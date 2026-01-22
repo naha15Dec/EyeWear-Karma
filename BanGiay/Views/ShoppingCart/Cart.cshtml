@@ -1,0 +1,134 @@
+﻿@using BanGiay.ViewModel
+@using System.Globalization
+@{
+    ViewBag.Title = "Giỏ hàng";
+
+    // Lấy giỏ hàng từ Session
+    var cart = Session["ShoppingCart"] as List<Cart> ?? new List<Cart>();
+
+    // Culture Việt Nam để định dạng tiền: 3.390.000 ₫
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    int TotalMoney = 0;
+    foreach (var total in cart) { TotalMoney += total.Total; }
+}
+
+<section class="banner-area organic-breadcrumb">
+    <div class="container">
+        <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+            <div class="col-first">
+                <h1>Giỏ hàng</h1>
+                <nav class="d-flex align-items-center">
+                    <a href="@Url.Action("Index","Home")">Trang chủ<span class="lnr lnr-arrow-right"></span></a>
+                    <a href="javascript:void(0)">Giỏ hàng</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cart_area">
+    <div class="container">
+        <div class="cart_inner">
+
+            @if (cart != null && cart.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sản phẩm</th>
+                                <th scope="col">Giá</th>
+                                <th scope="col">Giảm giá</th>
+                                <th scope="col">Số lượng</th>
+                                <th scope="col">Tổng</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Cart item in cart)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="media">
+                                            <div class="d-flex">
+                                                <img src="@item.ImageProduct" height="120" alt="product-image" />
+                                            </div>
+                                            <div class="media-body">
+                                                <!-- Nếu có tên sản phẩm thì thay ID bằng tên -->
+                                                <p>@item.IDProduct</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <h5>@item.Price.ToString("N0", vi) ₫</h5>
+                                    </td>
+                                    <td>
+                                        @item.Discount.ToString("N0", vi) ₫
+                                    </td>
+                                    <td>
+                                        <div class="product_count">
+                                            <input type="number"
+                                                   min="1"
+                                                   value="@item.Quantity"
+                                                   id="quantity-@item.IDProduct"
+                                                   onchange="updateQuantity('@item.IDProduct')" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <h5>@item.Total.ToString("N0", vi) ₫</h5>
+                                    </td>
+                                    <td>
+                                        @using (Html.BeginForm("RemoveItem", "ShoppingCart", FormMethod.Post))
+                                        {
+                                            <input type="hidden" name="idProduct" value="@item.IDProduct" />
+                                            <button type="submit" class="btn" title="Xóa">
+                                                <i class="fa fa-trash nav-icon"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <h5>Tổng tiền: <span>@TotalMoney.ToString("N0", vi)</span> ₫</h5>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="checkout_btn_inner d-flex align-items-center justify-content-sm-end gap-2">
+                            <a class="gray_btn" href="@Url.Action("Index","Product")">Tiếp tục mua</a>
+                            <a class="gray_btn" style="background: linear-gradient(90deg, #ffba00 0%, #ff6c00 100%); color:#fff;"
+                               href="@Url.Action("Index","Checkout")">Tiếp tục</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <h4>Giỏ hàng của bạn đang trống</h4>
+                    <a class="gray_btn mt-3" href="@Url.Action("Index","Product")">Mua sắm ngay</a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<script>
+    // Cập nhật số lượng, redirect sang action xử lý
+    function updateQuantity(productId) {
+        var input = document.getElementById("quantity-" + productId);
+        if (!input) return;
+        var newQuantity = parseInt(input.value, 10);
+        if (isNaN(newQuantity) || newQuantity < 1) {
+            newQuantity = 1;
+            input.value = 1;
+        }
+        window.location.href = '@Url.Action("UpdateQuantityItem", "ShoppingCart")'
+            + '?idProduct=' + encodeURIComponent(productId)
+            + '&quantity=' + newQuantity;
+    }
+</script>
