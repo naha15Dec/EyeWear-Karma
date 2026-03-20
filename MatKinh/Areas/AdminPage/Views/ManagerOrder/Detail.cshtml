@@ -1,0 +1,675 @@
+﻿@model MatKinh.ViewModel.AdminOrderDetailVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+    var login = Session["LoginInformation"] as TaiKhoan;
+    var roleCode = login != null && login.VaiTro != null ? login.VaiTro.MaVaiTro : string.Empty;
+
+    bool isAdmin = string.Equals(roleCode, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase);
+    bool isStaff = string.Equals(roleCode, RoleConstants.STAFF, StringComparison.OrdinalIgnoreCase);
+    bool isShipper = string.Equals(roleCode, RoleConstants.SHIPPER, StringComparison.OrdinalIgnoreCase);
+
+    bool canAssignShipper = isAdmin || isStaff;
+    bool canUpdateStatus = isAdmin || isStaff || isShipper;
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Chi tiết đơn hàng #@Model.MaDonHang</h1>
+        <p class="admin-page-subtitle">Theo dõi xử lý đơn, giao hàng và lịch sử trạng thái.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "ManagerOrder")">Quản lý đơn hàng</a>
+        </li>
+        <li class="breadcrumb-item active">#@Model.MaDonHang</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="row">
+            <!-- LEFT -->
+            <div class="col-lg-8">
+
+                <!-- ORDER SUMMARY -->
+                <div class="card admin-card mb-3">
+                    <div class="card-header admin-card-header border-0">
+                        <div class="admin-card-title-wrap">
+                            <h3 class="admin-card-title">Tổng quan đơn hàng</h3>
+                            <span class="admin-card-count">@Model.TrangThaiText</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row admin-detail-grid">
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Mã đơn hàng</div>
+                                    <div class="admin-detail-value">#@Model.MaDonHang</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Trạng thái hiện tại</div>
+                                    <div class="admin-detail-value">
+                                        @switch (Model.TrangThai)
+                                        {
+                                            case OrderStatusConstants.PENDING:
+                                                <span class="admin-status-badge warning">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.CONFIRMED:
+                                                <span class="admin-status-badge info">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.PREPARING:
+                                                <span class="admin-status-badge processing">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
+                                                <span class="admin-status-badge assigned">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.DELIVERING:
+                                                <span class="admin-status-badge shipping">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.DELIVERED:
+                                                <span class="admin-status-badge success">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.DELIVERY_FAILED:
+                                                <span class="admin-status-badge danger">@Model.TrangThaiText</span>
+                                                break;
+                                            case OrderStatusConstants.CANCELLED:
+                                                <span class="admin-status-badge muted">@Model.TrangThaiText</span>
+                                                break;
+                                            default:
+                                                <span class="admin-status-badge">@Model.TrangThaiText</span>
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Khách hàng</div>
+                                    <div class="admin-detail-value">@Model.TenKhachHang</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Ngày đặt</div>
+                                    <div class="admin-detail-value">@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Người tạo đơn</div>
+                                    <div class="admin-detail-value">@(string.IsNullOrWhiteSpace(Model.CreatedByName) ? "—" : Model.CreatedByName)</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Người xác nhận</div>
+                                    <div class="admin-detail-value">@(string.IsNullOrWhiteSpace(Model.ConfirmedByName) ? "—" : Model.ConfirmedByName)</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Shipper</div>
+                                    <div class="admin-detail-value">@(string.IsNullOrWhiteSpace(Model.ShipperName) ? "Chưa gán" : Model.ShipperName)</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Ghi chú đơn</div>
+                                    <div class="admin-detail-value">@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú" : Model.GhiChu)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECEIVER INFO -->
+                <div class="card admin-card mb-3">
+                    <div class="card-header admin-card-header border-0">
+                        <div class="admin-card-title-wrap">
+                            <h3 class="admin-card-title">Thông tin nhận hàng</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row admin-detail-grid">
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Người nhận</div>
+                                    <div class="admin-detail-value">@Model.HoTenNguoiNhan</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Số điện thoại</div>
+                                    <div class="admin-detail-value">@Model.SoDienThoaiNguoiNhan</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mb-0">
+                                <div class="admin-detail-box">
+                                    <div class="admin-detail-label">Địa chỉ nhận hàng</div>
+                                    <div class="admin-detail-value">@Model.DiaChiNhanHang</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ORDER ITEMS -->
+                <div class="card admin-card mb-3">
+                    <div class="card-header admin-card-header border-0">
+                        <div class="admin-card-title-wrap">
+                            <h3 class="admin-card-title">Sản phẩm trong đơn</h3>
+                            <span class="admin-card-count">@Model.Items.Count dòng sản phẩm</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table admin-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-right">Đơn giá</th>
+                                        <th class="text-center">SL</th>
+                                        <th class="text-right">Giảm giá</th>
+                                        <th class="text-right">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Items != null && Model.Items.Count > 0)
+                                    {
+                                        foreach (var item in Model.Items)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="admin-product-cell">
+                                                        <div class="admin-product-thumb">
+                                                            @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
+                                                            {
+                                                                <img src="@item.HinhAnhChinh" alt="@item.TenSanPhamSnapshot" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="admin-product-thumb-placeholder">
+                                                                    <i class="fas fa-image"></i>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            <div class="admin-product-name">@item.TenSanPhamSnapshot</div>
+                                                            <div class="admin-product-sub">@(string.IsNullOrWhiteSpace(item.MaSanPham) ? "" : "#" + item.MaSanPham)</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="text-right">@item.DonGiaSnapshot.ToString("N0") đ</td>
+                                                <td class="text-center">@item.SoLuong</td>
+                                                <td class="text-right">@item.GiamGiaSnapshot.ToString("N0") đ</td>
+                                                <td class="text-right admin-price-strong">@item.ThanhTien.ToString("N0") đ</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">Không có sản phẩm trong đơn.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY -->
+                <div class="card admin-card">
+                    <div class="card-header admin-card-header border-0">
+                        <div class="admin-card-title-wrap">
+                            <h3 class="admin-card-title">Lịch sử trạng thái</h3>
+                            <span class="admin-card-count">@Model.Histories.Count lần cập nhật</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        @if (Model.Histories != null && Model.Histories.Count > 0)
+                        {
+                            <div class="admin-timeline">
+                                @foreach (var item in Model.Histories)
+                                {
+                                    <div class="admin-timeline-item">
+                                        <div class="admin-timeline-dot"></div>
+                                        <div class="admin-timeline-content">
+                                            <div class="admin-timeline-title">
+                                                @item.TrangThaiCuText → @item.TrangThaiMoiText
+                                            </div>
+                                            <div class="admin-timeline-meta">
+                                                @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                @if (!string.IsNullOrWhiteSpace(item.NguoiCapNhat))
+                                                {
+                                                    <span>• @item.NguoiCapNhat</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(item.GhiChu))
+                                            {
+                                                <div class="admin-timeline-note">@item.GhiChu</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted">Chưa có lịch sử cập nhật trạng thái.</div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-lg-4">
+
+                <!-- PAYMENT SUMMARY -->
+                <div class="card admin-card mb-3">
+                    <div class="card-header admin-card-header border-0">
+                        <h3 class="admin-card-title">Thanh toán</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="admin-summary-row">
+                            <span>Tiền hàng</span>
+                            <strong>@Model.TongTienHang.ToString("N0") đ</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Phí vận chuyển (COD)</span>
+                            <strong>@Model.PhiVanChuyen.ToString("N0") đ</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Giảm giá</span>
+                            <strong>- @Model.GiamGia.ToString("N0") đ</strong>
+                        </div>
+                        <hr />
+                        <div class="admin-summary-row total">
+                            <span>Tổng thanh toán</span>
+                            <strong>@Model.TongThanhToan.ToString("N0") đ</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPDATE STATUS -->
+                @if (canUpdateStatus)
+                {
+                    <div class="card admin-card mb-3">
+                        <div class="card-header admin-card-header border-0">
+                            <h3 class="admin-card-title">Cập nhật trạng thái</h3>
+                        </div>
+                        <div class="card-body">
+                            @using (Html.BeginForm("UpdateStatus", "ManagerOrder", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="DonHangId" value="@Model.DonHangId" />
+
+                                <div class="form-group">
+                                    <label>Trạng thái mới</label>
+                                    <select name="TrangThaiMoi" class="form-control admin-input">
+                                        @if (isAdmin)
+                                        {
+                                            if (Model.TrangThai == OrderStatusConstants.PENDING)
+                                            {
+                                                <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
+                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
+                                            {
+                                                <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.PREPARING)
+                                            {
+                                                <option value="@OrderStatusConstants.ASSIGNED_TO_SHIPPER">Đã giao shipper</option>
+                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
+                                            {
+                                                <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
+                                            {
+                                                <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
+                                                <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
+                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                            }
+                                        }
+                                        else if (isStaff)
+                                        {
+                                            if (Model.TrangThai == OrderStatusConstants.PENDING)
+                                            {
+                                                <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
+                                            {
+                                                <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.PREPARING)
+                                            {
+                                                <option value="@OrderStatusConstants.ASSIGNED_TO_SHIPPER">Đã giao shipper</option>
+                                            }
+                                        }
+                                        else if (isShipper)
+                                        {
+                                            if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
+                                            {
+                                                <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
+                                            }
+                                            else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
+                                            {
+                                                <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
+                                                <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Ghi chú</label>
+                                    <textarea name="GhiChu"
+                                              rows="3"
+                                              class="form-control admin-input"
+                                              placeholder="Nhập ghi chú khi cập nhật trạng thái..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn admin-btn admin-btn-save w-100">
+                                    <i class="fas fa-sync-alt mr-1"></i> Cập nhật trạng thái
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- ASSIGN SHIPPER -->
+                @if (canAssignShipper)
+                {
+                    <div class="card admin-card mb-3">
+                        <div class="card-header admin-card-header border-0">
+                            <h3 class="admin-card-title">Gán shipper</h3>
+                        </div>
+                        <div class="card-body">
+                            @using (Html.BeginForm("AssignShipper", "ManagerOrder", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="DonHangId" value="@Model.DonHangId" />
+
+                                <div class="form-group">
+                                    <label>Chọn shipper</label>
+                                    <select name="ShipperId" class="form-control admin-input">
+                                        <option value="">-- Chọn shipper --</option>
+                                        @foreach (var shipper in Model.Shippers)
+                                        {
+                                            <option value="@shipper.Value" @(Model.ShipperId.HasValue && Model.ShipperId.Value.ToString() == shipper.Value ? "selected" : "")>
+                                                @shipper.Text
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Ghi chú</label>
+                                    <textarea name="GhiChu"
+                                              rows="3"
+                                              class="form-control admin-input"
+                                              placeholder="Ví dụ: Giao ưu tiên trong ngày"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn admin-btn admin-btn-detail w-100">
+                                    <i class="fas fa-truck mr-1"></i> Gán shipper
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- TIME LOG -->
+                <div class="card admin-card">
+                    <div class="card-header admin-card-header border-0">
+                        <h3 class="admin-card-title">Mốc thời gian</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="admin-summary-row">
+                            <span>Ngày đặt</span>
+                            <strong>@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Ngày xác nhận</span>
+                            <strong>@(Model.NgayXacNhan.HasValue ? Model.NgayXacNhan.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Ngày giao</span>
+                            <strong>@(Model.NgayGiao.HasValue ? Model.NgayGiao.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Ngày hoàn tất</span>
+                            <strong>@(Model.NgayHoanTat.HasValue ? Model.NgayHoanTat.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+                        <div class="admin-summary-row">
+                            <span>Ngày hủy</span>
+                            <strong>@(Model.NgayHuy.HasValue ? Model.NgayHuy.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .admin-detail-box {
+        background: #fafafa;
+        border: 1px solid #ececec;
+        border-radius: 12px;
+        padding: 14px 16px;
+        height: 100%;
+    }
+
+    .admin-detail-label {
+        font-size: 12px;
+        color: #8a8f98;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 6px;
+    }
+
+    .admin-detail-value {
+        font-size: 15px;
+        color: #2f3542;
+        font-weight: 600;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .admin-product-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .admin-product-thumb {
+        width: 58px;
+        height: 58px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f4f4f4;
+        border: 1px solid #ececec;
+        flex-shrink: 0;
+    }
+
+        .admin-product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .admin-product-thumb-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a0a7b0;
+        font-size: 18px;
+    }
+
+    .admin-product-name {
+        font-weight: 700;
+        color: #2f3542;
+    }
+
+    .admin-product-sub {
+        font-size: 12px;
+        color: #8a8f98;
+        margin-top: 2px;
+    }
+
+    .admin-price-strong {
+        font-weight: 700;
+        color: #2f3542;
+    }
+
+    .admin-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        color: #4b5563;
+        border-bottom: 1px dashed #ececec;
+    }
+
+        .admin-summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .admin-summary-row.total {
+            font-size: 16px;
+            color: #2f3542;
+        }
+
+    .admin-timeline {
+        position: relative;
+        padding-left: 12px;
+    }
+
+    .admin-timeline-item {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 20px;
+        border-left: 2px solid #f0e7d6;
+    }
+
+        .admin-timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .admin-timeline-dot {
+        position: absolute;
+        left: -7px;
+        top: 2px;
+        width: 12px;
+        height: 12px;
+        background: #d8b67a;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #f4ead8;
+    }
+
+    .admin-timeline-title {
+        font-weight: 700;
+        color: #2f3542;
+        margin-bottom: 4px;
+    }
+
+    .admin-timeline-meta {
+        font-size: 12px;
+        color: #8a8f98;
+        margin-bottom: 6px;
+    }
+
+    .admin-timeline-note {
+        font-size: 14px;
+        color: #4b5563;
+        background: #faf8f3;
+        border: 1px solid #f0e7d6;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    .admin-status-badge.info {
+        background: #eef6ff;
+        color: #1d4ed8;
+    }
+
+    .admin-status-badge.warning {
+        background: #fff8e6;
+        color: #b7791f;
+    }
+
+    .admin-status-badge.processing {
+        background: #fffdf3;
+        color: #a16207;
+    }
+
+    .admin-status-badge.assigned {
+        background: #f7f3ff;
+        color: #7c3aed;
+    }
+
+    .admin-status-badge.shipping {
+        background: #eefbf6;
+        color: #0f766e;
+    }
+
+    .admin-status-badge.success {
+        background: #edfdf3;
+        color: #15803d;
+    }
+
+    .admin-status-badge.danger {
+        background: #fff1f2;
+        color: #dc2626;
+    }
+
+    .admin-status-badge.muted {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+</style>

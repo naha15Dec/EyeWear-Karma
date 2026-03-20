@@ -1,0 +1,208 @@
+﻿@model MatKinh.ViewModel.AdminBrandIndexVm
+
+@{
+    ViewBag.Title = "Thương hiệu";
+    bool isEdit = Model != null && Model.Form != null && Model.Form.ThuongHieuId.HasValue;
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Thương hiệu</h1>
+        <p class="admin-page-subtitle">Quản lý danh sách thương hiệu kính mắt trong hệ thống.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Thương hiệu</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="card admin-card">
+                    <div class="card-header admin-card-header border-0">
+                        <div class="admin-card-title-wrap">
+                            <h3 class="admin-card-title">Danh sách thương hiệu</h3>
+                            <span class="admin-card-count">@((Model.Brands != null) ? Model.Brands.Count : 0) thương hiệu</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table admin-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Mã thương hiệu</th>
+                                        <th>Tên</th>
+                                        <th>Mô tả</th>
+                                        <th>Trạng thái</th>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Lệnh</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Brands != null && Model.Brands.Count > 0)
+                                    {
+                                        foreach (var item in Model.Brands)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <span class="admin-code-text">#@item.MaThuongHieu</span>
+                                                </td>
+
+                                                <td>
+                                                    <div class="admin-brand-name">@item.TenThuongHieu</div>
+                                                </td>
+
+                                                <td>
+                                                    <span class="admin-post-summary">
+                                                        @(string.IsNullOrWhiteSpace(item.MoTa)
+                                                            ? "Chưa có mô tả"
+                                                            : (item.MoTa.Length > 60 ? item.MoTa.Substring(0, 60) + "..." : item.MoTa))
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    @if (item.IsActive)
+                                                    {
+                                                        <span class="admin-status-badge success">Đang sử dụng</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="admin-status-badge cancel">Ngừng sử dụng</span>
+                                                    }
+                                                </td>
+
+                                                <td>
+                                                    <span class="admin-origin-text">@item.SoSanPham</span>
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <div class="admin-action-group">
+                                                        @using (Html.BeginForm("Update", "ListBrand", FormMethod.Post, new { @class = "d-inline" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@item.ThuongHieuId" />
+                                                            <button type="submit" class="btn admin-btn admin-btn-edit">
+                                                                <i class="fas fa-pen mr-1"></i> Sửa
+                                                            </button>
+                                                        }
+
+                                                        @using (Html.BeginForm("Delete", "ListBrand", FormMethod.Post, new { @class = "d-inline" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@item.ThuongHieuId" />
+                                                            <button type="submit"
+                                                                    class="btn admin-btn admin-btn-delete"
+                                                                    onclick="return confirm('Bạn có chắc muốn xóa hoặc ngừng sử dụng thương hiệu này?')">
+                                                                <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">Không có thương hiệu nào.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Mã thương hiệu</th>
+                                        <th>Tên</th>
+                                        <th>Mô tả</th>
+                                        <th>Trạng thái</th>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Lệnh</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                @using (Html.BeginForm("AddBrand", "ListBrand", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Form.ThuongHieuId)
+
+                    <div class="card admin-form-card">
+                        <div class="card-header border-0 d-flex justify-content-between align-items-center">
+                            <h3 class="card-title mb-0">@(isEdit ? "Cập nhật thương hiệu" : "Thêm thương hiệu")</h3>
+
+                            @if (isEdit)
+                            {
+                                <a href="@Url.Action("Brand", "ListBrand")" class="btn admin-btn admin-btn-light">
+                                    Hủy sửa
+                                </a>
+                            }
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Mã thương hiệu</label>
+                                @Html.TextBoxFor(m => m.Form.MaThuongHieu,
+                                    new { @class = "form-control admin-input", placeholder = "Ví dụ: RAYBAN" })
+                                @Html.ValidationMessageFor(m => m.Form.MaThuongHieu, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tên thương hiệu</label>
+                                @Html.TextBoxFor(m => m.Form.TenThuongHieu,
+                                    new { @class = "form-control admin-input", placeholder = "Tên thương hiệu" })
+                                @Html.ValidationMessageFor(m => m.Form.TenThuongHieu, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                <label>Mô tả</label>
+                                @Html.TextAreaFor(m => m.Form.MoTa,
+                                    new { @class = "form-control admin-input admin-brand-note", placeholder = "Mô tả thương hiệu..." })
+                                @Html.ValidationMessageFor(m => m.Form.MoTa, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                <label>Trạng thái</label>
+                                <select name="Form.IsActive" class="form-control admin-input">
+                                    <option value="true" @(Model.Form.IsActive ? "selected" : "")>Đang sử dụng</option>
+                                    <option value="false" @(!Model.Form.IsActive ? "selected" : "")>Ngừng sử dụng</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-form-actions">
+                                <button type="submit" class="btn admin-btn admin-btn-save">
+                                    <i class="fas fa-save mr-1"></i>
+                                    @(isEdit ? "Cập nhật thương hiệu" : "Lưu thương hiệu")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

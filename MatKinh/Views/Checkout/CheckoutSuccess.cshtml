@@ -1,0 +1,242 @@
+﻿@using MatKinh.Models
+@using System.Globalization
+
+@{
+    ViewBag.Title = "Thanh toán thành công";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    var customer = ViewData["CustomerOrder"] as KhachHang;
+    var order = ViewData["Order"] as DonHang;
+    var orderDetails = ViewData["OrderDetails"] as List<ChiTietDonHang> ?? new List<ChiTietDonHang>();
+
+    string paymentMethodText = "Thanh toán khi nhận hàng";
+    if (Request.QueryString["vnp_TxnRef"] != null || Request.Url.AbsoluteUri.ToLower().Contains("vnpay"))
+    {
+        paymentMethodText = "Thanh toán online qua VNPay";
+    }
+
+    string orderStatusText = "Chờ xác nhận";
+    if (order != null)
+    {
+        switch (order.TrangThai)
+        {
+            case 1:
+                orderStatusText = "Chờ xác nhận";
+                break;
+            case 2:
+                orderStatusText = "Đã xác nhận";
+                break;
+            case 3:
+                orderStatusText = "Đang chuẩn bị hàng";
+                break;
+            case 4:
+                orderStatusText = "Đã bàn giao shipper";
+                break;
+            case 5:
+                orderStatusText = "Đang giao hàng";
+                break;
+            case 6:
+                orderStatusText = "Đã giao hàng";
+                break;
+            case 7:
+                orderStatusText = "Giao hàng thất bại";
+                break;
+            case 8:
+                orderStatusText = "Đã hủy";
+                break;
+        }
+    }
+}
+
+<section class="success-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Confirmation</span>
+                <h1>Xác nhận đơn hàng</h1>
+                <nav>
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    <span>/</span>
+                    <span>Xác nhận</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="success-section">
+        <div class="container">
+            <div class="success-hero-card">
+                <div class="success-icon">
+                    <i class="fa fa-check"></i>
+                </div>
+
+                <span class="success-eyebrow">Order completed</span>
+                <h2>Cảm ơn bạn! Chúng tôi đã nhận được đơn hàng.</h2>
+                <p>
+                    Đơn hàng của bạn đã được ghi nhận thành công. Chúng tôi sẽ sớm liên hệ để xác nhận
+                    và tiến hành giao hàng trong thời gian sớm nhất.
+                </p>
+            </div>
+
+            <div class="success-layout">
+                <div class="success-info-card">
+                    <h3>Thông tin đơn hàng</h3>
+
+                    <div class="success-info-grid">
+                        <div class="success-info-item">
+                            <span class="label">Mã đơn hàng</span>
+                            <strong>@(order?.MaDonHang ?? "—")</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Trạng thái</span>
+                            <strong>@orderStatusText</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Ngày đặt</span>
+                            <strong>@(order != null ? order.NgayDat.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Phương thức thanh toán</span>
+                            <strong>@paymentMethodText</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-info-card">
+                    <h3>Thông tin giao hàng</h3>
+
+                    <div class="success-info-grid">
+                        <div class="success-info-item">
+                            <span class="label">Mã khách hàng</span>
+                            <strong>@(customer?.MaKhachHang ?? "—")</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Số điện thoại</span>
+                            <strong>@(order?.SoDienThoaiNguoiNhan ?? customer?.SoDienThoai ?? "—")</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Tên người nhận</span>
+                            <strong>@(order?.HoTenNguoiNhan ?? customer?.HoTen ?? "—")</strong>
+                        </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Địa chỉ</span>
+                            <strong>@(order?.DiaChiNhanHang ?? customer?.DiaChi ?? "—")</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-order-card">
+                <div class="success-order-card__head">
+                    <div>
+                        <span class="success-eyebrow">Order details</span>
+                        <h3>Chi tiết đơn hàng</h3>
+                    </div>
+                </div>
+
+                @if (orderDetails.Any())
+                {
+                    <div class="success-order-table-wrap">
+                        <table class="success-order-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Giảm giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in orderDetails)
+                                {
+                                    <tr>
+                                        <td>@item.TenSanPhamSnapshot</td>
+                                        <td>x @item.SoLuong</td>
+                                        <td>@item.DonGiaSnapshot.ToString("N0", vi) ₫</td>
+                                        <td>@item.GiamGiaSnapshot.ToString("N0", vi) ₫</td>
+                                        <td>@item.ThanhTien.ToString("N0", vi) ₫</td>
+                                    </tr>
+                                }
+
+                                <tr class="summary-row">
+                                    <td colspan="4">Tổng tiền hàng</td>
+                                    <td>@((order?.TongTienHang ?? 0).ToString("N0", vi)) ₫</td>
+                                </tr>
+
+                                <tr class="summary-row">
+                                    <td colspan="4">Phí giao hàng</td>
+                                    <td>@((order?.PhiVanChuyen ?? 0).ToString("N0", vi)) ₫</td>
+                                </tr>
+
+                                <tr class="summary-row">
+                                    <td colspan="4">Giảm giá</td>
+                                    <td>@((order?.GiamGia ?? 0).ToString("N0", vi)) ₫</td>
+                                </tr>
+
+                                <tr class="summary-row grand-total">
+                                    <td colspan="4">Tổng thanh toán</td>
+                                    <td>@((order?.TongThanhToan ?? 0).ToString("N0", vi)) ₫</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="success-order-mobile">
+                        @foreach (var item in orderDetails)
+                        {
+                            <div class="success-order-mobile__item">
+                                <h4>@item.TenSanPhamSnapshot</h4>
+                                <p>Số lượng: x @item.SoLuong</p>
+                                <p>Đơn giá: @item.DonGiaSnapshot.ToString("N0", vi) ₫</p>
+                                <p>Giảm giá: @item.GiamGiaSnapshot.ToString("N0", vi) ₫</p>
+                                <strong>@item.ThanhTien.ToString("N0", vi) ₫</strong>
+                            </div>
+                        }
+
+                        <div class="success-order-mobile__summary">
+                            <div>
+                                <span>Tổng tiền hàng</span>
+                                <strong>@((order?.TongTienHang ?? 0).ToString("N0", vi)) ₫</strong>
+                            </div>
+                            <div>
+                                <span>Phí giao hàng</span>
+                                <strong>@((order?.PhiVanChuyen ?? 0).ToString("N0", vi)) ₫</strong>
+                            </div>
+                            <div>
+                                <span>Giảm giá</span>
+                                <strong>@((order?.GiamGia ?? 0).ToString("N0", vi)) ₫</strong>
+                            </div>
+                            <div class="grand">
+                                <span>Tổng thanh toán</span>
+                                <strong>@((order?.TongThanhToan ?? 0).ToString("N0", vi)) ₫</strong>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="catalog-empty">
+                        <h3>Không có dữ liệu chi tiết đơn hàng</h3>
+                        <p>Đơn hàng đã được ghi nhận nhưng hiện chưa tải được danh sách sản phẩm.</p>
+                    </div>
+                }
+
+                <div class="success-actions">
+                    <a href="@Url.Action("Index", "Home")" class="optical-btn optical-btn--dark">
+                        Quay lại trang chủ
+                    </a>
+                    <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
+                        Tiếp tục mua sắm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>

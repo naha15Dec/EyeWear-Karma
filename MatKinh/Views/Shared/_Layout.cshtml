@@ -1,0 +1,295 @@
+﻿@using System.Linq
+@using System.Data.Entity
+@using MatKinh.Models
+
+@{
+    var sessionAccount = Session["LoginInformation"] as TaiKhoan;
+
+    var db = new BanMatKinhEntities();
+
+    TaiKhoan account = null;
+    string roleCode = string.Empty;
+
+    if (sessionAccount != null)
+    {
+        account = db.TaiKhoans
+            .Include(x => x.VaiTro)
+            .FirstOrDefault(x => x.TaiKhoanId == sessionAccount.TaiKhoanId && x.IsActive);
+
+        if (account != null && account.VaiTro != null)
+        {
+            roleCode = (account.VaiTro.MaVaiTro ?? string.Empty).Trim().ToUpper();
+        }
+    }
+
+    var inf = db.ThongTinCuaHangs
+        .OrderByDescending(x => x.IsActive)
+        .ThenByDescending(x => x.UpdatedAt)
+        .FirstOrDefault();
+
+    string brandName = !string.IsNullOrWhiteSpace(inf?.TenCuaHang) ? inf.TenCuaHang : "Karma Eyewear";
+    string hotline = !string.IsNullOrWhiteSpace(inf?.Hotline) ? inf.Hotline : "Đang cập nhật";
+    string email = !string.IsNullOrWhiteSpace(inf?.Email) ? inf.Email : "Đang cập nhật";
+    string diaChi = !string.IsNullOrWhiteSpace(inf?.DiaChi) ? inf.DiaChi : "Hệ thống cửa hàng chính hãng";
+    string moTaNgan = !string.IsNullOrWhiteSpace(inf?.MoTaNgan)
+        ? inf.MoTaNgan
+        : "Chúng tôi mang đến những thiết kế mắt kính thời trang, tinh tế và phù hợp với phong cách sống hiện đại.";
+
+    string facebookUrl = !string.IsNullOrWhiteSpace(inf?.FacebookUrl) ? inf.FacebookUrl : "#";
+    string instagramUrl = !string.IsNullOrWhiteSpace(inf?.InstagramUrl) ? inf.InstagramUrl : "#";
+    string zaloUrl = !string.IsNullOrWhiteSpace(inf?.ZaloUrl) ? inf.ZaloUrl : "#";
+
+    bool isLoggedIn = account != null;
+    bool isUser = roleCode == RoleConstants.USER;
+    bool isAdminLike = roleCode == RoleConstants.ADMIN || roleCode == RoleConstants.STAFF || roleCode == RoleConstants.SHIPPER;
+
+    string accountDisplay = isLoggedIn
+        ? (!string.IsNullOrWhiteSpace(account.HoTen) ? account.HoTen : account.TenDangNhap)
+        : "Tài khoản";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - @brandName</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap">
+    <link href="~/Content/linearicons.css" rel="stylesheet" />
+    <link href="~/Content/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/themify-icons.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <link href="~/Content/owl.carousel.css" rel="stylesheet" />
+    <link href="~/Content/nice-select.css" rel="stylesheet" />
+    <link href="~/Content/nouislider.min.css" rel="stylesheet" />
+    <link href="~/Content/ion.rangeSlider.css" rel="stylesheet" />
+    <link href="~/Content/ion.rangeSlider.skinFlat.css" rel="stylesheet" />
+    <link href="~/Content/magnific-popup.css" rel="stylesheet" />
+
+    <link href="~/Content/css/layout.css" rel="stylesheet" />
+    <link href="~/Content/css/home.css" rel="stylesheet" />
+    <link href="~/Content/css/product.css" rel="stylesheet" />
+    <link href="~/Content/css/detail.css" rel="stylesheet" />
+    <link href="~/Content/css/auth.css" rel="stylesheet" />
+    <link href="~/Content/css/blog.css" rel="stylesheet" />
+    <link href="~/Content/css/cart.css" rel="stylesheet" />
+    <link href="~/Content/css/checkout.css" rel="stylesheet" />
+    <link href="~/Content/css/success.css" rel="stylesheet" />
+    <link href="~/Content/css/profile.css" rel="stylesheet" />
+    <link href="~/Content/css/order-detail.css" rel="stylesheet" />
+    <link href="~/Content/css/contact.css" rel="stylesheet" />
+    <link href="~/Content/css/responsive.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="topbar-eyewear">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <span>
+                <i class="fas fa-map-marker-alt mr-2"></i>@diaChi
+            </span>
+            <span>
+                <i class="fa fa-phone mr-2"></i>
+                <a href="tel:@hotline">@hotline</a>
+            </span>
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light main_box px-0">
+                <a class="brand-logo" href='@Url.Action("Index","Home")'>
+                    <span class="brand-name">@brandName</span>
+                    <span class="brand-sub">Premium Eyewear</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="fa fa-bars"></span>
+                </button>
+
+                <div class="collapse navbar-collapse offset" id="navbarSupportedContent">
+                    <ul class="nav navbar-nav menu_nav mx-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href='@Url.Action("Index","Home")'>Trang chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index","Product")">Mắt kính</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index","Blog")">Xu hướng & Blog</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index","Contact")">Liên hệ</a>
+                        </li>
+                    </ul>
+
+                    <div class="header-actions">
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item submenu dropdown">
+                                <a href="#" class="nav-link dropdown-toggle account-chip" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-user mr-2"></i>
+                                    @accountDisplay
+                                </a>
+                                <ul class="dropdown-menu">
+                                    @if (isLoggedIn)
+                                    {
+                                        if (isUser)
+                                        {
+                                            <li class="nav-item">
+                                                <a class="nav-link" href='@Url.Action("Profile","ProfileUser")'>
+                                                    Thông tin cá nhân
+                                                </a>
+                                            </li>
+                                        }
+                                        else if (isAdminLike)
+                                        {
+                                            <li class="nav-item">
+                                                <a class="nav-link" href='@Url.Action("Index","Dashboard", new { area = "AdminPage" })'>
+                                                    Trang quản trị
+                                                </a>
+                                            </li>
+                                        }
+
+                                        <li class="nav-item">
+                                            <a class="nav-link" href='@Url.Action("LogoutAccount","Account")'>Đăng xuất</a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="nav-item">
+                                            <a class="nav-link" href='@Url.Action("LoginAccount","Account")'>Đăng nhập</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href='@Url.Action("RegisterAccount","Account")'>Đăng ký</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <a href='@Url.Action("Cart","ShoppingCart")' class="action-btn" title="Giỏ hàng">
+                            <span class="lnr lnr-cart"></span>
+                        </a>
+
+                        <button type="button" class="action-btn" id="openSearchBtn" title="Tìm kiếm">
+                            <span class="lnr lnr-magnifier"></span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <div class="search-panel" id="searchPanel">
+            <div class="container">
+                @using (Html.BeginForm("CheckFilters", "Product", FormMethod.Post, new { id = "searchForm", @class = "search-form-wrap" }))
+                {
+                    <input type="text"
+                           class="search-input-modern"
+                           id="search_input"
+                           name="NameProduct"
+                           placeholder="Tìm mẫu kính, gọng kính, tròng kính bạn yêu thích..." />
+
+                    <button type="submit" class="search-submit-btn">
+                        Tìm kiếm
+                    </button>
+
+                    <button type="button" class="search-close-btn" id="closeSearchBtn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main class="site-content">
+        @RenderBody()
+    </main>
+
+    <footer class="footer-modern">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="footer-brand">@brandName</div>
+                    <p class="footer-text">
+                        @moTaNgan
+                    </p>
+                    <div class="footer-social">
+                        <a href="@facebookUrl" target="_blank" rel="noopener noreferrer"><i class="fa fa-facebook"></i></a>
+                        <a href="@instagramUrl" target="_blank" rel="noopener noreferrer"><i class="fa fa-instagram"></i></a>
+                        <a href="@zaloUrl" target="_blank" rel="noopener noreferrer"><i class="fa fa-comment"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="footer-heading">Khám phá</h6>
+                    <ul class="footer-links">
+                        <li><a href='@Url.Action("Index","Home")'>Trang chủ</a></li>
+                        <li><a href='@Url.Action("Index","Product")'>Sản phẩm</a></li>
+                        <li><a href='@Url.Action("Index","Blog")'>Bài viết</a></li>
+                        <li><a href='@Url.Action("Index","Contact")'>Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="footer-heading">Hệ thống cửa hàng</h6>
+                    <div class="footer-contact-card">
+                        <p class="mb-2"><strong>Showroom</strong></p>
+                        <p class="mb-2">@diaChi</p>
+                        <p class="mb-0">Hotline: @hotline</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="footer-heading">Chăm sóc khách hàng</h6>
+                    <div class="footer-contact-card">
+                        <p class="mb-2">
+                            <i class="fa fa-phone mr-2"></i>
+                            <a href="tel:@hotline">@hotline</a>
+                        </p>
+                        <p class="mb-0">
+                            <i class="fa fa-envelope mr-2"></i>
+                            @email
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom-modern">
+                Copyright &copy;
+                <script>document.write(new Date().getFullYear());</script>
+                @brandName — Tự hào đồng hành cùng phong cách của bạn.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="~/Scripts/vendor/jquery-2.2.4.min.js"></script>
+    <script src="~/Scripts/vendor/bootstrap.min.js"></script>
+    <script src="~/Scripts/jquery.ajaxchimp.min.js"></script>
+    <script src="~/Scripts/jquery.nice-select.min.js"></script>
+    <script src="~/Scripts/jquery.sticky.js"></script>
+    <script src="~/Scripts/nouislider.min.js"></script>
+    <script src="~/Scripts/countdown.js"></script>
+    <script src="~/Scripts/jquery.magnific-popup.min.js"></script>
+    <script src="~/Scripts/owl.carousel.min.js"></script>
+    <script src="~/Scripts/gmaps.min.js"></script>
+
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        $(document).ready(function () {
+            $("#openSearchBtn").on("click", function () {
+                $("#searchPanel").slideDown(200).addClass("show");
+                $("#search_input").focus();
+            });
+
+            $("#closeSearchBtn").on("click", function () {
+                $("#searchPanel").slideUp(200).removeClass("show");
+            });
+        });
+    </script>
+
+    <script src="~/Scripts/main.js"></script>
+</body>
+</html>

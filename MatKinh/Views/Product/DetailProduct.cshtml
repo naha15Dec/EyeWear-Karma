@@ -1,0 +1,362 @@
+﻿@model MatKinh.Models.SanPham
+@using MatKinh.Models
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Linq
+
+@{
+    ViewBag.Title = "Chi tiết sản phẩm";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    var relatedProducts = ViewBag.RelatedProducts as List<SanPham> ?? new List<SanPham>();
+    var recommendedProducts = ViewBag.RecommendedProducts as List<SanPham> ?? new List<SanPham>();
+
+    Func<string, string> normalizeImage = (path) =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return Url.Content("~/Asset/img/no-image.png");
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+    string mainImg = normalizeImage(Model != null ? Model.HinhAnhChinh : null);
+
+    decimal giaGoc = Model != null ? Model.GiaGoc : 0m;
+    decimal giaBan = Model != null ? Model.GiaBan : 0m;
+    bool isSale = giaGoc > giaBan;
+
+    bool conHang = Model != null && Model.TrangThai == 1 && Model.SoLuongTon > 0;
+
+    string tenSP = Model != null ? Model.TenSanPham : "Sản phẩm";
+    string maSP = Model != null ? Model.MaSanPham : string.Empty;
+    string tenLoai = Model != null && Model.LoaiSanPham != null ? Model.LoaiSanPham.TenLoaiSanPham : "—";
+    string tenThuongHieu = Model != null && Model.ThuongHieu != null ? Model.ThuongHieu.TenThuongHieu : "—";
+    string moTaNgan = Model != null ? Model.MoTaNgan : null;
+    string moTaChiTiet = Model != null ? Model.MoTaChiTiet : null;
+
+    Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
+}
+
+<section class="detail-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Product</span>
+                <h1>Chi tiết sản phẩm</h1>
+                <nav>
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    <span>/</span>
+                    <a href="@Url.Action("Index", "Product")">Sản phẩm</a>
+                    <span>/</span>
+                    <span>Chi tiết sản phẩm</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-main-section">
+        <div class="container">
+            <div class="detail-card">
+                <div class="row align-items-start">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <div class="detail-gallery">
+                            <div class="detail-gallery__main">
+                                <img id="mainImage"
+                                     src="@mainImg"
+                                     alt="@tenSP"
+                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
+                            </div>
+
+                            <div class="detail-gallery__thumbs">
+                                <img class="thumb active"
+                                     src="@mainImg"
+                                     data-src="@mainImg"
+                                     alt="@tenSP"
+                                     onclick="swapImage(this)"
+                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="detail-info">
+                            <div class="detail-badges">
+                                <span class="detail-badge">@tenLoai</span>
+                                <span class="detail-badge detail-badge--light">@tenThuongHieu</span>
+                                <span class="detail-stock @(conHang ? "in-stock" : "out-stock")">
+                                    @(conHang ? "Còn hàng" : "Hết hàng")
+                                </span>
+                            </div>
+
+                            <h2 class="detail-title">@tenSP</h2>
+
+                            <div class="detail-meta">
+                                <span><strong>Mã sản phẩm:</strong> @(string.IsNullOrWhiteSpace(maSP) ? "—" : maSP)</span>
+                                <span><strong>Thương hiệu:</strong> @tenThuongHieu</span>
+                                <span><strong>Tồn kho:</strong> @(Model != null ? Model.SoLuongTon : 0)</span>
+                            </div>
+
+                            <div class="detail-price-box">
+                                @if (isSale)
+                                {
+                                    <div class="detail-price-sale">
+                                        @money(giaBan) ₫
+                                    </div>
+                                    <div class="detail-price-row">
+                                        <span class="detail-price-old">@money(giaGoc) ₫</span>
+                                        <span class="detail-discount-save">
+                                            Tiết kiệm @money(giaGoc - giaBan) ₫
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="detail-price-sale">
+                                        @money(giaBan) ₫
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="detail-short-desc">
+                                @(string.IsNullOrWhiteSpace(moTaNgan)
+                                    ? "Thiết kế mắt kính hiện đại, phù hợp cho nhu cầu sử dụng hằng ngày và định hình phong cách thanh lịch."
+                                    : moTaNgan)
+                            </div>
+
+                            <div class="detail-actions">
+                                @if (conHang && Model != null)
+                                {
+                                    <a class="optical-btn optical-btn--dark"
+                                       href="@Url.Action("AddItemToCart", "ShoppingCart", new { sanPhamId = Model.SanPhamId })">
+                                        <i class="ti-bag mr-2"></i>Thêm vào giỏ hàng
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="optical-btn optical-btn--disabled">
+                                        <i class="ti-na mr-2"></i>Hết hàng
+                                    </span>
+                                }
+
+                                <a class="optical-btn optical-btn--light"
+                                   href="@Url.Action("Index", "Product")">
+                                    Xem thêm sản phẩm
+                                </a>
+                            </div>
+
+                            <div class="detail-extra-grid">
+                                <div class="detail-extra-item">
+                                    <span class="label">Loại sản phẩm</span>
+                                    <span class="value">@tenLoai</span>
+                                </div>
+                                <div class="detail-extra-item">
+                                    <span class="label">Thương hiệu</span>
+                                    <span class="value">@tenThuongHieu</span>
+                                </div>
+                                <div class="detail-extra-item">
+                                    <span class="label">Tình trạng</span>
+                                    <span class="value">@(conHang ? "Còn hàng" : "Hết hàng")</span>
+                                </div>
+                                <div class="detail-extra-item">
+                                    <span class="label">Tồn kho</span>
+                                    <span class="value">@(Model != null ? Model.SoLuongTon.ToString() : "0")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-tabs-section">
+        <div class="container">
+            <div class="detail-tabs-card">
+                <ul class="nav nav-tabs detail-tabs-nav" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active"
+                           id="description-tab"
+                           data-toggle="tab"
+                           href="#description"
+                           role="tab"
+                           aria-controls="description"
+                           aria-selected="true">
+                            Mô tả chi tiết
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           id="info-tab"
+                           data-toggle="tab"
+                           href="#info"
+                           role="tab"
+                           aria-controls="info"
+                           aria-selected="false">
+                            Thông tin sản phẩm
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content detail-tabs-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                        @if (!string.IsNullOrWhiteSpace(moTaChiTiet))
+                        {
+                            @Html.Raw(moTaChiTiet)
+                        }
+                        else
+                        {
+                            <p>Chưa có mô tả chi tiết cho sản phẩm này.</p>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+                        <div class="table-responsive">
+                            <table class="table detail-info-table">
+                                <tbody>
+                                    <tr>
+                                        <td>Mã sản phẩm</td>
+                                        <td>@(string.IsNullOrWhiteSpace(maSP) ? "—" : maSP)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tên sản phẩm</td>
+                                        <td>@tenSP</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Loại sản phẩm</td>
+                                        <td>@tenLoai</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Thương hiệu</td>
+                                        <td>@tenThuongHieu</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Giá gốc</td>
+                                        <td>@money(giaGoc) ₫</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Giá bán</td>
+                                        <td>@money(giaBan) ₫</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tình trạng</td>
+                                        <td>@(conHang ? "Còn hàng" : "Hết hàng")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Số lượng tồn</td>
+                                        <td>@(Model != null ? Model.SoLuongTon : 0)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-recommend-section">
+        <div class="container">
+            <div class="section-heading">
+                <span class="eyebrow">Gợi ý cho bạn</span>
+                <h2>Sản phẩm gợi ý</h2>
+                <p>Những mẫu kính có phong cách hoặc đặc điểm gần với sản phẩm bạn đang xem.</p>
+            </div>
+
+            @{
+                var displayProducts = recommendedProducts.Any() ? recommendedProducts : relatedProducts;
+            }
+
+            @if (displayProducts.Any())
+            {
+                <div class="row">
+                    @foreach (var item in displayProducts)
+                    {
+                        string itemImg = normalizeImage(item.HinhAnhChinh);
+                        bool itemIsSale = item.GiaGoc > item.GiaBan;
+
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="recommend-product-card">
+                                <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })" class="recommend-product-link">
+                                    <div class="recommend-product-image">
+                                        <img src="@itemImg"
+                                             alt="@item.TenSanPham"
+                                             onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                    </div>
+
+                                    <div class="recommend-product-body">
+                                        <h5 class="recommend-product-title">
+                                            @(item.TenSanPham != null && item.TenSanPham.Length > 45
+                                                ? item.TenSanPham.Substring(0, 45) + "..."
+                                                : item.TenSanPham)
+                                        </h5>
+
+                                        @if (itemIsSale)
+                                        {
+                                            <div class="recommend-product-price-sale">
+                                                @money(item.GiaBan) ₫
+                                            </div>
+                                            <div class="recommend-product-price-old">
+                                                @money(item.GiaGoc) ₫
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="recommend-product-price-sale">
+                                                @money(item.GiaBan) ₫
+                                            </div>
+                                        }
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="catalog-empty">
+                    <h3>Chưa có dữ liệu gợi ý</h3>
+                    <p>Hệ thống sẽ sớm cập nhật thêm các sản phẩm phù hợp dành cho bạn.</p>
+                </div>
+            }
+        </div>
+    </section>
+</section>
+
+@section Scripts {
+    <script>
+        function swapImage(el) {
+            var main = document.getElementById('mainImage');
+            if (!main || !el) return;
+
+            main.src = el.getAttribute('data-src');
+
+            var thumbs = document.querySelectorAll('.detail-gallery__thumbs .thumb');
+            for (var i = 0; i < thumbs.length; i++) {
+                thumbs[i].classList.remove('active');
+            }
+
+            el.classList.add('active');
+        }
+    </script>
+}

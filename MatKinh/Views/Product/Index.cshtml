@@ -1,0 +1,362 @@
+﻿@using MatKinh.Models
+@using MatKinh.ViewModel
+@using System.Globalization
+@model ProductCatalogFilterVm
+
+@{
+    ViewBag.Title = "Sản phẩm";
+
+    List<SanPham> products = ViewData["listProduct"] as List<SanPham> ?? new List<SanPham>();
+    List<LoaiSanPham> categories = ViewData["typeProductList"] as List<LoaiSanPham> ?? new List<LoaiSanPham>();
+    List<ThuongHieu> brands = ViewData["brandList"] as List<ThuongHieu> ?? new List<ThuongHieu>();
+    ProductCatalogFilterVm filter = ViewBag.Filter as ProductCatalogFilterVm ?? new ProductCatalogFilterVm();
+
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    int page = ViewBag.Page ?? 1;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int displayFrom = ViewBag.DisplayPage ?? 0;
+    int noOfPages = ViewBag.NoOfPages ?? totalPages;
+
+    int prevPage = page > 1 ? page - 1 : 1;
+    int nextPage = page < totalPages ? page + 1 : totalPages;
+
+    Func<string, string> normalizeImage = (path) =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return Url.Content("~/Asset/img/no-image.png");
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
+
+    object BuildRoute(int pageNumber)
+    {
+        return new
+        {
+            CategoryId = filter.CategoryId,
+            BrandId = filter.BrandId,
+            Keyword = filter.Keyword,
+            PriceRange = filter.PriceRange,
+            Page = pageNumber,
+            PageSize = filter.PageSize
+        };
+    }
+}
+
+<section class="product-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Collection</span>
+                <h1>Khám phá bộ sưu tập mắt kính</h1>
+                <nav>
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    <span>/</span>
+                    <span>Sản phẩm</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="product-catalog-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-3 col-lg-4">
+                    <aside class="optical-sidebar">
+                        <div class="sidebar-card">
+                            <div class="sidebar-card__title">Danh mục mắt kính</div>
+                            <ul class="optical-category-list">
+                                <li>
+                                    <a class="@(filter.CategoryId == null ? "active" : "")"
+                                       href="@Url.Action("Index", "Product", new { Page = 1, PageSize = filter.PageSize })">
+                                        Tất cả sản phẩm
+                                    </a>
+                                </li>
+
+                                @foreach (var category in categories)
+                                {
+                                    bool isActive = filter.CategoryId == category.LoaiSanPhamId;
+                                    <li>
+                                        <a class="@(isActive ? "active" : "")"
+                                           href="@Url.Action("Index", "Product", new
+                                           {
+                                               CategoryId = category.LoaiSanPhamId,
+                                               BrandId = filter.BrandId,
+                                               Keyword = filter.Keyword,
+                                               PriceRange = filter.PriceRange,
+                                               Page = 1,
+                                               PageSize = filter.PageSize
+                                           })">
+                                            @category.TenLoaiSanPham
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
+                        <div class="sidebar-card">
+                            <div class="sidebar-card__title">Bộ lọc sản phẩm</div>
+
+                            @using (Html.BeginForm("Index", "Product", FormMethod.Get, new { @class = "optical-filter-form" }))
+                            {
+                                <input type="hidden" name="CategoryId" value="@filter.CategoryId" />
+                                <input type="hidden" name="Page" value="1" />
+                                <input type="hidden" name="PageSize" value="@filter.PageSize" />
+
+                                <div class="filter-group">
+                                    <div class="filter-group__title">Thương hiệu</div>
+                                    <div class="filter-options">
+                                        <label class="filter-option" for="brand-all">
+                                            <input id="brand-all"
+                                                   type="radio"
+                                                   name="BrandId"
+                                                   value=""
+                                                   @(filter.BrandId == null ? "checked" : "") />
+                                            <span>Tất cả thương hiệu</span>
+                                        </label>
+
+                                        @foreach (var brand in brands)
+                                        {
+                                            string inputId = "brand-" + brand.ThuongHieuId;
+                                            bool isChecked = filter.BrandId == brand.ThuongHieuId;
+
+                                            <label class="filter-option" for="@inputId">
+                                                <input id="@inputId"
+                                                       type="radio"
+                                                       name="BrandId"
+                                                       value="@brand.ThuongHieuId"
+                                                       @(isChecked ? "checked" : "") />
+                                                <span>@brand.TenThuongHieu</span>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="filter-group">
+                                    <div class="filter-group__title">Khoảng giá</div>
+                                    <div class="filter-options">
+                                        <label class="filter-option" for="price-all">
+                                            <input id="price-all"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value=""
+                                                   @(string.IsNullOrWhiteSpace(filter.PriceRange) ? "checked" : "") />
+                                            <span>Tất cả mức giá</span>
+                                        </label>
+
+                                        <label class="filter-option" for="price_1">
+                                            <input id="price_1"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value="500000"
+                                                   @(filter.PriceRange == "500000" ? "checked" : "") />
+                                            <span>0 - 500.000đ</span>
+                                        </label>
+
+                                        <label class="filter-option" for="price_2">
+                                            <input id="price_2"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value="3000000"
+                                                   @(filter.PriceRange == "3000000" ? "checked" : "") />
+                                            <span>500.000đ - 3.000.000đ</span>
+                                        </label>
+
+                                        <label class="filter-option" for="price_3">
+                                            <input id="price_3"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value="5000000"
+                                                   @(filter.PriceRange == "5000000" ? "checked" : "") />
+                                            <span>3.000.000đ - 5.000.000đ</span>
+                                        </label>
+
+                                        <label class="filter-option" for="price_4">
+                                            <input id="price_4"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value="10000000"
+                                                   @(filter.PriceRange == "10000000" ? "checked" : "") />
+                                            <span>Trên 10.000.000đ</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="optical-btn optical-btn--dark optical-btn--full">
+                                    <i class="fas fa-sliders-h mr-2"></i>Áp dụng bộ lọc
+                                </button>
+                            }
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="col-xl-9 col-lg-8">
+                    <div class="catalog-topbar">
+                        <div class="catalog-topbar__left">
+                            <span class="catalog-result">
+                                @(totalCount > 0 ? $"Tìm thấy {totalCount} sản phẩm" : "Không tìm thấy sản phẩm")
+                            </span>
+                        </div>
+
+                        <div class="catalog-topbar__right">
+                            @using (Html.BeginForm("Index", "Product", FormMethod.Get, new { @class = "catalog-search-form" }))
+                            {
+                                <input type="hidden" name="CategoryId" value="@filter.CategoryId" />
+                                <input type="hidden" name="BrandId" value="@filter.BrandId" />
+                                <input type="hidden" name="PriceRange" value="@filter.PriceRange" />
+                                <input type="hidden" name="Page" value="1" />
+                                <input type="hidden" name="PageSize" value="@filter.PageSize" />
+
+                                <input type="text"
+                                       class="catalog-search-input"
+                                       name="Keyword"
+                                       value="@filter.Keyword"
+                                       placeholder="Tìm mẫu kính bạn muốn..." />
+
+                                <button type="submit" class="catalog-search-btn">Tìm kiếm</button>
+                            }
+                        </div>
+                    </div>
+
+                    @if (products.Any())
+                    {
+                        <div class="catalog-pagination top">
+                            <a href="@Url.Action("Index", "Product", BuildRoute(prevPage))" class="page-arrow">
+                                <span class="lnr lnr-chevron-left"></span>
+                            </a>
+
+                            @for (int i = displayFrom; i < noOfPages; i++)
+                            {
+                                int pageNumber = i + 1;
+                                <a href="@Url.Action("Index", "Product", BuildRoute(pageNumber))"
+                                   class="@(pageNumber == page ? "active" : "")">
+                                    @pageNumber
+                                </a>
+                            }
+
+                            <a href="@Url.Action("Index", "Product", BuildRoute(nextPage))" class="page-arrow">
+                                <span class="lnr lnr-chevron-right"></span>
+                            </a>
+                        </div>
+                    }
+
+                    @if (!products.Any())
+                    {
+                        <div class="catalog-empty">
+                            <h3>Không có sản phẩm phù hợp</h3>
+                            <p>Hãy thử đổi từ khóa tìm kiếm hoặc chọn lại bộ lọc để xem thêm nhiều mẫu kính khác.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            @foreach (var item in products)
+                            {
+                                bool conHang = item.TrangThai == 1 && item.SoLuongTon > 0;
+                                bool isSale = item.GiaGoc > item.GiaBan;
+                                string imageUrl = normalizeImage(item.HinhAnhChinh);
+
+                                <div class="col-xl-4 col-md-6 mb-4">
+                                    <div class="optical-product-card">
+                                        <div class="optical-product-card__thumb">
+                                            @if (!conHang)
+                                            {
+                                                <span class="product-status-badge soldout">Hết hàng</span>
+                                            }
+                                            else if (isSale)
+                                            {
+                                                <span class="product-status-badge sale">Sale</span>
+                                            }
+
+                                            <img src="@imageUrl"
+                                                 alt="Ảnh @item.TenSanPham"
+                                                 onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
+                                        </div>
+
+                                        <div class="optical-product-card__body">
+                                            <h3 class="product-name">@item.TenSanPham</h3>
+
+                                            <div class="product-price">
+                                                @if (isSale)
+                                                {
+                                                    <span class="sale-price">@money(item.GiaBan) ₫</span>
+                                                    <span class="old-price">@money(item.GiaGoc) ₫</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="sale-price">@money(item.GiaBan) ₫</span>
+                                                }
+                                            </div>
+
+                                            <div class="product-actions">
+                                                @if (conHang)
+                                                {
+                                                    <a href="@Url.Action("AddItemToCart", "ShoppingCart", new { sanPhamId = item.SanPhamId })"
+                                                       class="optical-btn optical-btn--dark">
+                                                        <i class="ti-bag mr-2"></i>Thêm giỏ
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="optical-btn optical-btn--disabled">
+                                                        <i class="ti-na mr-2"></i>Hết hàng
+                                                    </span>
+                                                }
+
+                                                <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
+                                                   class="optical-btn optical-btn--light">
+                                                    Chi tiết
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="catalog-pagination bottom">
+                            <a href="@Url.Action("Index", "Product", BuildRoute(prevPage))" class="page-arrow">
+                                <span class="lnr lnr-chevron-left"></span>
+                            </a>
+
+                            @for (int i = displayFrom; i < noOfPages; i++)
+                            {
+                                int pageNumber = i + 1;
+                                <a href="@Url.Action("Index", "Product", BuildRoute(pageNumber))"
+                                   class="@(pageNumber == page ? "active" : "")">
+                                    @pageNumber
+                                </a>
+                            }
+
+                            <a href="@Url.Action("Index", "Product", BuildRoute(nextPage))" class="page-arrow">
+                                <span class="lnr lnr-chevron-right"></span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</section>

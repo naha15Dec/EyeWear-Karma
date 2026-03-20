@@ -1,0 +1,222 @@
+﻿@model MatKinh.ViewModel.AdminAccountDetailVm
+
+@{
+    ViewBag.Title = "Chi tiết tài khoản";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Chi tiết tài khoản</h1>
+        <p class="admin-page-subtitle">Xem, chỉnh sửa thông tin và phân quyền tài khoản.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("AccountManager","ManagerAccount")'>Quản lý tài khoản</a>
+        </li>
+        <li class="breadcrumb-item active">@Model.TenDangNhap</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+        <div class="row">
+
+            <!-- PROFILE -->
+            <div class="col-lg-4 col-xl-3">
+                <div class="card admin-profile-card">
+                    <div class="card-body text-center">
+                        <div class="admin-profile-avatar-wrap">
+                            <img class="admin-profile-avatar"
+                                 src="~/Asset/img/image_Account.jpg" />
+                        </div>
+
+                        <h3 class="admin-profile-name">@Model.HoTen</h3>
+                        <div class="admin-profile-username">@Model.TenDangNhap</div>
+
+                        <div class="admin-profile-meta-list">
+
+                            <div class="admin-profile-meta-item">
+                                <span class="admin-profile-meta-label">Vai trò</span>
+                                <span class="admin-profile-meta-value">@Model.TenVaiTro</span>
+                            </div>
+
+                            <div class="admin-profile-meta-item">
+                                <span class="admin-profile-meta-label">Trạng thái</span>
+                                <span class="admin-profile-meta-value">
+                                    @(Model.IsActive ? "Hoạt động" : "Đã khóa")
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM -->
+            <div class="col-lg-8 col-xl-9">
+                <div class="card admin-form-card admin-tab-card">
+
+                    <div class="card-header border-0 pb-0">
+                        <ul class="nav nav-pills admin-tab-nav">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#profileInformationAccount" data-toggle="tab">
+                                    Thông tin tài khoản
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#changePassword" data-toggle="tab">
+                                    Đổi mật khẩu
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#changePermisstion" data-toggle="tab">
+                                    Vai trò tài khoản
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="tab-content">
+
+                            <!-- ================= INFO ================= -->
+                            <div class="tab-pane active" id="profileInformationAccount">
+                                @using (Html.BeginForm("UpdateInformationAccount", "ManagerAccount", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.HiddenFor(m => m.TaiKhoanId)
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Tài khoản</label>
+                                                <input class="form-control admin-input"
+                                                       value="@Model.TenDangNhap" disabled />
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Email</label>
+                                                @Html.TextBox("Email", Model.Email, new { @class = "form-control admin-input" })
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Họ tên</label>
+                                        @Html.TextBox("HoTen", Model.HoTen, new { @class = "form-control admin-input" })
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Số điện thoại</label>
+                                                @Html.TextBox("SoDienThoai", Model.SoDienThoai, new { @class = "form-control admin-input" })
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Trạng thái</label>
+                                                <input class="form-control admin-input"
+                                                       value="@(Model.IsActive ? "Hoạt động" : "Đã khóa")"
+                                                       disabled />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Địa chỉ</label>
+                                        @Html.TextBox("DiaChi", Model.DiaChi, new { @class = "form-control admin-input" })
+                                    </div>
+
+                                    <div class="admin-form-actions">
+                                        <button type="submit" class="btn admin-btn admin-btn-save">
+                                            <i class="fas fa-save mr-1"></i> Lưu thông tin
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- ================= PASSWORD ================= -->
+                            <div class="tab-pane" id="changePassword">
+                                @using (Html.BeginForm("ChangePassword", "ManagerAccount", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("TaiKhoanId", Model.TaiKhoanId)
+
+                                    <div class="form-group">
+                                        <label>Tài khoản</label>
+                                        <input class="form-control admin-input"
+                                               value="@Model.TenDangNhap" disabled />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Mật khẩu mới</label>
+                                        <input type="password"
+                                               name="NewPassword"
+                                               class="form-control admin-input" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Nhập lại mật khẩu</label>
+                                        <input type="password"
+                                               name="ConfirmPassword"
+                                               class="form-control admin-input" />
+                                    </div>
+
+                                    <div class="admin-form-actions">
+                                        <button type="submit" class="btn admin-btn admin-btn-save">
+                                            <i class="fas fa-key mr-1"></i> Lưu mật khẩu
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- ================= ROLE ================= -->
+                            <div class="tab-pane" id="changePermisstion">
+                                @using (Html.BeginForm("UpdatePermisstionAccount", "ManagerAccount", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("TaiKhoanId", Model.TaiKhoanId)
+
+                                    <div class="form-group">
+                                        <label>Tài khoản</label>
+                                        <input class="form-control admin-input"
+                                               value="@Model.TenDangNhap" disabled />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Vai trò</label>
+                                        <select name="VaiTroId" class="form-control admin-input">
+                                            @foreach (var role in Model.Roles)
+                                            {
+                                                <option value="@role.Value" @(role.Value == Model.VaiTroId.ToString() ? "selected" : "")>
+                                                    @role.Text
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="admin-form-actions">
+                                        <button type="submit" class="btn admin-btn admin-btn-save">
+                                            <i class="fas fa-user-shield mr-1"></i> Cập nhật vai trò
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

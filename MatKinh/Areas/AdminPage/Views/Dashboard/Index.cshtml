@@ -1,0 +1,295 @@
+﻿@using MatKinh.Models
+@{
+    ViewBag.Title = "Dashboard";
+
+    var login = Session["LoginInformation"] as TaiKhoan;
+    var roleCode = "";
+    if (login != null && login.VaiTro != null)
+    {
+        roleCode = login.VaiTro.MaVaiTro ?? "";
+    }
+
+    bool isAdmin = roleCode == RoleConstants.ADMIN;
+    bool isStaff = roleCode == RoleConstants.STAFF;
+    bool isShipper = roleCode == RoleConstants.SHIPPER;
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Dashboard</h1>
+        <p class="admin-page-subtitle">Tổng quan hoạt động quản trị cửa hàng mắt kính.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (isAdmin || isStaff)
+        {
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Đơn hàng</div>
+                                <div class="dashboard-stat-value">Vận hành</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-orders">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">
+                            Kiểm tra đơn hàng đang chờ xác nhận, chuẩn bị và giao hàng.
+                        </p>
+                        <a href='@Url.Action("Index", "ManagerOrder")' class="dashboard-stat-link">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                @if (isAdmin)
+                {
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="dashboard-stat-card">
+                            <div class="dashboard-stat-top">
+                                <div>
+                                    <div class="dashboard-stat-label">Doanh thu</div>
+                                    <div class="dashboard-stat-value">Báo cáo</div>
+                                </div>
+                                <div class="dashboard-stat-icon icon-revenue">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                            <p class="dashboard-stat-desc">
+                                Theo dõi hiệu quả kinh doanh và doanh thu bán hàng.
+                            </p>
+                            <a href='@Url.Action("Revenue", "ManagerRevenue")' class="dashboard-stat-link">
+                                Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                @if (isAdmin)
+                {
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="dashboard-stat-card">
+                            <div class="dashboard-stat-top">
+                                <div>
+                                    <div class="dashboard-stat-label">Tài khoản</div>
+                                    <div class="dashboard-stat-value">Quản lý</div>
+                                </div>
+                                <div class="dashboard-stat-icon icon-users">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <p class="dashboard-stat-desc">
+                                Quản lý tài khoản nhân viên, shipper và người dùng trong hệ thống.
+                            </p>
+                            <a href='@Url.Action("AccountManager", "ManagerAccount")' class="dashboard-stat-link">
+                                Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Sản phẩm</div>
+                                <div class="dashboard-stat-value">Kho hàng</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-products">
+                                <i class="fas fa-glasses"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">
+                            Xem danh sách sản phẩm, tình trạng tồn kho và cập nhật thông tin.
+                        </p>
+                        <a href='@Url.Action("ProductsList", "ListProduct")' class="dashboard-stat-link">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (isShipper)
+        {
+            <div class="row">
+                <div class="col-lg-4 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Đơn được giao</div>
+                                <div class="dashboard-stat-value">Shipper</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-orders">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">
+                            Theo dõi các đơn hàng được phân công cho bạn và cập nhật trạng thái giao hàng.
+                        </p>
+                        <a href='@Url.Action("Index", "ManagerOrder")' class="dashboard-stat-link">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Hồ sơ cá nhân</div>
+                                <div class="dashboard-stat-value">Thông tin</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-users">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">
+                            Xem và cập nhật thông tin tài khoản giao hàng của bạn.
+                        </p>
+                        <a href='@Url.Action("Index", "Profile")' class="dashboard-stat-link">
+                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row mt-2">
+            <div class="col-lg-8">
+                <div class="card dashboard-panel">
+                    <div class="card-header border-0">
+                        <h3 class="card-title dashboard-panel-title">Tổng quan quản trị</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="dashboard-overview-grid">
+
+                            @if (isAdmin || isStaff)
+                            {
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>Đơn hàng</h4>
+                                        <p>Theo dõi đơn hàng mới, xử lý trạng thái và bàn giao cho shipper.</p>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>Sản phẩm</h4>
+                                        <p>Quản lý sản phẩm, thương hiệu, loại sản phẩm và tình trạng kho.</p>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>Nội dung</h4>
+                                        <p>Soạn bài viết, kiểm duyệt nội dung và quản lý hiển thị website.</p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (isAdmin)
+                            {
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>Hiệu suất</h4>
+                                        <p>Xem doanh thu, tài khoản hệ thống và thiết lập thông tin cửa hàng.</p>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (isShipper)
+                            {
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>Giao hàng</h4>
+                                        <p>Nhận đơn được phân công, cập nhật trạng thái đang giao và giao thành công.</p>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-overview-item">
+                                    <span class="overview-dot"></span>
+                                    <div>
+                                        <h4>COD</h4>
+                                        <p>Theo dõi các đơn giao hàng thu tiền khi nhận và cập nhật kết quả giao.</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card dashboard-panel">
+                    <div class="card-header border-0">
+                        <h3 class="card-title dashboard-panel-title">Truy cập nhanh</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="dashboard-quick-links">
+
+                            @if (isAdmin || isStaff)
+                            {
+                                <a href="@Url.Action("AddProduct","ListProduct")" class="dashboard-quick-link">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Thêm sản phẩm</span>
+                                </a>
+
+                                <a href="@Url.Action("Index","ManagerOrder")" class="dashboard-quick-link">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>Đơn hàng vận hành</span>
+                                </a>
+
+                                <a href="@Url.Action("BlogList","ListBlog")" class="dashboard-quick-link">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Bài viết của tôi</span>
+                                </a>
+                            }
+
+                            @if (isAdmin)
+                            {
+                                <a href="@Url.Action("ManagerBlog","ManagerBlog", new { status = "draft" })" class="dashboard-quick-link">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Kiểm duyệt bài viết</span>
+                                </a>
+
+                                <a href="@Url.Action("Index","SettingInformationWebsite")" class="dashboard-quick-link">
+                                    <i class="fas fa-store"></i>
+                                    <span>Thông tin cửa hàng</span>
+                                </a>
+                            }
+
+                            @if (isShipper)
+                            {
+                                <a href="@Url.Action("Index","ManagerOrder")" class="dashboard-quick-link">
+                                    <i class="fas fa-truck"></i>
+                                    <span>Đơn được giao cho tôi</span>
+                                </a>
+
+                                <a href="@Url.Action("Index","Profile")" class="dashboard-quick-link">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Hồ sơ cá nhân</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

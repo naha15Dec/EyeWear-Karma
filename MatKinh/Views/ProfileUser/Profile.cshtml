@@ -1,0 +1,364 @@
+﻿@using MatKinh.Models
+@model MatKinh.Models.TaiKhoan
+
+@{
+    ViewBag.Title = "Thông tin tài khoản";
+
+    List<DonHang> orders = ViewData["listOrderUser"] as List<DonHang> ?? new List<DonHang>();
+
+    int currentPage = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+    int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
+    int noOfPages = ViewBag.NoOfPages != null ? (int)ViewBag.NoOfPages : totalPages;
+    int displayPage = ViewBag.DisplayPage != null ? (int)ViewBag.DisplayPage : 0;
+
+    int prevPage = currentPage - 1;
+    if (prevPage <= 0)
+    {
+        prevPage = 1;
+    }
+
+    int nextPage = currentPage + 1;
+    if (nextPage > totalPages)
+    {
+        nextPage = totalPages;
+    }
+
+    string fullName = (Model.HoTen ?? "").Trim();
+    if (string.IsNullOrWhiteSpace(fullName))
+    {
+        fullName = Model.TenDangNhap;
+    }
+
+    string[] nameParts = fullName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    string firstName = nameParts.Length > 0 ? nameParts[nameParts.Length - 1] : "";
+    string lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Take(nameParts.Length - 1)) : "";
+
+    string avatarText = "U";
+    if (!string.IsNullOrWhiteSpace(Model.HoTen))
+    {
+        avatarText = Model.HoTen.Substring(0, 1).ToUpper();
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.TenDangNhap))
+    {
+        avatarText = Model.TenDangNhap.Substring(0, 1).ToUpper();
+    }
+
+    Func<int, string> orderStatusText = status =>
+    {
+        switch (status)
+        {
+            case 1: return "Chờ xác nhận";
+            case 2: return "Đã xác nhận";
+            case 3: return "Đang chuẩn bị";
+            case 4: return "Đã giao shipper";
+            case 5: return "Đang giao";
+            case 6: return "Đã giao";
+            case 7: return "Giao thất bại";
+            case 8: return "Đã hủy";
+            default: return "Không xác định";
+        }
+    };
+
+    Func<int, string> orderStatusClass = status =>
+    {
+        switch (status)
+        {
+            case 6: return "success";
+            case 8: return "danger";
+            case 7: return "warning";
+            default: return "processing";
+        }
+    };
+}
+
+<section class="profile-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Account</span>
+                <h1>Thông tin tài khoản</h1>
+                <nav>
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    <span>/</span>
+                    <span>Thông tin tài khoản</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="profile-section">
+        <div class="container">
+            <div class="profile-shell">
+                @if (TempData["ProfileSuccess"] != null)
+                {
+                    <div class="alert alert-success mb-4">@TempData["ProfileSuccess"]</div>
+                }
+
+                @if (TempData["ProfileError"] != null)
+                {
+                    <div class="alert alert-danger mb-4">@TempData["ProfileError"]</div>
+                }
+
+                @if (TempData["PasswordSuccess"] != null)
+                {
+                    <div class="alert alert-success mb-4">@TempData["PasswordSuccess"]</div>
+                }
+
+                @if (TempData["PasswordError"] != null)
+                {
+                    <div class="alert alert-danger mb-4">@TempData["PasswordError"]</div>
+                }
+
+                <div class="profile-top-card">
+                    <div class="profile-top-card__avatar">
+                        @avatarText
+                    </div>
+
+                    <div class="profile-top-card__content">
+                        <span class="profile-top-card__eyebrow">Member profile</span>
+                        <h2>@fullName</h2>
+                        <p>
+                            Quản lý thông tin cá nhân, cập nhật mật khẩu và theo dõi lịch sử đơn hàng của bạn tại Karma Eyewear.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="profile-main-card">
+                    <ul class="nav nav-pills profile-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#profileInformationAccount" data-toggle="tab">
+                                Thông tin tài khoản
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#changePassword" data-toggle="tab">
+                                Đổi mật khẩu
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content profile-tab-content">
+                        <div class="tab-pane active" id="profileInformationAccount">
+                            <div class="profile-content-grid">
+                                <div class="profile-form-card">
+                                    <div class="profile-card-head">
+                                        <span class="profile-card-head__eyebrow">Account settings</span>
+                                        <h3>Thông tin cá nhân</h3>
+                                    </div>
+
+                                    @using (Html.BeginForm("UpdateInformationAccount", "ProfileUser", FormMethod.Post, new { @class = "profile-form" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idAccount" value="@Model.TaiKhoanId" />
+
+                                        <div class="profile-form-grid">
+                                            <div class="profile-form-group profile-grid-full">
+                                                <label class="profile-label">Tên đăng nhập</label>
+                                                <input type="text" class="profile-input profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                            </div>
+
+                                            <div class="profile-form-group profile-grid-full">
+                                                <label class="profile-label">Email</label>
+                                                <input type="email" class="profile-input profile-input--disabled" value="@Model.Email" disabled />
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Số điện thoại</label>
+                                                <input type="text" class="profile-input" id="Mobile" name="Mobile" value="@Model.SoDienThoai" />
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Trạng thái tài khoản</label>
+                                                <input type="text"
+                                                       class="profile-input profile-input--disabled"
+                                                       value="@(Model.IsActive ? "Hoạt động" : "Ngừng hoạt động")"
+                                                       disabled />
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Họ</label>
+                                                <input type="text" class="profile-input" id="LastName" name="LastName" value="@lastName" />
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Tên</label>
+                                                <input type="text" class="profile-input" id="FirstName" name="FirstName" value="@firstName" />
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Giới tính</label>
+                                                <select name="Sex" class="profile-input profile-select">
+                                                    <option value="">Chọn giới tính</option>
+                                                    <option value="Nam" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
+                                                    <option value="Nữ" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="profile-form-group">
+                                                <label class="profile-label">Ngày sinh</label>
+                                                <input type="text"
+                                                       class="profile-input profile-input--disabled"
+                                                       value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")"
+                                                       disabled />
+                                            </div>
+
+                                            <div class="profile-form-group profile-grid-full">
+                                                <label class="profile-label">Địa chỉ</label>
+                                                <input type="text" class="profile-input" id="Address" name="Address" value="@Model.DiaChi" />
+                                            </div>
+                                        </div>
+
+                                        <div class="profile-form-actions">
+                                            <button type="submit" class="optical-btn optical-btn--dark">
+                                                Lưu thay đổi
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="profile-history-card">
+                                    <div class="profile-card-head">
+                                        <span class="profile-card-head__eyebrow">Order history</span>
+                                        <h3>Lịch sử đơn hàng</h3>
+                                    </div>
+
+                                    @if (orders.Any())
+                                    {
+                                        <div class="profile-order-table-wrap">
+                                            <table class="profile-order-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Mã đơn hàng</th>
+                                                        <th>Ngày đặt</th>
+                                                        <th>Tổng thanh toán</th>
+                                                        <th>Trạng thái</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in orders)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.MaDonHang</td>
+                                                            <td>@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</td>
+                                                            <td>@string.Format("{0:N0}", item.TongThanhToan) ₫</td>
+                                                            <td>
+                                                                <span class="profile-status-badge @orderStatusClass(item.TrangThai)">
+                                                                    @orderStatusText(item.TrangThai)
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <a href='@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = item.MaDonHang })'
+                                                                   class="optical-btn optical-btn--light profile-detail-btn">
+                                                                    Chi tiết
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="profile-order-mobile">
+                                            @foreach (var item in orders)
+                                            {
+                                                <div class="profile-order-mobile__item">
+                                                    <div class="profile-order-mobile__top">
+                                                        <h4>@item.MaDonHang</h4>
+                                                        <span class="profile-status-badge @orderStatusClass(item.TrangThai)">
+                                                            @orderStatusText(item.TrangThai)
+                                                        </span>
+                                                    </div>
+
+                                                    <p><strong>Ngày đặt:</strong> @item.NgayDat.ToString("dd/MM/yyyy HH:mm")</p>
+                                                    <p><strong>Tổng thanh toán:</strong> @string.Format("{0:N0}", item.TongThanhToan) ₫</p>
+
+                                                    <a href='@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = item.MaDonHang })'
+                                                       class="optical-btn optical-btn--light profile-detail-btn">
+                                                        Xem chi tiết
+                                                    </a>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="catalog-pagination bottom">
+                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = prevPage })' class="page-arrow">
+                                                <span class="lnr lnr-chevron-left"></span>
+                                            </a>
+
+                                            @for (int i = displayPage; i < noOfPages; i++)
+                                            {
+                                                if (i + 1 == currentPage)
+                                                {
+                                                    <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })' class="active">@(i + 1)</a>
+                                                }
+                                                else
+                                                {
+                                                    <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })'>@(i + 1)</a>
+                                                }
+                                            }
+
+                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = nextPage })' class="page-arrow">
+                                                <span class="lnr lnr-chevron-right"></span>
+                                            </a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="catalog-empty">
+                                            <h3>Chưa có đơn hàng nào</h3>
+                                            <p>Bạn chưa phát sinh đơn hàng nào trong tài khoản này.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="changePassword">
+                            <div class="profile-password-card">
+                                <div class="profile-card-head">
+                                    <span class="profile-card-head__eyebrow">Security</span>
+                                    <h3>Đổi mật khẩu</h3>
+                                </div>
+
+                                @using (Html.BeginForm("ChangePasswordAccount", "ProfileUser", FormMethod.Post, new { @class = "profile-form" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="idAccount" value="@Model.TaiKhoanId" />
+
+                                    <div class="profile-form-grid">
+                                        <div class="profile-form-group profile-grid-full">
+                                            <label class="profile-label">Tên đăng nhập</label>
+                                            <input type="text" class="profile-input profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                        </div>
+
+                                        <div class="profile-form-group profile-grid-full">
+                                            <label class="profile-label">Mật khẩu hiện tại</label>
+                                            <input type="password" class="profile-input" id="inputPassCurrent" name="passwdCurrent" />
+                                        </div>
+
+                                        <div class="profile-form-group">
+                                            <label class="profile-label">Mật khẩu mới</label>
+                                            <input type="password" class="profile-input" id="PassWord" name="PassWord" />
+                                        </div>
+
+                                        <div class="profile-form-group">
+                                            <label class="profile-label">Nhập lại mật khẩu mới</label>
+                                            <input type="password" class="profile-input" id="ComfirmPassword" name="ComfirmPassword" />
+                                        </div>
+                                    </div>
+
+                                    <div class="profile-form-actions">
+                                        <button type="submit" class="optical-btn optical-btn--dark">
+                                            Cập nhật mật khẩu
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>

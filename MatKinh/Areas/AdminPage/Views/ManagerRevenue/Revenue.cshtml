@@ -1,0 +1,155 @@
+﻿@model MatKinh.ViewModel.AdminRevenueVm
+@{
+    ViewBag.Title = "Quản lý doanh thu";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Quản lý doanh thu</h1>
+        <p class="admin-page-subtitle">Theo dõi hiệu quả kinh doanh và các chỉ số bán hàng quan trọng.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Quản lý doanh thu</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        <!-- ===== TOP CARDS ===== -->
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-stat-card revenue-stat-card">
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Tổng doanh thu</div>
+                            <div class="dashboard-stat-value">
+                                @string.Format("{0:N0}", Model.TotalRevenue)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-revenue">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                    <p class="dashboard-stat-desc">Tổng doanh thu từ đơn giao thành công.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-stat-card revenue-stat-card">
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Doanh thu tháng</div>
+                            <div class="dashboard-stat-value">
+                                @string.Format("{0:N0}", Model.TotalMonthRevenue)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-orders">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <p class="dashboard-stat-desc">Doanh thu trong tháng hiện tại.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-12">
+                <div class="dashboard-stat-card revenue-stat-card">
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Doanh thu hôm nay</div>
+                            <div class="dashboard-stat-value">
+                                @string.Format("{0:N0}", Model.TotalTodayRevenue)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-users">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                    <p class="dashboard-stat-desc">Doanh thu trong ngày hôm nay.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT SPLIT ===== -->
+        <div class="row mt-2">
+            <div class="col-lg-6">
+                <div class="dashboard-stat-card">
+                    <div class="dashboard-stat-label">Doanh thu COD</div>
+                    <div class="dashboard-stat-value">
+                        @string.Format("{0:N0}", Model.TotalRevenueCod)
+                    </div>
+                    <p class="dashboard-stat-desc">
+                        @Model.TotalOrderCod đơn hàng thanh toán khi nhận hàng
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="dashboard-stat-card">
+                    <div class="dashboard-stat-label">Doanh thu VNPay</div>
+                    <div class="dashboard-stat-value">
+                        @string.Format("{0:N0}", Model.TotalRevenueVnpay)
+                    </div>
+                    <p class="dashboard-stat-desc">
+                        @Model.TotalOrderVnpay đơn hàng thanh toán online
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DETAIL ===== -->
+        <div class="card admin-form-card revenue-detail-card mt-2">
+            <div class="card-header border-0">
+                <h3 class="card-title">Chỉ số bán hàng</h3>
+            </div>
+
+            <div class="card-body">
+                <div class="revenue-metric-list">
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Sản phẩm bán hôm nay</div>
+                        <div class="revenue-metric-value">@Model.TotalProductSoldToday</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Sản phẩm bán trong tháng</div>
+                        <div class="revenue-metric-value">@Model.TotalProductSoldMonth</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Tổng sản phẩm đã bán</div>
+                        <div class="revenue-metric-value">@Model.TotalProductSoldAll</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Đơn hàng thành công</div>
+                        <div class="revenue-metric-value">@Model.TotalOrderSuccess</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Đơn hàng hôm nay</div>
+                        <div class="revenue-metric-value">@Model.TotalOrderToday</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label">Đơn hàng trong tháng</div>
+                        <div class="revenue-metric-value">@Model.TotalOrderMonth</div>
+                    </div>
+
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label text-danger">Thanh toán thất bại</div>
+                        <div class="revenue-metric-value text-danger">
+                            @Model.TotalPaymentFailed
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

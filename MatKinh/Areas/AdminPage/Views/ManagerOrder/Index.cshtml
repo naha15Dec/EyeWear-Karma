@@ -1,0 +1,300 @@
+﻿@model MatKinh.ViewModel.AdminOrderIndexVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Quản lý đơn hàng";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">@Model.HeaderTitle</h1>
+        <p class="admin-page-subtitle">Theo dõi trạng thái đơn hàng, xử lý vận hành và giao hàng.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Quản lý đơn hàng</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="card admin-card mb-3">
+            <div class="card-header admin-card-header border-0">
+                <div class="admin-card-title-wrap">
+                    <h3 class="admin-card-title">Bộ lọc đơn hàng</h3>
+                    <span class="admin-card-count">@Model.Orders.Count đơn hàng</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @using (Html.BeginForm("Index", "ManagerOrder", FormMethod.Get, new { @class = "row" }))
+                {
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label>Tìm kiếm</label>
+                            <input type="text"
+                                   name="keyword"
+                                   value="@Model.Keyword"
+                                   class="form-control admin-input"
+                                   placeholder="Mã đơn / người nhận / số điện thoại" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select name="status" class="form-control admin-input">
+                                <option value="">Tất cả trạng thái</option>
+                                @foreach (var item in Model.StatusOptions)
+                                {
+                                    <option value="@item.Value" @(item.Selected ? "selected" : "")>
+                                        @item.Text
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-group w-100">
+                            <button type="submit" class="btn admin-btn admin-btn-save w-100">
+                                <i class="fas fa-search mr-1"></i> Lọc đơn hàng
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card admin-card">
+            <div class="card-header admin-card-header border-0">
+                <div class="admin-card-title-wrap">
+                    <h3 class="admin-card-title">Danh sách đơn hàng</h3>
+                    <span class="admin-card-count">@Model.Orders.Count đơn</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách / Người nhận</th>
+                                <th>Ngày đặt</th>
+                                <th class="text-right">Thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th>Shipper</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.Orders != null && Model.Orders.Count > 0)
+                            {
+                                foreach (var item in Model.Orders)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="admin-order-code">#@item.MaDonHang</div>
+                                            <div class="admin-order-subtext">
+                                                @item.SoLuongSanPham sản phẩm
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div class="admin-account-cell">
+                                                <div class="admin-account-avatar">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="admin-account-name">
+                                                        @(string.IsNullOrWhiteSpace(item.HoTenNguoiNhan) ? item.TenKhachHang : item.HoTenNguoiNhan)
+                                                    </div>
+                                                    <div class="admin-account-sub">
+                                                        @item.SoDienThoaiNguoiNhan
+                                                    </div>
+                                                    <div class="admin-order-subtext">
+                                                        @item.DiaChiNhanHang
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div>@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</div>
+                                            @if (item.NgayXacNhan.HasValue)
+                                            {
+                                                <div class="admin-order-subtext">
+                                                    XN: @item.NgayXacNhan.Value.ToString("dd/MM HH:mm")
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td class="text-right">
+                                            <div class="admin-price-strong">
+                                                @item.TongThanhToan.ToString("N0") đ
+                                            </div>
+                                            <div class="admin-order-subtext">
+                                                Tiền hàng: @item.TongTienHang.ToString("N0") đ
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            @switch (item.TrangThai)
+                                            {
+                                                case OrderStatusConstants.PENDING:
+                                                    <span class="admin-status-badge warning">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.CONFIRMED:
+                                                    <span class="admin-status-badge info">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.PREPARING:
+                                                    <span class="admin-status-badge processing">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
+                                                    <span class="admin-status-badge assigned">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.DELIVERING:
+                                                    <span class="admin-status-badge shipping">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.DELIVERED:
+                                                    <span class="admin-status-badge success">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.DELIVERY_FAILED:
+                                                    <span class="admin-status-badge danger">@item.TrangThaiText</span>
+                                                    break;
+                                                case OrderStatusConstants.CANCELLED:
+                                                    <span class="admin-status-badge muted">@item.TrangThaiText</span>
+                                                    break;
+                                                default:
+                                                    <span class="admin-status-badge">@item.TrangThaiText</span>
+                                                    break;
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(item.ShipperName))
+                                            {
+                                                <span class="admin-role-badge">@item.ShipperName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-order-subtext">Chưa gán</span>
+                                            }
+                                        </td>
+
+                                        <td class="text-center">
+                                            <a href="@Url.Action("Detail", "ManagerOrder", new { id = item.DonHangId })"
+                                               class="btn admin-btn admin-btn-detail">
+                                                <i class="fas fa-eye mr-1"></i> Chi tiết
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        Không có đơn hàng nào phù hợp.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                        <tfoot>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách / Người nhận</th>
+                                <th>Ngày đặt</th>
+                                <th class="text-right">Thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th>Shipper</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<style>
+    .admin-order-code {
+        font-weight: 700;
+        color: #2f3542;
+    }
+
+    .admin-order-subtext {
+        font-size: 12px;
+        color: #7f8c8d;
+        margin-top: 2px;
+        line-height: 1.4;
+    }
+
+    .admin-price-strong {
+        font-weight: 700;
+        color: #2f3542;
+    }
+
+    .admin-status-badge.info {
+        background: #eef6ff;
+        color: #1d4ed8;
+    }
+
+    .admin-status-badge.warning {
+        background: #fff8e6;
+        color: #b7791f;
+    }
+
+    .admin-status-badge.processing {
+        background: #fffdf3;
+        color: #a16207;
+    }
+
+    .admin-status-badge.assigned {
+        background: #f7f3ff;
+        color: #7c3aed;
+    }
+
+    .admin-status-badge.shipping {
+        background: #eefbf6;
+        color: #0f766e;
+    }
+
+    .admin-status-badge.success {
+        background: #edfdf3;
+        color: #15803d;
+    }
+
+    .admin-status-badge.danger {
+        background: #fff1f2;
+        color: #dc2626;
+    }
+
+    .admin-status-badge.muted {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+</style>

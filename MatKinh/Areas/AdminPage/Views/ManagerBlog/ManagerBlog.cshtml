@@ -1,0 +1,213 @@
+﻿@model MatKinh.ViewModel.AdminBlogIndexVm
+
+@{
+    ViewBag.Title = "Quản lý bài viết";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">@Model.HeaderTitle</h1>
+        <p class="admin-page-subtitle">Quản lý, kiểm duyệt và ẩn bài viết.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">@Model.HeaderTitle</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="card admin-card">
+
+            <!-- HEADER -->
+            <div class="card-header admin-card-header border-0 d-flex justify-content-between">
+
+                <div class="admin-card-title-wrap">
+                    <h3 class="admin-card-title">Danh sách bài viết</h3>
+                    <span class="admin-card-count">@Model.Posts.Count bài viết</span>
+                </div>
+
+                <!-- FILTER -->
+                <div class="d-flex">
+
+                    @using (Html.BeginForm("ManagerBlog", "ManagerBlog", FormMethod.Get, new { @class = "admin-search-form d-flex" }))
+                    {
+                        <select name="status" class="form-control mr-2">
+                            @foreach (var item in Model.StatusOptions)
+                            {
+                                <option value="@item.Value" @(item.Selected ? "selected" : "")>@item.Text</option>
+                            }
+                        </select>
+
+                        <div class="admin-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text"
+                                   name="keyword"
+                                   value="@Model.Keyword"
+                                   placeholder="Mã hoặc tiêu đề..."
+                                   class="form-control" />
+                        </div>
+
+                        <button class="btn admin-search-btn ml-2">Lọc</button>
+                    }
+                </div>
+
+            </div>
+
+            <!-- BODY -->
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tiêu đề</th>
+                                <th>Người tạo</th>
+                                <th>Ngày đăng</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.Posts != null && Model.Posts.Count > 0)
+                            {
+                                foreach (var item in Model.Posts)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="admin-code-text">#@item.MaBaiViet</span>
+                                        </td>
+
+                                        <td>
+                                            <div class="admin-post-title">@item.TieuDe</div>
+                                            <div class="admin-post-summary">
+                                                @(string.IsNullOrEmpty(item.TomTat)
+                                                    ? "Không có mô tả"
+                                                    : (item.TomTat.Length > 70 ? item.TomTat.Substring(0, 70) + "..." : item.TomTat))
+                                            </div>
+                                        </td>
+
+                                        <td>@item.NguoiTao</td>
+
+                                        <td>
+                                            @(item.NgayDang.HasValue
+                                                ? item.NgayDang.Value.ToString("dd/MM/yyyy")
+                                                : "Chưa đăng")
+                                        </td>
+
+                                        <td>
+                                            <span class="admin-status-badge
+                                                @(item.TrangThai == 2 ? "success" :
+                                                  item.TrangThai == 1 ? "processing" : "cancel")">
+                                                @item.TrangThaiText
+                                            </span>
+                                        </td>
+
+                                        <td class="text-center">
+                                            <div class="admin-action-group">
+
+                                                <!-- VIEW -->
+                                                <button type="button"
+                                                        class="btn admin-btn admin-btn-detail"
+                                                        data-toggle="modal"
+                                                        data-target="#modal-@item.BaiVietId">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+
+                                                <!-- CHANGE STATUS -->
+                                                @using (Html.BeginForm("ActivateBlog", "ManagerBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.BaiVietId" />
+                                                    <input type="hidden" name="status" value="@Model.StatusFilter" />
+
+                                                    <button class="btn admin-btn admin-btn-save">
+                                                        <i class="fas fa-sync"></i>
+                                                    </button>
+                                                }
+
+                                                <!-- DELETE -->
+                                                @using (Html.BeginForm("Delete", "ManagerBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.BaiVietId" />
+                                                    <input type="hidden" name="status" value="@Model.StatusFilter" />
+
+                                                    <button class="btn admin-btn admin-btn-delete"
+                                                            onclick="return confirm('Xóa bài viết này?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                }
+
+                                            </div>
+
+                                            <!-- MODAL -->
+                                            <div class="modal fade admin-modal" id="modal-@item.BaiVietId">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content admin-modal-content">
+
+                                                        <div class="modal-header">
+                                                            <h5>@item.TieuDe</h5>
+                                                        </div>
+
+                                                        <div class="modal-body">
+
+                                                            <img src="@item.AnhDaiDien"
+                                                                 style="width:100%; margin-bottom:10px;" />
+
+                                                            <p><b>Tóm tắt:</b> @item.TomTat</p>
+
+                                                            <hr />
+
+                                                            <div style="max-height:400px; overflow:auto">
+                                                                @Html.Raw(item.TieuDe)
+                                                            </div>
+
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button class="btn admin-btn admin-btn-light"
+                                                                    data-dismiss="modal">
+                                                                Đóng
+                                                            </button>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">Không có bài viết</td>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

@@ -1,0 +1,189 @@
+﻿@using MatKinh.ViewModel
+@model MatKinh.ViewModel.PurchaseInformation
+
+@{
+    ViewBag.Title = "Checkout";
+    List<Cart> listProductOrder = (Session["ShoppingCart"] as List<Cart>) ?? new List<Cart>();
+    decimal total = listProductOrder.Sum(x => x.ThanhTien);
+    decimal shippingFee = 30000m;
+    decimal grandTotal = total + shippingFee;
+}
+
+<section class="checkout-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Checkout</span>
+                <h1>Hoàn tất đơn hàng</h1>
+                <nav>
+                    <a href="@Url.Action("Index","Home")">Trang chủ</a>
+                    <span>/</span>
+                    <a href="@Url.Action("Cart","ShoppingCart")">Giỏ hàng</a>
+                    <span>/</span>
+                    <span>Thanh toán</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="checkout-section">
+        <div class="container">
+            @using (Html.BeginForm("Index", "Checkout", FormMethod.Post, new { @class = "checkout-form" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="checkout-layout">
+                    <div class="checkout-main-card">
+                        <div class="checkout-section-head">
+                            <span class="checkout-section-head__eyebrow">Shipping details</span>
+                            <h2>Thông tin giao hàng</h2>
+                            <p>Vui lòng kiểm tra kỹ thông tin để đơn hàng được giao chính xác và nhanh chóng.</p>
+                        </div>
+
+                        @Html.ValidationSummary(true, "", new { @class = "checkout-validation-summary" })
+
+                        <div class="checkout-form-grid">
+                            <div class="checkout-form-group checkout-grid-full">
+                                <label class="checkout-label">Họ và tên</label>
+                                @Html.TextBoxFor(m => m.HoTenNguoiNhan, new
+                                {
+                                    @class = "checkout-input",
+                                    placeholder = "Nhập họ và tên người nhận"
+                                })
+                                @Html.ValidationMessageFor(m => m.HoTenNguoiNhan, "", new { @class = "checkout-field-error" })
+                            </div>
+
+                            <div class="checkout-form-group">
+                                <label class="checkout-label">Số điện thoại</label>
+                                @Html.TextBoxFor(m => m.SoDienThoaiNguoiNhan, new
+                                {
+                                    @class = "checkout-input",
+                                    placeholder = "Nhập số điện thoại"
+                                })
+                                @Html.ValidationMessageFor(m => m.SoDienThoaiNguoiNhan, "", new { @class = "checkout-field-error" })
+                            </div>
+
+                            <div class="checkout-form-group">
+                                <label class="checkout-label">Email</label>
+                                @Html.TextBoxFor(m => m.Email, new
+                                {
+                                    @class = "checkout-input",
+                                    placeholder = "Nhập email"
+                                })
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "checkout-field-error" })
+                            </div>
+
+                            <div class="checkout-form-group checkout-grid-full">
+                                <label class="checkout-label">Địa chỉ giao hàng</label>
+                                @Html.TextBoxFor(m => m.DiaChiNhanHang, new
+                                {
+                                    @class = "checkout-input",
+                                    placeholder = "Nhập địa chỉ giao hàng"
+                                })
+                                @Html.ValidationMessageFor(m => m.DiaChiNhanHang, "", new { @class = "checkout-field-error" })
+                            </div>
+
+                            <div class="checkout-form-group checkout-grid-full">
+                                <label class="checkout-label">Ghi chú giao hàng</label>
+                                @Html.TextAreaFor(m => m.GhiChu, new
+                                {
+                                    @class = "checkout-textarea",
+                                    rows = "4",
+                                    placeholder = "Ví dụ: giao giờ hành chính, gọi trước khi giao, số nhà cụ thể..."
+                                })
+                                @Html.ValidationMessageFor(m => m.GhiChu, "", new { @class = "checkout-field-error" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkout-summary-card">
+                        <span class="checkout-section-head__eyebrow">Order summary</span>
+                        <h3>Đơn hàng của bạn</h3>
+
+                        <div class="checkout-order-list">
+                            <div class="checkout-order-head">
+                                <span>Sản phẩm</span>
+                                <span>Thành tiền</span>
+                            </div>
+
+                            @if (listProductOrder.Any())
+                            {
+                                foreach (var item in listProductOrder)
+                                {
+                                    <div class="checkout-order-item">
+                                        <div class="checkout-order-item__left">
+                                            <strong>@item.TenSanPham</strong>
+                                            <span>x @item.SoLuong</span>
+                                        </div>
+                                        <div class="checkout-order-item__right">
+                                            @string.Format("{0:N0}", item.ThanhTien) ₫
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="checkout-order-empty">
+                                    Chưa có sản phẩm trong giỏ hàng.
+                                </div>
+                            }
+                        </div>
+
+                        <div class="checkout-total-box">
+                            <div class="checkout-total-line">
+                                <span>Tạm tính</span>
+                                <strong>@string.Format("{0:N0}", total) ₫</strong>
+                            </div>
+
+                            <div class="checkout-total-line">
+                                <span>Phí giao hàng</span>
+                                <strong>@string.Format("{0:N0}", shippingFee) ₫</strong>
+                            </div>
+
+                            <div class="checkout-total-line checkout-total-line--grand">
+                                <span>Tổng cộng</span>
+                                <strong>@string.Format("{0:N0}", grandTotal) ₫</strong>
+                            </div>
+                        </div>
+
+                        <div class="checkout-payment-box">
+                            <div class="checkout-payment-title">Phương thức thanh toán</div>
+
+                            <label class="checkout-radio-card" for="payment-auto">
+                                <div class="checkout-radio-card__left">
+                                    @Html.RadioButtonFor(m => m.PhuongThucThanhToan, "Payment_Auto", new { id = "payment-auto" })
+                                    <div>
+                                        <strong>Thanh toán online qua VNPay</strong>
+                                        <p>Thanh toán trực tuyến và xác nhận đơn hàng ngay sau khi giao dịch thành công.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="checkout-radio-card" for="payment-cod">
+                                <div class="checkout-radio-card__left">
+                                    @Html.RadioButtonFor(m => m.PhuongThucThanhToan, "Payment_Before", new { id = "payment-cod" })
+                                    <div>
+                                        <strong>Thanh toán khi nhận hàng</strong>
+                                        <p>Thanh toán trực tiếp cho nhân viên giao hàng khi nhận được sản phẩm.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            @Html.ValidationMessageFor(m => m.PhuongThucThanhToan, "", new { @class = "checkout-field-error" })
+                        </div>
+
+                        <div class="checkout-submit-wrap">
+                            <button class="optical-btn optical-btn--dark checkout-submit-btn" type="submit">
+                                Đặt hàng
+                            </button>
+
+                            <a href="@Url.Action("Cart","ShoppingCart")" class="optical-btn optical-btn--light checkout-back-btn">
+                                Quay lại giỏ hàng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</section>

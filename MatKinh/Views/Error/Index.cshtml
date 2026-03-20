@@ -1,0 +1,72 @@
+﻿@using MatKinh.Models
+@using System.Data.Entity
+@{
+    Layout = null;
+
+    TaiKhoan sessionAccount = Session["LoginInformation"] as TaiKhoan;
+    TaiKhoan account = null;
+    string roleCode = string.Empty;
+
+    using (var db = new BanMatKinhEntities())
+    {
+        if (sessionAccount != null)
+        {
+            account = db.TaiKhoans
+                .Include(x => x.VaiTro)
+                .FirstOrDefault(x => x.TaiKhoanId == sessionAccount.TaiKhoanId && x.IsActive);
+
+            if (account != null && account.VaiTro != null)
+            {
+                roleCode = (account.VaiTro.MaVaiTro ?? string.Empty).Trim().ToUpperInvariant();
+            }
+        }
+    }
+
+    bool isAdminLike = roleCode == RoleConstants.ADMIN
+        || roleCode == RoleConstants.STAFF
+        || roleCode == RoleConstants.SHIPPER;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Không có quyền truy cập</title>
+    <link href="~/Content/css/error.css" rel="stylesheet" />
+</head>
+
+<body class="error-page-modern">
+    <div class="error-container">
+        <div class="error-card">
+            <span class="error-code">403</span>
+
+            <h1>Không có quyền truy cập</h1>
+
+            <p>
+                Bạn không có quyền truy cập vào trang này.
+                Nếu bạn nghĩ đây là lỗi, hãy liên hệ với chúng tôi để được hỗ trợ.
+            </p>
+
+            <div class="error-actions">
+                @if (isAdminLike)
+                {
+                    <a href='@Url.Action("Index", "Dashboard", new { area = "AdminPage" })'
+                       class="optical-btn optical-btn--dark">
+                        Về trang quản trị
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Index","Home")" class="optical-btn optical-btn--dark">
+                        Về trang chủ
+                    </a>
+                }
+
+                <a href="@Url.Action("Index","Product")" class="optical-btn optical-btn--light">
+                    Xem sản phẩm
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

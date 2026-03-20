@@ -1,0 +1,203 @@
+﻿@using MatKinh.Models
+@model MatKinh.Models.DonHang
+
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+
+    List<ChiTietDonHang> details = ViewData["listOfProductInOrder"] as List<ChiTietDonHang> ?? new List<ChiTietDonHang>();
+
+    Func<int, string> orderStatusText = status =>
+    {
+        switch (status)
+        {
+            case 1: return "Chờ xác nhận";
+            case 2: return "Đã xác nhận";
+            case 3: return "Đang chuẩn bị";
+            case 4: return "Đã giao shipper";
+            case 5: return "Đang giao";
+            case 6: return "Đã giao";
+            case 7: return "Giao thất bại";
+            case 8: return "Đã hủy";
+            default: return "Không xác định";
+        }
+    };
+
+    Func<int, string> orderStatusClass = status =>
+    {
+        switch (status)
+        {
+            case 6: return "success";
+            case 8: return "danger";
+            case 7: return "warning";
+            default: return "processing";
+        }
+    };
+
+    string paymentText = "Thanh toán khi nhận hàng";
+    if (Model.GhiChu != null && Model.GhiChu.ToLower().Contains("vnpay"))
+    {
+        paymentText = "Thanh toán online";
+    }
+
+    decimal tongTienHang = Model.TongTienHang;
+    decimal phiVanChuyen = Model.PhiVanChuyen;
+    decimal giamGia = Model.GiamGia;
+    decimal tongThanhToan = Model.TongThanhToan;
+}
+
+<section class="order-detail-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Order detail</span>
+                <h1>Chi tiết đơn hàng</h1>
+                <nav>
+                    <a href="@Url.Action("Index","Home")">Trang chủ</a>
+                    <span>/</span>
+                    <a href="@Url.Action("Profile","ProfileUser")">Tài khoản</a>
+                    <span>/</span>
+                    <span>Chi tiết đơn</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="order-detail-section">
+        <div class="container">
+            <div class="order-detail-header">
+                <div>
+                    <span class="order-detail-eyebrow">Order #@Model.MaDonHang</span>
+                    <h2>Đơn hàng của bạn</h2>
+                </div>
+
+                <div class="order-detail-status">
+                    <span class="status-badge @orderStatusClass(Model.TrangThai)">
+                        @orderStatusText(Model.TrangThai)
+                    </span>
+                </div>
+            </div>
+
+            <div class="order-detail-grid">
+                <div class="order-info-card">
+                    <h3>Thông tin giao hàng</h3>
+                    <ul>
+                        <li><strong>Người nhận:</strong> @Model.HoTenNguoiNhan</li>
+                        <li><strong>Địa chỉ:</strong> @Model.DiaChiNhanHang</li>
+                        <li><strong>SĐT:</strong> @Model.SoDienThoaiNguoiNhan</li>
+                        <li><strong>Email:</strong> @(Model.KhachHang != null ? Model.KhachHang.Email : "—")</li>
+                    </ul>
+                </div>
+
+                <div class="order-info-card">
+                    <h3>Thông tin đơn</h3>
+                    <ul>
+                        <li><strong>Mã đơn:</strong> #@Model.MaDonHang</li>
+                        <li><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</li>
+                        <li><strong>Trạng thái:</strong> @orderStatusText(Model.TrangThai)</li>
+                        <li><strong>Thanh toán:</strong> @paymentText</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="order-products-card">
+                <div class="order-products-head">
+                    <h3>Sản phẩm</h3>
+                </div>
+
+                <div class="order-table-wrap">
+                    <table class="order-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Giảm</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in details)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="order-product">
+                                            <div class="order-product__info">
+                                                <h4>@item.TenSanPhamSnapshot</h4>
+                                                <span>Mã SP ID: @item.SanPhamId</span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td>x @item.SoLuong</td>
+
+                                    <td>@string.Format("{0:N0}", item.DonGiaSnapshot) ₫</td>
+
+                                    <td>@string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</td>
+
+                                    <td class="order-total-line">
+                                        @string.Format("{0:N0}", item.ThanhTien) ₫
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="order-mobile-list">
+                    @foreach (var item in details)
+                    {
+                        <div class="order-mobile-item">
+                            <h4>@item.TenSanPhamSnapshot</h4>
+                            <p>Mã SP ID: @item.SanPhamId</p>
+                            <p>Số lượng: x @item.SoLuong</p>
+                            <p>Giá: @string.Format("{0:N0}", item.DonGiaSnapshot) ₫</p>
+                            <p>Giảm: @string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</p>
+                            <strong>@string.Format("{0:N0}", item.ThanhTien) ₫</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="order-summary-card">
+                <div class="order-summary-left">
+                    <p><strong>Ghi chú:</strong> @(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</p>
+                </div>
+
+                <div class="order-summary-right">
+                    <div class="order-summary-line">
+                        <span>Tổng tiền hàng</span>
+                        <strong>@string.Format("{0:N0}", tongTienHang) ₫</strong>
+                    </div>
+
+                    <div class="order-summary-line">
+                        <span>Phí giao hàng</span>
+                        <strong>@string.Format("{0:N0}", phiVanChuyen) ₫</strong>
+                    </div>
+
+                    <div class="order-summary-line">
+                        <span>Giảm giá</span>
+                        <strong>@string.Format("{0:N0}", giamGia) ₫</strong>
+                    </div>
+
+                    <div class="order-summary-line grand">
+                        <span>Tổng cộng</span>
+                        <strong>@string.Format("{0:N0}", tongThanhToan) ₫</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-actions">
+                <a href="@Url.Action("Profile", "ProfileUser")"
+                   class="optical-btn optical-btn--light">
+                    Quay lại tài khoản
+                </a>
+
+                <a href="@Url.Action("Index","Product")"
+                   class="optical-btn optical-btn--dark">
+                    Mua thêm sản phẩm
+                </a>
+            </div>
+        </div>
+    </section>
+</section>

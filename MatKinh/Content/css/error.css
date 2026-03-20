@@ -1,0 +1,88 @@
+﻿.error-page-modern {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #f8f8f6, #f1efe9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.error-container {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.error-card {
+    background: #fff;
+    padding: 50px 40px;
+    border-radius: 28px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+}
+
+.error-code {
+    font-size: 72px;
+    font-weight: 800;
+    color: #b08d57;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.error-card h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.error-card p {
+    color: #777;
+    line-height: 1.8;
+    margin-bottom: 24px;
+}
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.optical-btn {
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.optical-btn--dark {
+    background: #161616;
+    color: #fff;
+}
+
+    .optical-btn--dark:hover {
+        background: #000;
+    }
+
+.optical-btn--light {
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+    .optical-btn--light:hover {
+        background: #f4f4f4;
+    }
+
+/* responsive */
+@media (max-width: 576px) {
+    .error-card {
+        padding: 30px 20px;
+    }
+
+    .error-code {
+        font-size: 48px;
+    }
+}
+

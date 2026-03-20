@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="5f9c191940f64430bc0e851f7a29f121" Name="Diagram1" ZoomLevel="77">
+        <EntityTypeShape EntityType="BanMatKinhModel.BaiViet" Width="1.5" PointX="5.25" PointY="8.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.ChiTietDonHang" Width="1.5" PointX="10.5" PointY="12" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.DonHang" Width="1.5" PointX="8.25" PointY="9.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.KhachHang" Width="1.5" PointX="6" PointY="3.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.LichSuTrangThaiDonHang" Width="1.5" PointX="10.5" PointY="8" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.LoaiSanPham" Width="1.5" PointX="3" PointY="16.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.SanPham" Width="1.5" PointX="5.25" PointY="12.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.TaiKhoan" Width="1.5" PointX="3" PointY="9.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.ThongTinCuaHang" Width="1.5" PointX="5.25" PointY="25.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.ThuongHieu" Width="1.5" PointX="3" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BanMatKinhModel.VaiTro" Width="1.5" PointX="0.75" PointY="11.125" IsExpanded="true" />
+        <AssociationConnector Association="BanMatKinhModel.FK_BaiViet_TaiKhoan" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ChiTietDonHang_DonHang" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ChiTietDonHang_SanPham" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DonHang_ConfirmedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DonHang_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DonHang_KhachHang" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DonHang_Shipper" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_LichSuTrangThai_DonHang" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_LichSuTrangThai_TaiKhoan" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_SanPham_LoaiSanPham" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_SanPham_CreatedBy" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_SanPham_ThuongHieu" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_TaiKhoan_VaiTro" ManuallyRouted="false" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ThongTinCuaHang_UpdatedBy" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

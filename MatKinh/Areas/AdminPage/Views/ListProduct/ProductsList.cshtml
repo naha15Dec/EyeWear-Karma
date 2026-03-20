@@ -1,0 +1,450 @@
+﻿@model MatKinh.ViewModel.AdminProductListPageVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Sản phẩm";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Danh sách sản phẩm</h1>
+        <p class="admin-page-subtitle">Quản lý thông tin kính mắt, giá bán, ảnh đại diện và trạng thái kho.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Danh sách sản phẩm</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="card admin-card">
+            <div class="card-header admin-card-header border-0">
+                <div class="admin-card-title-wrap">
+                    <h3 class="admin-card-title">Sản phẩm trong hệ thống</h3>
+                    <span class="admin-card-count">@((Model.Products != null) ? Model.Products.Count : 0) sản phẩm</span>
+                </div>
+
+                <div class="admin-card-tools d-flex">
+                    @using (Html.BeginForm("FindProductByName", "ListProduct", FormMethod.Get, new { @class = "admin-search-form" }))
+                    {
+                        <div class="admin-search-box">
+                            <i class="fas fa-search"></i>
+                            <input class="form-control"
+                                   type="search"
+                                   name="keyword"
+                                   value="@Model.Keyword"
+                                   placeholder="Tìm theo tên hoặc mã sản phẩm..."
+                                   aria-label="Search">
+                            <button class="btn admin-search-btn" type="submit">Tìm</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="mb-3">
+                    <a href="@Url.Action("AddProduct", "ListProduct")" class="btn admin-btn admin-btn-save">
+                        <i class="fas fa-plus mr-1"></i> Thêm sản phẩm
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Mã sản phẩm</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Ngày tạo / cập nhật</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (Model.Products != null && Model.Products.Count > 0)
+                            {
+                                foreach (var item in Model.Products)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (item.TrangThai == 1)
+                                            {
+                                                <a target="_blank"
+                                                   class="admin-code-link"
+                                                   href='@Url.Action("DetailProduct", "Product", new { area = "", idProduct = item.MaSanPham })'>
+                                                    #@item.MaSanPham
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-code-text">#@item.MaSanPham</span>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <div class="admin-product-cell">
+                                                <div class="admin-product-thumb">
+                                                    @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
+                                                    {
+                                                        <img src="@item.HinhAnhChinh" alt="@item.TenSanPham" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <img src="/Asset/img/no-image.png" alt="@item.TenSanPham" />
+                                                    }
+                                                </div>
+                                                <div class="admin-product-info">
+                                                    <div class="admin-product-name">@item.TenSanPham</div>
+                                                    <div class="admin-product-meta">
+                                                        @(item.MoTaNgan != null && item.MoTaNgan.Length > 60
+                                                            ? item.MoTaNgan.Substring(0, 60) + "..."
+                                                            : item.MoTaNgan)
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div class="admin-date-text">
+                                                Tạo: @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                            </div>
+                                            <div class="admin-post-summary">
+                                                @(item.UpdatedAt.HasValue
+                                                    ? "Cập nhật: " + item.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    : "Chưa cập nhật")
+                                            </div>
+                                        </td>
+
+                                        <td class="text-right">
+                                            <div class="admin-price-text">
+                                                @String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaBan)
+                                            </div>
+                                            <div class="admin-post-summary">
+                                                Giá gốc:
+                                                @String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaGoc)
+                                            </div>
+                                        </td>
+
+                                        <td class="text-center">
+                                            @item.SoLuongTon
+                                        </td>
+
+                                        <td>
+                                            @if (item.TrangThai == 1)
+                                            {
+                                                <span class="admin-status-badge in-stock">Đang bán</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-status-badge out-stock">Ngừng bán</span>
+                                            }
+                                        </td>
+
+                                        <td class="text-center">
+                                            <div class="admin-action-group">
+                                                @using (Html.BeginForm("Update", "ListProduct", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.SanPhamId" />
+
+                                                    <button type="button"
+                                                            class="btn admin-btn admin-btn-edit"
+                                                            data-toggle="modal"
+                                                            data-target="#customModal@(item.SanPhamId)">
+                                                        <i class="fas fa-pen mr-1"></i> Sửa
+                                                    </button>
+
+                                                    <div class="modal fade admin-modal" id="customModal@(item.SanPhamId)" tabindex="-1" role="dialog" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-xl admin-modal-dialog" role="document">
+                                                            <div class="modal-content admin-modal-content">
+                                                                <div class="modal-header admin-modal-header">
+                                                                    <div>
+                                                                        <h5 class="modal-title">Chỉnh sửa sản phẩm</h5>
+                                                                        <p class="admin-modal-subtitle mb-0">@item.TenSanPham</p>
+                                                                    </div>
+                                                                    <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body admin-modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-lg-8">
+                                                                            <div class="card admin-form-card">
+                                                                                <div class="card-header border-0">
+                                                                                    <h3 class="card-title">Thông tin sản phẩm</h3>
+                                                                                </div>
+                                                                                <div class="card-body">
+                                                                                    <div class="form-group">
+                                                                                        <label>Tên sản phẩm</label>
+                                                                                        <input type="text" name="TenSanPham" class="form-control admin-input" value="@item.TenSanPham" />
+                                                                                    </div>
+
+                                                                                    <div class="form-group">
+                                                                                        <label>Mô tả tóm tắt</label>
+                                                                                        <input type="text" name="MoTaNgan" class="form-control admin-input" value="@item.MoTaNgan" />
+                                                                                    </div>
+
+                                                                                    <div class="form-group">
+                                                                                        <label>Giới thiệu chi tiết sản phẩm</label>
+                                                                                        <textarea class="textarea admin-textarea"
+                                                                                                  name="MoTaChiTiet"
+                                                                                                  rows="12">@item.MoTaChiTiet</textarea>
+                                                                                    </div>
+
+                                                                                    <div class="row">
+                                                                                        <div class="col-md-4">
+                                                                                            <div class="form-group">
+                                                                                                <label>Thương hiệu</label>
+                                                                                                <select class="form-control admin-input" name="ThuongHieuId">
+                                                                                                    @foreach (var thuonghieu in Model.Brands)
+                                                                                                    {
+                                                                                                        <option value="@thuonghieu.Value" @(item.ThuongHieuId.ToString() == thuonghieu.Value ? "selected" : "")>
+                                                                                                            @thuonghieu.Text
+                                                                                                        </option>
+                                                                                                    }
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div class="col-md-4">
+                                                                                            <div class="form-group">
+                                                                                                <label>Loại sản phẩm</label>
+                                                                                                <select class="form-control admin-input" name="LoaiSanPhamId">
+                                                                                                    @foreach (var loai in Model.Categories)
+                                                                                                    {
+                                                                                                        <option value="@loai.Value" @(item.LoaiSanPhamId.ToString() == loai.Value ? "selected" : "")>
+                                                                                                            @loai.Text
+                                                                                                        </option>
+                                                                                                    }
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div class="col-md-4">
+                                                                                            <div class="form-group">
+                                                                                                <label>Trạng thái</label>
+                                                                                                <select name="TrangThai" class="form-control admin-input">
+                                                                                                    <option value="1" @(item.TrangThai == 1 ? "selected" : "")>Đang bán</option>
+                                                                                                    <option value="2" @(item.TrangThai == 2 ? "selected" : "")>Ngừng bán</option>
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div class="row">
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="form-group">
+                                                                                                <label>Nổi bật</label>
+                                                                                                <select name="IsFeatured" class="form-control admin-input">
+                                                                                                    <option value="false" @(!item.IsFeatured ? "selected" : "")>Không</option>
+                                                                                                    <option value="true" @(item.IsFeatured ? "selected" : "")>Có</option>
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="form-group">
+                                                                                                <label>Tồn kho</label>
+                                                                                                <input type="number" min="0" name="SoLuongTon" value="@item.SoLuongTon" class="form-control admin-input text-right" />
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="form-group">
+                                                                                                <label>Giá gốc (VND)</label>
+                                                                                                <div class="input-group">
+                                                                                                    <input name="GiaGoc"
+                                                                                                           class="form-control admin-input text-right currency-input"
+                                                                                                           value="@item.GiaGoc"
+                                                                                                           autocomplete="off" />
+                                                                                                    <div class="input-group-append">
+                                                                                                        <span class="input-group-text admin-input-addon">₫</span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div class="col-md-3">
+                                                                                            <div class="form-group">
+                                                                                                <label>Giá bán (VND)</label>
+                                                                                                <div class="input-group">
+                                                                                                    <input name="GiaBan"
+                                                                                                           class="form-control admin-input text-right currency-input"
+                                                                                                           value="@item.GiaBan"
+                                                                                                           autocomplete="off" />
+                                                                                                    <div class="input-group-append">
+                                                                                                        <span class="input-group-text admin-input-addon">₫</span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="col-lg-4">
+                                                                            <div class="card admin-form-card mb-4">
+                                                                                <div class="card-header border-0">
+                                                                                    <h3 class="card-title">Ảnh đại diện</h3>
+                                                                                </div>
+                                                                                <div class="card-body">
+                                                                                    <div id="imagePreviewSingle-@item.SanPhamId" class="admin-image-preview-single">
+                                                                                        @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
+                                                                                        {
+                                                                                            <img src="@item.HinhAnhChinh" alt="@item.TenSanPham" />
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <img src="/Asset/img/no-image.png" alt="@item.TenSanPham" />
+                                                                                        }
+                                                                                    </div>
+
+                                                                                    <div class="input-group mt-3">
+                                                                                        <div class="custom-file">
+                                                                                            <input type="file"
+                                                                                                   class="custom-file-input single-image-input"
+                                                                                                   id="inputSingleFile-@item.SanPhamId"
+                                                                                                   data-productid="@item.SanPhamId"
+                                                                                                   name="imageAvatar"
+                                                                                                   accept=".jpg,.jpeg,.png,.gif,.webp">
+                                                                                            <label class="custom-file-label" for="inputSingleFile-@item.SanPhamId">Chọn ảnh đại diện</label>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer admin-modal-footer">
+                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
+                                                                    <button type="submit" class="btn admin-btn admin-btn-save">
+                                                                        <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @using (Html.BeginForm("Delete", "ListProduct", FormMethod.Post, new { @class = "d-inline" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.SanPhamId" />
+                                                    <button class="btn admin-btn admin-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                                        <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">Không có sản phẩm nào.</td>
+                                </tr>
+                            }
+                        </tbody>
+
+                        <tfoot>
+                            <tr>
+                                <th>Mã sản phẩm</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Ngày tạo / cập nhật</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.tiny.cloud/1/mjx5bcjxjzsekqcvy1ai2z4fspdr4j94doloncihjvicobhw/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script>
+    $(document).ready(function () {
+        $(document).on('change', '.single-image-input', function () {
+            var productId = $(this).data('productid');
+            var input = this;
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $("#imagePreviewSingle-" + productId).html('<img src="' + e.target.result + '" alt="Ảnh đại diện" />');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    });
+
+    tinymce.init({
+        selector: '.admin-textarea',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        height: 380
+    });
+
+    function formatVndValue(value) {
+        var numeric = value.replace(/[^\d]/g, "");
+        if (!numeric) return "";
+        var number = parseInt(numeric, 10);
+        if (isNaN(number)) return "";
+        return number.toLocaleString("vi-VN");
+    }
+
+    (function () {
+        var currencyInputs = document.querySelectorAll(".currency-input");
+
+        currencyInputs.forEach(function (input) {
+            input.addEventListener("focus", function () {
+                var numeric = this.value.replace(/[^\d]/g, "");
+                this.value = numeric;
+            });
+
+            input.addEventListener("blur", function () {
+                this.value = formatVndValue(this.value);
+            });
+
+            if (input.value) {
+                input.value = formatVndValue(input.value);
+            }
+        });
+
+        var forms = document.querySelectorAll("form");
+        forms.forEach(function (form) {
+            form.addEventListener("submit", function () {
+                var inputs = form.querySelectorAll(".currency-input");
+                inputs.forEach(function (input) {
+                    input.value = input.value.replace(/[^\d]/g, "");
+                });
+            });
+        });
+    })();
+</script>

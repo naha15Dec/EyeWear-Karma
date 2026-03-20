@@ -1,0 +1,142 @@
+﻿@model MatKinh.ViewModel.AdminBlogCreateVm
+
+@{
+    ViewBag.Title = "Thêm bài viết";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Thêm bài viết</h1>
+        <p class="admin-page-subtitle">Tạo nội dung bài viết mới cho website.</p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Thêm bài viết</li>
+    </ol>
+</div>
+
+<section class="content">
+    <div class="container-fluid p-0">
+        @using (Html.BeginForm("AddBlog", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-lg-7">
+
+                    <!-- THÔNG TIN CHÍNH -->
+                    <div class="card admin-form-card mb-4">
+                        <div class="card-header border-0">
+                            <h3 class="card-title">Thông tin chính</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Tên bài viết</label>
+                                @Html.TextBoxFor(m => m.TieuDe,
+                                    new { @class = "form-control admin-input", placeholder = "Nhập tiêu đề..." })
+                                @Html.ValidationMessageFor(m => m.TieuDe, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="form-group">
+                                <label>Nội dung tóm tắt</label>
+                                @Html.TextAreaFor(m => m.TomTat,
+                                    new { @class = "form-control admin-input", placeholder = "Tóm tắt ngắn..." })
+                                @Html.ValidationMessageFor(m => m.TomTat, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NỘI DUNG -->
+                    <div class="card admin-form-card">
+                        <div class="card-header border-0">
+                            <h3 class="card-title">Nội dung chi tiết bài viết</h3>
+                        </div>
+
+                        <div class="card-body">
+                            @Html.TextAreaFor(m => m.NoiDung,
+                                new
+                                {
+                                    @class = "admin-textarea tinymce-editor",
+                                    placeholder = "Nhập nội dung bài viết..."
+                                })
+                            @Html.ValidationMessageFor(m => m.NoiDung, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ẢNH + SUBMIT -->
+                <div class="col-lg-5">
+                    <div class="card admin-form-card mb-4">
+                        <div class="card-header border-0">
+                            <h3 class="card-title">Ảnh đại diện bài viết</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div id="imagePreviewSingle" class="admin-image-preview-single">
+                                <span class="admin-image-placeholder">Xem trước ảnh đại diện</span>
+                            </div>
+
+                            <div class="input-group mt-3">
+                                <div class="custom-file">
+                                    <input type="file"
+                                           class="custom-file-input"
+                                           id="inputSingleFile"
+                                           name="imageAvatar">
+                                    <label class="custom-file-label" for="inputSingleFile">Chọn ảnh</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div class="card admin-form-card">
+                        <div class="card-header border-0">
+                            <h3 class="card-title">Xuất bản</h3>
+                        </div>
+
+                        <div class="card-body">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
+
+                            <div class="admin-publish-note">
+                                Bài viết sẽ được lưu dưới dạng <b>nháp</b> và chờ admin duyệt.
+                            </div>
+
+                            <div class="admin-form-actions mt-3">
+                                <button type="submit" class="btn admin-btn admin-btn-save">
+                                    <i class="fas fa-paper-plane mr-1"></i> Tạo bài viết
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<script src="https://cdn.tiny.cloud/1/zihqpwrk4mgc8xsa9hlg2hm0etuz7f7dh1ovyeioicuygk8v/tinymce/6/tinymce.min.js"></script>
+
+<script>
+    tinymce.init({
+        selector: '.tinymce-editor',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        height: 500
+    });
+
+    document.getElementById('inputSingleFile').addEventListener('change', function () {
+        var file = this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreviewSingle').innerHTML =
+                    '<img src="' + e.target.result + '" />';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>

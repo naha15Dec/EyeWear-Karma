@@ -1,0 +1,125 @@
+﻿@model MatKinh.ViewModel.Login
+@{
+    ViewBag.Title = "Đăng nhập";
+    var hasModelErrors = !ViewData.ModelState.IsValid;
+}
+
+<section class="auth-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">Karma Eyewear Account</span>
+                <h1>Đăng nhập tài khoản</h1>
+                <nav aria-label="breadcrumb">
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                    <span>/</span>
+                    <span>Đăng nhập</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-shell">
+                <div class="row no-gutters align-items-stretch">
+                    <div class="col-lg-6 order-1 order-lg-2">
+                        <div class="auth-form-wrap">
+                            <div class="auth-form-head">
+                                <span class="auth-form-head__eyebrow">Member access</span>
+                                <h2>Đăng nhập</h2>
+                                <p>Tiếp tục mua sắm, theo dõi đơn hàng và lưu lại những mẫu kính bạn yêu thích.</p>
+                            </div>
+
+                            @if (TempData["NotificationLogin"] != null)
+                            {
+                                <div class="auth-alert auth-alert--warning" role="alert">
+                                    @TempData["NotificationLogin"]
+                                </div>
+                            }
+
+                            @using (Html.BeginForm("LoginAccount", "Account", FormMethod.Post, new { @class = "auth-form", autocomplete = "off" }))
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <div class="auth-form-group">
+                                    <label class="auth-label" for="Username">Tên đăng nhập</label>
+                                    @Html.TextBoxFor(m => m.Username, new
+                                    {
+                                        @class = "auth-input",
+                                        placeholder = "Nhập tên đăng nhập",
+                                        autocomplete = "off",
+                                        id = "Username",
+                                        value = ""
+                                    })
+                                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "auth-field-error" })
+                                </div>
+                                
+                                <div class="auth-form-group">
+                                    <label class="auth-label" for="Password">Mật khẩu</label>
+                                    @Html.PasswordFor(m => m.Password, new
+                                    {
+                                        @class = "auth-input",
+                                        placeholder = "Nhập mật khẩu",
+                                        autocomplete = "new-password",
+                                        id = "Password",
+                                        value = ""
+                                    })
+                                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small d-block mt-2" })
+                                </div>
+
+                                <div class="auth-meta-row">
+                                    <label class="auth-checkbox" for="RememberMe">
+                                        @Html.CheckBoxFor(m => m.RememberMe, new { id = "RememberMe" })
+                                        <span>Ghi nhớ đăng nhập</span>
+                                    </label>
+
+                                    <a href="javascript:void(0);"
+                                       class="auth-forgot-link"
+                                       data-toggle="modal"
+                                       data-target="#customModal">
+                                        Quên mật khẩu?
+                                    </a>
+                                </div>
+
+                                <div class="auth-form-actions">
+                                    <button type="submit" class="optical-btn optical-btn--dark auth-submit-btn">
+                                        Đăng nhập
+                                    </button>
+                                </div>
+                            }
+
+                            <div class="auth-bottom-note">
+                                Chưa có tài khoản?
+                                <a href="@Url.Action("RegisterAccount", "Account")">Đăng ký ngay</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 order-2 order-lg-1">
+                        <div class="auth-showcase">
+                            <div class="auth-showcase__image">
+                                <img src="@Url.Content("~/Asset/img/login.jpg")" alt="Karma Eyewear Login" />
+                            </div>
+
+                            <div class="auth-showcase__overlay"></div>
+
+                            <div class="auth-showcase__content">
+                                <span class="auth-showcase__eyebrow">New here?</span>
+                                <h2>Chào mừng đến với Karma Eyewear</h2>
+                                <p>
+                                    Tạo tài khoản để theo dõi đơn hàng, lưu mẫu kính yêu thích
+                                    và nhận gợi ý phù hợp với phong cách của bạn.
+                                </p>
+                                <a class="optical-btn optical-btn--light auth-showcase__btn"
+                                   href="@Url.Action("RegisterAccount", "Account")">
+                                    Tạo tài khoản
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>

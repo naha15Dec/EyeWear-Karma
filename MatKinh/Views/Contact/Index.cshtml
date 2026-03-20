@@ -1,0 +1,163 @@
+﻿@model MatKinh.Models.ThongTinCuaHang
+@{
+    ViewBag.Title = "Liên hệ";
+
+    string storeName = Model != null && !string.IsNullOrWhiteSpace(Model.TenCuaHang)
+        ? Model.TenCuaHang
+        : "Karma Eyewear";
+
+    string hotline = Model != null ? Model.Hotline : "";
+    string email = Model != null ? Model.Email : "";
+    string address = Model != null ? Model.DiaChi : "";
+    string shortDesc = Model != null ? Model.MoTaNgan : "";
+    string intro = Model != null ? Model.GioiThieu : "";
+    string facebookUrl = Model != null ? Model.FacebookUrl : "";
+    string instagramUrl = Model != null ? Model.InstagramUrl : "";
+    string zaloUrl = Model != null ? Model.ZaloUrl : "";
+}
+<section class="contact-page">
+    <section class="optical-breadcrumb">
+        <div class="container">
+            <div class="optical-breadcrumb__inner">
+                <span class="optical-breadcrumb__eyebrow">@storeName</span>
+                <h1>Liên hệ với chúng tôi</h1>
+                <nav>
+                    <a href="@Url.Action("Index","Home")">Trang chủ</a>
+                    <span>/</span>
+                    <span>Liên hệ</span>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <div class="container">
+            <div class="contact-hero">
+                <h2>Chúng tôi luôn sẵn sàng hỗ trợ bạn</h2>
+                <p>
+                    @(!string.IsNullOrWhiteSpace(shortDesc)
+                        ? shortDesc
+                        : "Nếu bạn cần tư vấn về sản phẩm, đơn hàng hoặc bất kỳ thông tin nào, hãy liên hệ với chúng tôi – đội ngũ hỗ trợ sẽ phản hồi trong thời gian sớm nhất.")
+                </p>
+            </div>
+
+            <div class="contact-grid">
+                <div class="contact-info-card">
+                    <span class="contact-eyebrow">Contact info</span>
+                    <h3>Thông tin cửa hàng</h3>
+
+                    <div class="contact-info-item">
+                        <i class="lnr lnr-home"></i>
+                        <div>
+                            <strong>Địa chỉ</strong>
+                            <p>@(string.IsNullOrWhiteSpace(address) ? "Chưa cập nhật địa chỉ." : address)</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <i class="lnr lnr-phone-handset"></i>
+                        <div>
+                            <strong>Số điện thoại</strong>
+                            <p>
+                                @if (!string.IsNullOrWhiteSpace(hotline))
+                                {
+                                    <a href="tel:@hotline">@hotline</a>
+                                }
+                                else
+                                {
+                                    <span>Chưa cập nhật số điện thoại.</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-item">
+                        <i class="lnr lnr-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p>
+                                @if (!string.IsNullOrWhiteSpace(email))
+                                {
+                                    <a href="mailto:@email">@email</a>
+                                }
+                                else
+                                {
+                                    <span>Chưa cập nhật email.</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="contact-extra">
+                        <p>
+                            Thời gian làm việc: <br />
+                            <strong>08:00 – 22:00 (T2 – CN)</strong>
+                        </p>
+
+                        @if (!string.IsNullOrWhiteSpace(intro))
+                        {
+                            <p class="mt-3">@intro</p>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(facebookUrl) || !string.IsNullOrWhiteSpace(instagramUrl) || !string.IsNullOrWhiteSpace(zaloUrl))
+                    {
+                        <div class="contact-social-links mt-4">
+                            @if (!string.IsNullOrWhiteSpace(facebookUrl))
+                            {
+                                <a href="@facebookUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mr-2 mb-2">
+                                    Facebook
+                                </a>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(instagramUrl))
+                            {
+                                <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mr-2 mb-2">
+                                    Instagram
+                                </a>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(zaloUrl))
+                            {
+                                <a href="@zaloUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mb-2">
+                                    Zalo
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="contact-map-card">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.7704806485776!2d106.67178467480811!3d10.98068928918078!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3174d1085e2b1c37%3A0x73bfa5616464d0ee!2sThu%20Dau%20Mot%20University!5e0!3m2!1sen!2s!4v1773818804398!5m2!1sen!2s"
+                            width="100%"
+                            height="100%"
+                            style="border:0;"
+                            allowfullscreen=""
+                            loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="contact-cta">
+                <h3>Bạn cần hỗ trợ nhanh?</h3>
+                <p>Liên hệ trực tiếp với chúng tôi để được tư vấn ngay.</p>
+
+                <div class="contact-cta-actions">
+                    @if (!string.IsNullOrWhiteSpace(hotline))
+                    {
+                        <a href="tel:@hotline" class="optical-btn optical-btn--dark">
+                            Gọi ngay
+                        </a>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(email))
+                    {
+                        <a href="mailto:@email" class="optical-btn optical-btn--light">
+                            Gửi email
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
