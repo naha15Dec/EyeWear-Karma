@@ -1,0 +1,176 @@
+﻿@using BanGiay.Models;
+@model BanGiay.Models.thongTinCuaHang
+@{
+    ViewBag.Title = "Thông tin cửa hàng";
+    string acc = (Session["LoginInformation"] as taiKhoanThanhVien).taiKhoan;
+    List<thongTinCuaHang> historyChanges = ViewData["HistoryChanges"] as List<thongTinCuaHang>;
+    thongTinCuaHang mostRencentChange = ViewData["MostRecentChanges"] as thongTinCuaHang;
+}
+<style>
+    form {
+        display: inline;
+    }
+    .custom-modal-dialog {
+        max-width: 60%; /* Đặt chiều rộng tùy chỉnh cho modal */
+    }
+</style>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Thông tin cửa hàng</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href='@Url.Action("Index","Dashboard")'>Dashboard</a></li>
+                        <li class="breadcrumb-item active">Thông tin cửa hàng</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Danh sách lịch sử thay đổi thông tin</h3>
+                        </div>
+                        <div class="card-body">
+                            <table id="example2" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã thông tin</th>
+                                        <th>Tài khoản </th>
+                                        <th>Thời gian</th>
+                                        <th>Lệnh</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in historyChanges)
+                                    {
+                                        <tr>
+                                            <td>@item.maThongTin</td>
+                                            <td>@item.taiKhoan</td>
+                                            <td>@item.thoiGian</td>
+                                            <td>
+                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#customModal@(item.maThongTin)">Chi tiết</button>
+                                                <div class="modal fade" id="customModal@(item.maThongTin)" tabindex="-1" role="dialog">
+                                                    <div class="modal-dialog custom-modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="customModalLabel">Lịch sử thay đổi</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-12">
+                                                                        <div class="card card-success">
+                                                                           
+                                                                            <div class="card-body">
+                                                                                <div class="form-group">
+                                                                                    <label>Mã thông tin</label>
+                                                                                    <input type="text" class="form-control" value="@item.maThongTin" disabled/>
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Tài khoản thực hiện</label>
+                                                                                    <input type="text" class="form-control" value="@item.taiKhoan" disabled/>
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Thời gian</label>
+                                                                                    <input type="text" class="form-control" value="@item.thoiGian" disabled/>
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Về cửa hàng</label>
+                                                                                    <textarea style="height:250px;" class="form-control">@item.veCuaHang</textarea>
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Email liên hệ</label>
+                                                                                    <input type="text" class="form-control" value="@item.emailLienHe" />
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Số điện thoại liên hệ</label>
+                                                                                    <input type="text" class="form-control" value="@item.soDTLienHe" />
+                                                                                </div>
+                                                                                <div class="form-group">
+                                                                                    <label>Địa chỉ lấy hàng</label>
+                                                                                    <input type="text" class="form-control" value="@item.diaChiLayHang" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">Đóng</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                @using (Html.BeginForm("DeleteHistoryChange","SettingInformationWebsite",FormMethod.Post))
+                                                {
+                                                    <input type="hidden" name="id"/>
+                                                    <button type="button" class="btn btn-danger">Xóa</button>
+                                                }
+
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Mã thông tin</th>
+                                        <th>Tài khoản </th>
+                                        <th>Thời gian</th>
+                                        <th>Lệnh</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    @using (Html.BeginForm("ChangeInformation", "SettingInformationWebsite", FormMethod.Post))
+                    {
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Thông tin chính</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Về cửa hàng</label>
+                                            @*<input type="text" class="form-control" value="@(mostRencentChange != null ? mostRencentChange.veCuaHang : "")" name="veCuaHang"/>*@
+                                            <textarea class="form-control" style="height:250px;" name="veCuaHang">@(mostRencentChange != null ? mostRencentChange.veCuaHang : "")</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email liên hệ</label>
+                                            <input type="text" class="form-control" value="@(mostRencentChange!=null ? mostRencentChange.emailLienHe : "")" name="emailLienHe"/> 
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Số điện thoại liên hệ</label>
+                                            <input type="text" class="form-control" value="@(mostRencentChange != null ? mostRencentChange.soDTLienHe : "")" name="soDTLienHe"/>
+                                        </div>
+                                        <div class=" form-group">
+                                            <label>Địa chỉ lấy hàng</label>
+                                            <input  type="text" class="form-control" value="@(mostRencentChange != null ? mostRencentChange.diaChiLayHang : "")" name="diaChiLayHang"/>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">Lưu</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

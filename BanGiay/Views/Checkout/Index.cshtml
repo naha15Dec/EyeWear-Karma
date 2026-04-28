@@ -1,0 +1,155 @@
+﻿@using BanGiay.ViewModel;
+@using BanGiay.Models;
+@model BanGiay.ViewModel.PurchaseInformation
+
+@{
+    ViewBag.Title = "Checkout";
+    taiKhoanThanhVien account = (Session["LoginInformation"] as taiKhoanThanhVien);
+    List<Cart> listProductOrder = (Session["ShoppingCart"] as List<Cart>);
+    int Total = 0;
+    if (listProductOrder != null)
+    {
+        foreach (var pro in listProductOrder)
+        {
+            Total += pro.Total;
+        }
+    }
+}
+
+<style>
+    .validation-summary-errors {
+        color: red;
+        margin-bottom: 10px;
+    }
+
+    .field-validation-error {
+        color: red;
+        font-size: 13px;
+    }
+</style>
+
+<section class="banner-area organic-breadcrumb">
+    <div class="container">
+        <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+            <div class="col-first">
+                <h1>Checkout</h1>
+                <nav class="d-flex align-items-center">
+                    <a href="@Url.Action("Index","Home")">Home<span class="lnr lnr-arrow-right"></span></a>
+                    <a href="#">Checkout</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="checkout_area section_gap">
+    <div class="container">
+        <div class="billing_details">
+            @using (Html.BeginForm("Index", "Checkout", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h3>Thông tin giao hàng</h3>
+
+                        @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
+
+                        <div class="row contact_form">
+                            @* Vì bắt buộc đăng nhập nên account luôn != null *@
+                            <div class="col-md-12 form-group p_star">
+                                @Html.TextBoxFor(m => m.NameCustomer,
+                                    new { @class = "form-control", placeholder = "Họ và tên" })
+                                @Html.ValidationMessageFor(m => m.NameCustomer, "", new { @class = "field-validation-error" })
+                            </div>
+
+                            <div class="col-md-12 form-group p_star">
+                                @Html.TextBoxFor(m => m.MobileCustomer,
+                                    new { @class = "form-control", placeholder = "Số điện thoại" })
+                                @Html.ValidationMessageFor(m => m.MobileCustomer, "", new { @class = "field-validation-error" })
+                            </div>
+
+                            <div class="col-md-12 form-group p_star">
+                                @Html.TextBoxFor(m => m.Email,
+                                    new { @class = "form-control", placeholder = "Email" })
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "field-validation-error" })
+                            </div>
+
+                            <div class="col-md-12 form-group p_star">
+                                @Html.TextBoxFor(m => m.DeliveryAddress,
+                                    new { @class = "form-control", placeholder = "Địa chỉ giao hàng" })
+                                @Html.ValidationMessageFor(m => m.DeliveryAddress, "", new { @class = "field-validation-error" })
+                            </div>
+
+                            @* Nếu PurchaseInformation còn có BirthOfDate, Sex mà bạn muốn dùng cho đã login thì có thể ẩn hoặc bỏ *@
+
+                            <div class="col-md-12 form-group">
+                                <div class="creat_account">
+                                    <h3>Ghi chú giao hàng</h3>
+                                </div>
+                                @Html.TextAreaFor(m => m.Note,
+                                    new
+                                    {
+                                        @class = "form-control",
+                                        rows = "1",
+                                        placeholder = "Có thể ghi thêm chi tiết địa chỉ, số nhà hoặc ghi chú về đơn hàng."
+                                    })
+                                @Html.ValidationMessageFor(m => m.Note, "", new { @class = "field-validation-error" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-12">
+                        <div class="order_box">
+                            <h2>Đơn đặt hàng của bạn</h2>
+
+                            <ul class="list">
+                                <li>
+                                    <a href="#">Sản phẩm <span>Giá</span></a>
+                                </li>
+                                @if (listProductOrder != null)
+                                {
+                                    foreach (var item in listProductOrder)
+                                    {
+                                        <li>
+                                            <a href="#">
+                                                @item.NameProduct
+                                                <span class="middle">x @item.Quantity</span>
+                                                <span class="last">@string.Format("{0:N0}", item.Total)</span>
+                                            </a>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+
+                            <ul class="list list_2">
+                                <li><a href="#">Phí giao hàng <span>FREE</span></a></li>
+                                <li><a href="#">Tổng <span>@string.Format("{0:N0}", Total)</span></a></li>
+                            </ul>
+
+                            <div class="payment_item">
+                                <div class="radion_btn">
+                                    @Html.RadioButtonFor(m => m.PaymentMenthods, "Payment_Auto", new { id = "f-option5" })
+                                    <label for="f-option5">Thanh toán qua chuyển khoản</label>
+                                    <div class="check"></div>
+                                </div>
+                            </div>
+
+                            <div class="payment_item active">
+                                <div class="radion_btn">
+                                    @Html.RadioButtonFor(m => m.PaymentMenthods, "Payment_Before", new { id = "f-option6" })
+                                    <label for="f-option6">Thanh toán sau giao hàng</label>
+                                    <div class="check"></div>
+                                </div>
+                            </div>
+
+                            @Html.ValidationMessageFor(m => m.PaymentMenthods, "", new { @class = "field-validation-error" })
+
+                            <button class="btn primary-btn w-100" type="submit">Tiếp tục</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

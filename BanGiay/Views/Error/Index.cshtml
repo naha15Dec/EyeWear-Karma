@@ -1,0 +1,45 @@
+﻿
+@using BanGiay.Models;
+@{
+    Layout = null;
+    taiKhoanThanhVien account = (Session["LoginInformation"] as taiKhoanThanhVien);
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Error</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link href="/Content/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="/Content/adminlte.min.css" rel="stylesheet" />
+</head>
+<body>
+    <section class="content" style="margin-top:300px;">
+        <div class="error-page">
+            <h2 class="headline text-danger">Lỗi</h2>
+            <div class="error-content">
+                <h3><i class="fas fa-exclamation-triangle text-danger"></i> Bạn không có quyền truy cập</h3>
+                <p>
+                    Chúng tôi sẽ khóa tài khoản nếu bạn cố tình truy cập. Hãy trở về trang chủ
+                    @if (account.maNhom == 3)
+                    {
+                        <a href=@Url.Action("Index","Home")>Click</a>
+                    }
+                    else
+                    {
+                        <a href=@Url.Action("Index","Dashboard",new {area="AdminPage" })>Click</a>
+                    }
+
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script src="~/Scripts/jquery.min.js"></script>
+    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,113 @@
+﻿@using BanGiay.Models;
+@model BanGiay.Models.loaiSP
+
+@{
+    ViewBag.Title = "Loại sản phẩm";
+    List<loaiSP> TypeProducts = ViewData["typeProductList"] as List<loaiSP>;
+}
+<style>
+    form{
+        display:inline;
+    }
+</style>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Loại sản phẩm</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href='@Url.Action("Index","Dashboard")'>Dashboard</a></li>
+                        <li class="breadcrumb-item active">Loại sản phẩm</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <h3 class="card-title">Thông tin chính</h3>
+                        </div>
+                        <div class="card-body">
+                            <table id="example2" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã loại</th>
+                                        <th>Tên loại</th>
+                                        <th>Lệnh</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in TypeProducts)
+                                    {
+
+                                        <tr>
+                                            <td>@item.maLoai</td>
+                                            <td>@item.tenLoai</td>
+                                            <td>
+                                                @using (Html.BeginForm("Update", "ListTypeProduct", FormMethod.Post))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ml" value="@item.maLoai" />
+                                                    <button class="btn btn-success">Sửa</button>
+                                                }
+                                                @using (Html.BeginForm("Delete", "ListTypeProduct", FormMethod.Post))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ml" value="@item.maLoai" />
+                                                    <button class="btn btn-danger">Xóa</button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Mã loại</th>
+                                        <th>Tên loại</th>
+                                        <th>Lệnh</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    @using (Html.BeginForm("AddTypeProduct", "ListTypeProduct", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card card-success">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Thông tin chính</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Tên loại</label>
+                                            @Html.TextBoxFor(m => m.tenLoai, new { @class = "form-control", placeholder = "Tên loại sản phẩm" })
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Ghi Chú</label>
+                                            @Html.TextAreaFor(m => m.ghiChu, new { @class = "form-control", placeholder = "Ghi chú loại sản phẩm" })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Lưu</button>
+                        @Html.HiddenFor(m=>m.maLoai)
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

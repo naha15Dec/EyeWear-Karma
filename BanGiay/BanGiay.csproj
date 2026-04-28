@@ -1,0 +1,950 @@
+﻿<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{03EA0056-9FD7-4416-9DA2-77195328B6E4}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BanGiay</RootNamespace>
+    <AssemblyName>BanGiay</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <WebGreaseLibPath>..\packages\WebGrease.1.5.2\lib</WebGreaseLibPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="WebGrease, Version=1.5.2.14234, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Web.Razor">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Webpages">
+      <HintPath>..\packages\Microsoft.AspNet.Webpages.3.2.7\lib\net45\System.Web.Webpages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Webpages.Deployment">
+      <HintPath>..\packages\Microsoft.AspNet.Webpages.3.2.7\lib\net45\System.Web.Webpages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Webpages.Razor">
+      <HintPath>..\packages\Microsoft.AspNet.Webpages.3.2.7\lib\net45\System.Web.Webpages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Helpers">
+      <HintPath>..\packages\Microsoft.AspNet.Webpages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Asset\img\%24 11041946Untitled1.png" />
+    <Content Include="Asset\img\11042106Untitled.png" />
+    <Content Include="Asset\img\AdminLTELogo.png" />
+    <Content Include="Asset\img\banner\banner-bg.jpg" />
+    <Content Include="Asset\img\banner\banner-img.png" />
+    <Content Include="Asset\img\banner\common-banner.jpg" />
+    <Content Include="Asset\img\banner\gong-kinh-cat-icon.png" />
+    <Content Include="Asset\img\banner\next.png" />
+    <Content Include="Asset\img\banner\prev.png" />
+    <Content Include="Asset\img\blog\add.jpg" />
+    <Content Include="Asset\img\blog\author.png" />
+    <Content Include="Asset\img\blog\c1.jpg" />
+    <Content Include="Asset\img\blog\c2.jpg" />
+    <Content Include="Asset\img\blog\c3.jpg" />
+    <Content Include="Asset\img\blog\c4.jpg" />
+    <Content Include="Asset\img\blog\c5.jpg" />
+    <Content Include="Asset\img\blog\c6.jpg" />
+    <Content Include="Asset\img\blog\cat-post\cat-post-1.jpg" />
+    <Content Include="Asset\img\blog\cat-post\cat-post-2.jpg" />
+    <Content Include="Asset\img\blog\cat-post\cat-post-3.jpg" />
+    <Content Include="Asset\img\blog\causes\causes-1.jpg" />
+    <Content Include="Asset\img\blog\causes\causes-2.jpg" />
+    <Content Include="Asset\img\blog\causes\causes-3.jpg" />
+    <Content Include="Asset\img\blog\feature-img1.jpg" />
+    <Content Include="Asset\img\blog\latest-post\l-post-1.jpg" />
+    <Content Include="Asset\img\blog\latest-post\l-post-2.jpg" />
+    <Content Include="Asset\img\blog\latest-post\l-post-3.jpg" />
+    <Content Include="Asset\img\blog\latest-post\l-post-4.jpg" />
+    <Content Include="Asset\img\blog\main-blog\m-blog-1.jpg" />
+    <Content Include="Asset\img\blog\main-blog\m-blog-2.jpg" />
+    <Content Include="Asset\img\blog\main-blog\m-blog-3.jpg" />
+    <Content Include="Asset\img\blog\main-blog\m-blog-4.jpg" />
+    <Content Include="Asset\img\blog\main-blog\m-blog-5.jpg" />
+    <Content Include="Asset\img\blog\next.jpg" />
+    <Content Include="Asset\img\blog\popular-post\post1.jpg" />
+    <Content Include="Asset\img\blog\popular-post\post2.jpg" />
+    <Content Include="Asset\img\blog\popular-post\post3.jpg" />
+    <Content Include="Asset\img\blog\popular-post\post4.jpg" />
+    <Content Include="Asset\img\blog\post-img1.jpg" />
+    <Content Include="Asset\img\blog\post-img2.jpg" />
+    <Content Include="Asset\img\blog\prev.jpg" />
+    <Content Include="Asset\img\brand\1.png" />
+    <Content Include="Asset\img\brand\1050-7.png" />
+    <Content Include="Asset\img\brand\2.png" />
+    <Content Include="Asset\img\brand\20200908_DOzjTsNv4HN3KVD8gGyBDhuL.jpg" />
+    <Content Include="Asset\img\brand\3.png" />
+    <Content Include="Asset\img\brand\4.png" />
+    <Content Include="Asset\img\brand\481_rayban.jpg" />
+    <Content Include="Asset\img\brand\5.png" />
+    <Content Include="Asset\img\brand\brand_adidas.jpg" />
+    <Content Include="Asset\img\brand\brand_converse.jpg" />
+    <Content Include="Asset\img\brand\brand_mlb.jpg" />
+    <Content Include="Asset\img\brand\brand_nike.jpg" />
+    <Content Include="Asset\img\brand\brand_vans.jpg" />
+    <Content Include="Asset\img\brand\images.png" />
+    <Content Include="Asset\img\brand\persol_career_tech_studio_vietnam_logo.jpg" />
+    <Content Include="Asset\img\cart.jpg" />
+    <Content Include="Asset\img\category\1.1200.1647589845-8ec.png" />
+    <Content Include="Asset\img\category\c1.jpg" />
+    <Content Include="Asset\img\category\c2.jpg" />
+    <Content Include="Asset\img\category\c3.jpg" />
+    <Content Include="Asset\img\category\c4.jpg" />
+    <Content Include="Asset\img\category\c5.jpg" />
+    <Content Include="Asset\img\category\deo-kinh-can-thuong-xuyen-tot-cho-mat-hay-nguoc-lai-tim-1-800x450 %281%29.jpg" />
+    <Content Include="Asset\img\category\s-l1600.jpg" />
+    <Content Include="Asset\img\category\s-p1.jpg" />
+    <Content Include="Asset\img\category\xuhuongmatkinh20191.jpg" />
+    <Content Include="Asset\img\elements\d.jpg" />
+    <Content Include="Asset\img\elements\disabled-check.png" />
+    <Content Include="Asset\img\elements\disabled-radio.png" />
+    <Content Include="Asset\img\elements\f1.jpg" />
+    <Content Include="Asset\img\elements\f2.jpg" />
+    <Content Include="Asset\img\elements\f3.jpg" />
+    <Content Include="Asset\img\elements\f4.jpg" />
+    <Content Include="Asset\img\elements\f5.jpg" />
+    <Content Include="Asset\img\elements\f6.jpg" />
+    <Content Include="Asset\img\elements\f7.jpg" />
+    <Content Include="Asset\img\elements\f8.jpg" />
+    <Content Include="Asset\img\elements\g1.jpg" />
+    <Content Include="Asset\img\elements\g2.jpg" />
+    <Content Include="Asset\img\elements\g3.jpg" />
+    <Content Include="Asset\img\elements\g4.jpg" />
+    <Content Include="Asset\img\elements\g5.jpg" />
+    <Content Include="Asset\img\elements\g6.jpg" />
+    <Content Include="Asset\img\elements\g7.jpg" />
+    <Content Include="Asset\img\elements\g8.jpg" />
+    <Content Include="Asset\img\elements\primary-check.png" />
+    <Content Include="Asset\img\elements\primary-radio.png" />
+    <Content Include="Asset\img\elements\success-check.png" />
+    <Content Include="Asset\img\elements\success-radio.png" />
+    <Content Include="Asset\img\exclusive.jpg" />
+    <Content Include="Asset\img\fav.png" />
+    <Content Include="Asset\img\features\f-icon1.png" />
+    <Content Include="Asset\img\features\f-icon2.png" />
+    <Content Include="Asset\img\features\f-icon3.png" />
+    <Content Include="Asset\img\features\f-icon4.png" />
+    <Content Include="Asset\img\ff576e6a-89cb-4644-aef6-bed0ae822b45.png" />
+    <Content Include="Asset\img\i1.jpg" />
+    <Content Include="Asset\img\i2.jpg" />
+    <Content Include="Asset\img\i3.jpg" />
+    <Content Include="Asset\img\i4.jpg" />
+    <Content Include="Asset\img\i5.jpg" />
+    <Content Include="Asset\img\i6.jpg" />
+    <Content Include="Asset\img\i7.jpg" />
+    <Content Include="Asset\img\i8.jpg" />
+    <Content Include="Asset\img\image_Account.jpg" />
+    <Content Include="Asset\img\l1.jpg" />
+    <Content Include="Asset\img\l2.jpg" />
+    <Content Include="Asset\img\l3.jpg" />
+    <Content Include="Asset\img\l4.jpg" />
+    <Content Include="Asset\img\l5.jpg" />
+    <Content Include="Asset\img\l6.jpg" />
+    <Content Include="Asset\img\l7.jpg" />
+    <Content Include="Asset\img\l8.jpg" />
+    <Content Include="Asset\img\login.jpg" />
+    <Content Include="Asset\img\logo.png" />
+    <Content Include="Asset\img\men-bg.jpg" />
+    <Content Include="Asset\img\ob1.jpg" />
+    <Content Include="Asset\img\ob2.jpg" />
+    <Content Include="Asset\img\ob3.jpg" />
+    <Content Include="Asset\img\OIP.jpg" />
+    <Content Include="Asset\img\organic-food\b1.png" />
+    <Content Include="Asset\img\organic-food\b2.png" />
+    <Content Include="Asset\img\organic-food\b3.png" />
+    <Content Include="Asset\img\organic-food\b4.png" />
+    <Content Include="Asset\img\organic-food\c1.jpg" />
+    <Content Include="Asset\img\organic-food\c2.jpg" />
+    <Content Include="Asset\img\organic-food\c3.jpg" />
+    <Content Include="Asset\img\organic-food\c4.jpg" />
+    <Content Include="Asset\img\organic-food\cd-bg.jpg" />
+    <Content Include="Asset\img\organic-food\cd.png" />
+    <Content Include="Asset\img\organic-food\ci1.jpg" />
+    <Content Include="Asset\img\organic-food\ci2.jpg" />
+    <Content Include="Asset\img\organic-food\ci3.jpg" />
+    <Content Include="Asset\img\organic-food\f1.jpg" />
+    <Content Include="Asset\img\organic-food\f2.jpg" />
+    <Content Include="Asset\img\organic-food\f3.jpg" />
+    <Content Include="Asset\img\organic-food\f4.jpg" />
+    <Content Include="Asset\img\organic-food\m1.png" />
+    <Content Include="Asset\img\organic-food\mp1.jpg" />
+    <Content Include="Asset\img\organic-food\mp10.jpg" />
+    <Content Include="Asset\img\organic-food\mp11.jpg" />
+    <Content Include="Asset\img\organic-food\mp12.jpg" />
+    <Content Include="Asset\img\organic-food\mp2.jpg" />
+    <Content Include="Asset\img\organic-food\mp3.jpg" />
+    <Content Include="Asset\img\organic-food\mp4.jpg" />
+    <Content Include="Asset\img\organic-food\mp5.jpg" />
+    <Content Include="Asset\img\organic-food\mp6.jpg" />
+    <Content Include="Asset\img\organic-food\mp7.jpg" />
+    <Content Include="Asset\img\organic-food\mp8.jpg" />
+    <Content Include="Asset\img\organic-food\mp9.jpg" />
+    <Content Include="Asset\img\organic-food\ob1.jpg" />
+    <Content Include="Asset\img\organic-food\ob2.jpg" />
+    <Content Include="Asset\img\organic-food\ob3.jpg" />
+    <Content Include="Asset\img\organic-food\p1.jpg" />
+    <Content Include="Asset\img\organic-food\p2.jpg" />
+    <Content Include="Asset\img\organic-food\p3.jpg" />
+    <Content Include="Asset\img\organic-food\p4.jpg" />
+    <Content Include="Asset\img\organic-food\p5.jpg" />
+    <Content Include="Asset\img\organic-food\p6.jpg" />
+    <Content Include="Asset\img\organic-food\p7.jpg" />
+    <Content Include="Asset\img\organic-food\p8.jpg" />
+    <Content Include="Asset\img\organic-food\pl1.jpg" />
+    <Content Include="Asset\img\organic-food\pl2.jpg" />
+    <Content Include="Asset\img\organic-food\pl3.jpg" />
+    <Content Include="Asset\img\organic-food\pl4.jpg" />
+    <Content Include="Asset\img\organic-food\pl5.jpg" />
+    <Content Include="Asset\img\organic-food\pl6.jpg" />
+    <Content Include="Asset\img\organic-food\pl7.jpg" />
+    <Content Include="Asset\img\organic-food\pl8.jpg" />
+    <Content Include="Asset\img\organic-food\pm.jpg" />
+    <Content Include="Asset\img\organic-food\q1.jpg" />
+    <Content Include="Asset\img\organic-food\u1.png" />
+    <Content Include="Asset\img\organic-food\u2.png" />
+    <Content Include="Asset\img\organic-food\u3.png" />
+    <Content Include="Asset\img\product\1f2258b4-474b-4d61-a968-afdd151e7cae.png" />
+    <Content Include="Asset\img\product\20185ff5-78d4-4af8-8c98-31ee5320d2de.png" />
+    <Content Include="Asset\img\product\38815380-5983-4f74-85e3-ab88f8f60291.png" />
+    <Content Include="Asset\img\product\5b45580c-fa97-4abe-bc3b-6e5d15a48d46.png" />
+    <Content Include="Asset\img\product\5d1f94b7-4f8d-4451-9624-1601a66d0fc2.png" />
+    <Content Include="Asset\img\product\60e91a59-ca71-4393-95aa-64f55cb03e16.png" />
+    <Content Include="Asset\img\product\78da5540-40a6-4f57-af18-ef48a55e45e1.png" />
+    <Content Include="Asset\img\product\7a830e3a-7108-4fef-a4aa-f0a2015c507f.png" />
+    <Content Include="Asset\img\product\89cd12f5-69cf-4aef-be53-b115cf7000aa.png" />
+    <Content Include="Asset\img\product\9bf409f9-0c77-4924-9d90-e6694f49eb1f.png" />
+    <Content Include="Asset\img\product\b9dac42b-837e-494d-9f17-3ee428e88d53.png" />
+    <Content Include="Asset\img\product\c215e3fb-1acc-491a-9543-1ba708ec5eae.png" />
+    <Content Include="Asset\img\product\c292bf52-2ba8-41ee-97b3-48dcefa7d301.png" />
+    <Content Include="Asset\img\product\card.jpg" />
+    <Content Include="Asset\img\product\e-p1.png" />
+    <Content Include="Asset\img\product\e1e3f002-e974-4ea6-91e1-f1ad08e1a18f.jpg" />
+    <Content Include="Asset\img\product\ed93a7b7-59df-4506-8de6-f11814cd4dc5.png" />
+    <Content Include="Asset\img\product\efc6c4ed-11a2-4e2f-ab90-b9f88491e30a.png" />
+    <Content Include="Asset\img\product\fc05e9d3-6462-4a82-a6ee-1b66fd155100.png" />
+    <Content Include="Asset\img\product\next.png" />
+    <Content Include="Asset\img\product\p1.jpg" />
+    <Content Include="Asset\img\product\p2.jpg" />
+    <Content Include="Asset\img\product\p3.jpg" />
+    <Content Include="Asset\img\product\p4.jpg" />
+    <Content Include="Asset\img\product\p5.jpg" />
+    <Content Include="Asset\img\product\p6.jpg" />
+    <Content Include="Asset\img\product\p7.jpg" />
+    <Content Include="Asset\img\product\p8.jpg" />
+    <Content Include="Asset\img\product\prev.png" />
+    <Content Include="Asset\img\product\review-1.png" />
+    <Content Include="Asset\img\product\review-2.png" />
+    <Content Include="Asset\img\product\review-3.png" />
+    <Content Include="Asset\img\q1.jpg" />
+    <Content Include="Asset\img\r1.jpg" />
+    <Content Include="Asset\img\r10.jpg" />
+    <Content Include="Asset\img\r11.jpg" />
+    <Content Include="Asset\img\r12.jpg" />
+    <Content Include="Asset\img\r2.jpg" />
+    <Content Include="Asset\img\r3.jpg" />
+    <Content Include="Asset\img\r4.jpg" />
+    <Content Include="Asset\img\r5.jpg" />
+    <Content Include="Asset\img\r6.jpg" />
+    <Content Include="Asset\img\r7.jpg" />
+    <Content Include="Asset\img\r8.jpg" />
+    <Content Include="Asset\img\r9.jpg" />
+    <Content Include="Asset\img\sd\c1.jpg" />
+    <Content Include="Asset\img\sd\c2.jpg" />
+    <Content Include="Asset\img\sd\c3.jpg" />
+    <Content Include="Asset\img\sd\c4.jpg" />
+    <Content Include="Asset\img\sd\c5.jpg" />
+    <Content Include="Asset\SaveImgBlog\1035da48-1462-40ad-adab-bab358abeb5f.jpg" />
+    <Content Include="Asset\SaveImgBlog\21441b4b-22cd-4188-96f2-94b6e819c0f4.jpg" />
+    <Content Include="Asset\SaveImgBlog\2146f90e-d480-48dd-99e7-d5e560db9682.jpg" />
+    <Content Include="Asset\SaveImgBlog\22fdcb02-591c-4534-9c05-444bf2e60c68.png" />
+    <Content Include="Asset\SaveImgBlog\25209baa-0467-4dbc-b7f3-236da38eb420.png" />
+    <Content Include="Asset\SaveImgBlog\35122771-eda1-4ed6-993e-a17f46679fa9.jpeg" />
+    <Content Include="Asset\SaveImgBlog\419b00be-0ea0-4943-bbec-4d604141d539.jpg" />
+    <Content Include="Asset\SaveImgBlog\4c18ce61-2fe0-4a00-a29d-6febbb5ecce4.png" />
+    <Content Include="Asset\SaveImgBlog\4fe99ef8-cc57-43fe-a1b3-40e7848e0ca9.png" />
+    <Content Include="Asset\SaveImgBlog\590c50b6-e8b8-4622-8fc4-c744d83f05ab.jpg" />
+    <Content Include="Asset\SaveImgBlog\63774cd3-6d2c-4f78-be63-9614a6376fd3.png" />
+    <Content Include="Asset\SaveImgBlog\88fdebca-6f06-4d71-ba58-ee4f0eb3424b.png" />
+    <Content Include="Asset\SaveImgBlog\924075be-cbd7-4534-ab48-18c29d4ffb12.png" />
+    <Content Include="Asset\SaveImgBlog\a81179f5-e357-4d59-858d-ecc05eb32f0c.jpg" />
+    <Content Include="Asset\SaveImgBlog\ab36136a-2b2e-424d-9924-3ec43d2d16e0.jpg" />
+    <Content Include="Asset\SaveImgBlog\ad3917ae-46df-4555-b1cf-e3183079e759.png" />
+    <Content Include="Asset\SaveImgBlog\b6e02bdf-b7ff-4a44-b6d5-d695a8293399.png" />
+    <Content Include="Asset\SaveImgBlog\c59a0972-fbde-4947-bdc8-ce24f054b77c.jpg" />
+    <Content Include="Asset\SaveImgBlog\daa3b44e-2984-4675-9d31-d8d7286a60a5.jpg" />
+    <Content Include="Asset\SaveImgBlog\ed0aab42-73a1-45e5-a0dd-e430f0b97f38.jpeg" />
+    <Content Include="Asset\SaveImgBlog\f26ca797-d6f9-45e5-99ff-a928003cc766.jpg" />
+    <Content Include="Asset\SaveImgBlog\f714c068-dee9-4228-9f8c-05a0879434c0.jpg" />
+    <Content Include="Asset\SaveImgBlog\f84d3d12-7b0f-4efb-be45-ab053138cd26.png" />
+    <Content Include="Asset\SaveImgProduct\0054a1f5-f392-4362-baee-4fa76c9e20e4.png" />
+    <Content Include="Asset\SaveImgProduct\006e3913-9d1e-42dc-be35-aecfa4af943f.png" />
+    <Content Include="Asset\SaveImgProduct\00e25e95-33ef-42a4-ac8b-1a34e8d76ff8.png" />
+    <Content Include="Asset\SaveImgProduct\024c496d-f80d-475d-a4ea-da15aaca6570.png" />
+    <Content Include="Asset\SaveImgProduct\0599e9b6-f25b-494a-8d4c-cc9dd03d5bb7.png" />
+    <Content Include="Asset\SaveImgProduct\07bc4286-67f7-4a8b-8f59-84ea2e9f02f7.png" />
+    <Content Include="Asset\SaveImgProduct\09576a73-0109-439b-8a7f-93df59db15aa.png" />
+    <Content Include="Asset\SaveImgProduct\0b0dffc9-1311-440c-aa4b-bd39b404039e.png" />
+    <Content Include="Asset\SaveImgProduct\0b980279-fa76-4803-a9b4-71781d72578d.png" />
+    <Content Include="Asset\SaveImgProduct\0ee92cc0-d095-46da-8ff4-3b803112cc98.png" />
+    <Content Include="Asset\SaveImgProduct\0f54bd72-4eed-4482-a897-5a8d3baef982.png" />
+    <Content Include="Asset\SaveImgProduct\108b7013-398b-4c0f-94ff-e1273b0c10cc.png" />
+    <Content Include="Asset\SaveImgProduct\125672fb-321b-41b1-a5a0-a4e322626b8f.png" />
+    <Content Include="Asset\SaveImgProduct\13a3fce0-7d87-4978-bdd9-92211956a8ad.png" />
+    <Content Include="Asset\SaveImgProduct\158f4ede-0c70-4e0c-8be1-0adb4ed80e05.png" />
+    <Content Include="Asset\SaveImgProduct\162e243d-055c-4cf4-a014-a8b0012d1bcc.png" />
+    <Content Include="Asset\SaveImgProduct\19e1c4e0-bb3b-485d-bc25-54faa39b7777.png" />
+    <Content Include="Asset\SaveImgProduct\1a0d4636-2b92-4afb-a11b-5fcc9db4ce19.png" />
+    <Content Include="Asset\SaveImgProduct\1a381889-298f-4352-ac16-f156fac7b8b8.png" />
+    <Content Include="Asset\SaveImgProduct\1a41d81d-f9d1-44b2-8327-a4a7b5dfbcd7.png" />
+    <Content Include="Asset\SaveImgProduct\1a52c457-e72e-48b6-872c-99504c386253.png" />
+    <Content Include="Asset\SaveImgProduct\1ab45a17-427d-41a7-ac92-2ac589de9421.png" />
+    <Content Include="Asset\SaveImgProduct\1bfea85c-9764-4090-8d12-1c839df4ca38.png" />
+    <Content Include="Asset\SaveImgProduct\1dadea81-5987-499e-9791-e12591bea18c.png" />
+    <Content Include="Asset\SaveImgProduct\1e26d732-983d-4334-8400-2ea865f9ba3f.png" />
+    <Content Include="Asset\SaveImgProduct\1e49411d-e4d9-411a-8159-ebddffd9a113.png" />
+    <Content Include="Asset\SaveImgProduct\1ffcff48-688f-4a00-b898-7cdd42b08e8b.png" />
+    <Content Include="Asset\SaveImgProduct\200abad0-021d-44da-83a1-15345a4207f2.png" />
+    <Content Include="Asset\SaveImgProduct\20955cba-f174-4ce6-a06f-597d697ebed8.png" />
+    <Content Include="Asset\SaveImgProduct\217e311a-c722-4d3e-a8b2-50e6cd76e5b8.png" />
+    <Content Include="Asset\SaveImgProduct\2399d818-40a5-4b38-a179-5fe6781869ee.png" />
+    <Content Include="Asset\SaveImgProduct\2497eb27-be48-4ec7-930b-5170e4a7007c.png" />
+    <Content Include="Asset\SaveImgProduct\27a5cbf2-4a39-459c-9ab7-a641a591ffc9.png" />
+    <Content Include="Asset\SaveImgProduct\282a5a7a-036f-40dc-bf97-67332195ea14.png" />
+    <Content Include="Asset\SaveImgProduct\29a7a792-9fd5-41ad-b8df-767f4014f585.png" />
+    <Content Include="Asset\SaveImgProduct\2a46324d-d631-4fee-a614-76fdfb732e1f.png" />
+    <Content Include="Asset\SaveImgProduct\2a8fa38a-db7b-4045-97a4-ca73f87641ba.png" />
+    <Content Include="Asset\SaveImgProduct\2d39e193-d1d9-4250-ae21-1d340bc7621c.png" />
+    <Content Include="Asset\SaveImgProduct\2dab85b0-2afa-4702-b45e-b9937b45160d.png" />
+    <Content Include="Asset\SaveImgProduct\2eca7596-2881-4cb9-8295-9881d60ab738.png" />
+    <Content Include="Asset\SaveImgProduct\313d03c9-65fe-45d1-9c96-7bf491616199.png" />
+    <Content Include="Asset\SaveImgProduct\356afe64-af0f-42ac-bc5b-dd1a63da312a.png" />
+    <Content Include="Asset\SaveImgProduct\37b71721-272c-4bf1-84e6-24f891a1764c.png" />
+    <Content Include="Asset\SaveImgProduct\37b8762d-e6fe-48b9-ae66-d98561f50ab3.png" />
+    <Content Include="Asset\SaveImgProduct\3882d73f-95f5-47ef-a085-206a7b19579a.png" />
+    <Content Include="Asset\SaveImgProduct\3a56d7af-839d-4826-b91e-e8e62cb6fe9d.png" />
+    <Content Include="Asset\SaveImgProduct\3a8149ed-34f9-45f2-8b08-d649cd3165ad.png" />
+    <Content Include="Asset\SaveImgProduct\3d274fcf-ace0-439e-9e4e-40784533ed12.png" />
+    <Content Include="Asset\SaveImgProduct\3fb966c9-6120-46d3-8c59-7f84924c2b49.png" />
+    <Content Include="Asset\SaveImgProduct\3fd0995a-3b9c-4356-b25e-6b47c08a9fd4.png" />
+    <Content Include="Asset\SaveImgProduct\40355e0d-d6a1-4be2-a5ba-1316fc4df254.png" />
+    <Content Include="Asset\SaveImgProduct\42999079-b98a-4a70-ad63-dfe540f450ec.png" />
+    <Content Include="Asset\SaveImgProduct\42e087da-5261-4af9-9a97-22ed824a11ca.png" />
+    <Content Include="Asset\SaveImgProduct\45a1ab94-d4bd-432a-ade8-2795aa5be0ac.png" />
+    <Content Include="Asset\SaveImgProduct\48f7a897-f19c-44fb-a265-28b329743bab.png" />
+    <Content Include="Asset\SaveImgProduct\492dcc9b-cebc-45a0-905d-1c8a7ee48b9a.png" />
+    <Content Include="Asset\SaveImgProduct\4a09b425-4e32-46cb-9f8d-09b009a24489.png" />
+    <Content Include="Asset\SaveImgProduct\4dc5f6bd-1879-4e9e-aad7-fa27cddf41cc.png" />
+    <Content Include="Asset\SaveImgProduct\4e7dd873-0bf4-4c09-80c0-04f5943e9785.png" />
+    <Content Include="Asset\SaveImgProduct\4ec3b4f3-d8d7-4204-b9b6-c8ec04392f96.png" />
+    <Content Include="Asset\SaveImgProduct\516ae333-4cfd-4157-8fd5-19b409dd1d85.png" />
+    <Content Include="Asset\SaveImgProduct\534eeacf-caa9-4b6b-a978-a5f3017e3e17.png" />
+    <Content Include="Asset\SaveImgProduct\53a02efe-00aa-4217-9455-08f7a1e4d1cf.png" />
+    <Content Include="Asset\SaveImgProduct\560dc2a2-4099-45a8-8881-cc768404ccff.png" />
+    <Content Include="Asset\SaveImgProduct\5774369f-3d5b-44e7-b0dc-fe1f51805059.png" />
+    <Content Include="Asset\SaveImgProduct\57a96765-2061-4d59-9aa7-c110872ed402.png" />
+    <Content Include="Asset\SaveImgProduct\57c9ad23-023e-4698-9ac2-6dbc1126fdbb.png" />
+    <Content Include="Asset\SaveImgProduct\583b62a0-9061-4cc2-afa6-ea3cf0d5a1fb.png" />
+    <Content Include="Asset\SaveImgProduct\5947d709-ac66-43ca-99c2-0d622ce86a1f.png" />
+    <Content Include="Asset\SaveImgProduct\5a989332-6767-4349-a2d6-325b4276309c.png" />
+    <Content Include="Asset\SaveImgProduct\5aca8b8b-5298-403c-8c81-075e417885d6.png" />
+    <Content Include="Asset\SaveImgProduct\5b1fe7f7-7e68-499d-b6d4-1ab3b3ce6e43.png" />
+    <Content Include="Asset\SaveImgProduct\5b5166e7-12dd-4d61-8887-027d8fa6bbc3.png" />
+    <Content Include="Asset\SaveImgProduct\5b6a1f1a-30b6-4e5e-bc1f-26681379ac0f.png" />
+    <Content Include="Asset\SaveImgProduct\5c91a770-0f59-4e26-88e4-a136ed7f5493.png" />
+    <Content Include="Asset\SaveImgProduct\5d60a053-7191-40f2-82d7-ba2a6521c2b0.png" />
+    <Content Include="Asset\SaveImgProduct\5d9ee4a6-d23d-42fb-8b3d-4a545a915220.png" />
+    <Content Include="Asset\SaveImgProduct\5e87de83-08c7-4892-b067-a6ed54334cf9.png" />
+    <Content Include="Asset\SaveImgProduct\5f7ab434-1b1a-4bcd-81cf-14f5468f723f.png" />
+    <Content Include="Asset\SaveImgProduct\60553b95-4578-4c0f-bb5c-54e5573c7ddd.png" />
+    <Content Include="Asset\SaveImgProduct\6200eac1-49af-41cf-9aee-8658ce2ac708.png" />
+    <Content Include="Asset\SaveImgProduct\62454fc4-a321-48ed-a0af-0cc961b1bfdc.png" />
+    <Content Include="Asset\SaveImgProduct\64a8e148-dde5-4f0d-894d-483a9e51e2df.png" />
+    <Content Include="Asset\SaveImgProduct\64e315b4-afb6-4f1e-9b7e-dea787405b3f.png" />
+    <Content Include="Asset\SaveImgProduct\655b4538-bfbd-4766-bb76-e1a18ba6b926.png" />
+    <Content Include="Asset\SaveImgProduct\65ad5071-ecd3-4d60-9670-7f40725f901f.png" />
+    <Content Include="Asset\SaveImgProduct\65ce774d-11de-469b-a13c-54f34f3bd259.png" />
+    <Content Include="Asset\SaveImgProduct\67e3de8d-8cbd-47bd-833e-2d865b69589d.png" />
+    <Content Include="Asset\SaveImgProduct\68bcb94c-989c-420e-8d00-738dae18560a.png" />
+    <Content Include="Asset\SaveImgProduct\694c12d7-ed62-4ce8-afa4-ad683b74bf9f.png" />
+    <Content Include="Asset\SaveImgProduct\6b459eab-8e16-4e6f-bf2f-1010ba42f43d.png" />
+    <Content Include="Asset\SaveImgProduct\6bd1e53f-21b1-43f3-a61a-3689af907386.png" />
+    <Content Include="Asset\SaveImgProduct\6bf7c61c-7fff-49e8-a227-4e05fa2c754b.png" />
+    <Content Include="Asset\SaveImgProduct\6c9a2af4-d81b-4e9b-8c8a-07df673156ab.png" />
+    <Content Include="Asset\SaveImgProduct\6d1be34a-3549-4b1b-963d-fdec9ec1e9ba.png" />
+    <Content Include="Asset\SaveImgProduct\6d744d78-73a0-4129-8e98-9e8102f59d7d.png" />
+    <Content Include="Asset\SaveImgProduct\6d969e17-8bf6-46c9-a7b1-57724525e593.png" />
+    <Content Include="Asset\SaveImgProduct\6db954da-ee1c-4751-8229-f4c75b1dd9e7.png" />
+    <Content Include="Asset\SaveImgProduct\70f228a0-fdea-4580-9f36-be325efbe940.png" />
+    <Content Include="Asset\SaveImgProduct\75445cf2-1438-4d5c-bd9c-f96b986e78a7.png" />
+    <Content Include="Asset\SaveImgProduct\788fdcca-2ba3-49f1-b494-207c4979c0a9.png" />
+    <Content Include="Asset\SaveImgProduct\78f7157a-d1d5-4979-b268-4ce33a0accb3.png" />
+    <Content Include="Asset\SaveImgProduct\793cf9eb-cf10-49dd-95c0-677da345efad.png" />
+    <Content Include="Asset\SaveImgProduct\79418ef5-a105-499c-8ac0-2b9a317ca811.png" />
+    <Content Include="Asset\SaveImgProduct\7b268145-2786-4920-94ff-35b8f591e1ed.png" />
+    <Content Include="Asset\SaveImgProduct\7c0fb16a-425f-48eb-9c6d-3728eed9b135.png" />
+    <Content Include="Asset\SaveImgProduct\7e5bc9bc-d6b1-4c8b-b810-931045d07d22.png" />
+    <Content Include="Asset\SaveImgProduct\7f32b8c0-3282-4a15-87f5-659bf43b6f77.png" />
+    <Content Include="Asset\SaveImgProduct\81d9a8c6-e07e-4c26-a998-a2e6b1f2a362.png" />
+    <Content Include="Asset\SaveImgProduct\833c9862-13b6-4d29-a7f2-b47b5f19e36e.png" />
+    <Content Include="Asset\SaveImgProduct\837ee2c1-6d44-4a67-9ba8-cb3ed6217f76.png" />
+    <Content Include="Asset\SaveImgProduct\84273567-8bf2-41d4-ab91-3fca8e95c5a9.png" />
+    <Content Include="Asset\SaveImgProduct\855c0c9e-d352-4d11-8511-972468372289.png" />
+    <Content Include="Asset\SaveImgProduct\85baaed0-6317-44b7-8121-d5dc604dbe2e.png" />
+    <Content Include="Asset\SaveImgProduct\862a9eaf-34af-47d4-a4be-4ed55bcfbc67.png" />
+    <Content Include="Asset\SaveImgProduct\8681be69-4343-446f-a372-04c7220c68ad.png" />
+    <Content Include="Asset\SaveImgProduct\89a08acb-9c57-455a-b620-57e772f86fb2.png" />
+    <Content Include="Asset\SaveImgProduct\8ab93059-876c-4ca2-a8f0-e21f661d7b69.png" />
+    <Content Include="Asset\SaveImgProduct\8ae1f8de-4c8e-4dba-8cad-218a23b37cf4.png" />
+    <Content Include="Asset\SaveImgProduct\8d57eaba-97b8-4475-9808-3fa3427f2573.png" />
+    <Content Include="Asset\SaveImgProduct\8d7da228-15f2-4270-a7d4-a2e1559e6319.png" />
+    <Content Include="Asset\SaveImgProduct\8da720b3-77ff-498a-9e82-ef17ae7f3713.png" />
+    <Content Include="Asset\SaveImgProduct\8f150fde-662a-4710-9230-98de0aa1f3ae.png" />
+    <Content Include="Asset\SaveImgProduct\8fdb0294-5c6d-49a8-a34b-aa53671e25bb.png" />
+    <Content Include="Asset\SaveImgProduct\908866a7-625e-4f15-8b15-54270e7b1fe5.png" />
+    <Content Include="Asset\SaveImgProduct\90a38708-2ffa-40e6-886e-3850f8693350.png" />
+    <Content Include="Asset\SaveImgProduct\90aab93f-81ad-4f8d-9271-be3da9195ee6.png" />
+    <Content Include="Asset\SaveImgProduct\911fe3bb-3f03-436d-b417-a5abf7ecc4a3.png" />
+    <Content Include="Asset\SaveImgProduct\933315ca-e5ff-4fc5-8722-eee0c084b757.png" />
+    <Content Include="Asset\SaveImgProduct\946a23b2-1865-4252-adae-53915a23aaa9.png" />
+    <Content Include="Asset\SaveImgProduct\9476ab5f-d197-4d62-bbb4-a9e797235770.png" />
+    <Content Include="Asset\SaveImgProduct\95743b7c-e30e-4a0d-80b5-ebadfe502273.png" />
+    <Content Include="Asset\SaveImgProduct\95d3050e-a1e6-47cc-a5b1-8b8f7347c50b.png" />
+    <Content Include="Asset\SaveImgProduct\97f7efd9-17e5-48bb-8b00-f923faa2b298.png" />
+    <Content Include="Asset\SaveImgProduct\9a756dc6-2db1-4cc1-9f5b-64b835a5c0a0.png" />
+    <Content Include="Asset\SaveImgProduct\9e726258-89d4-4eee-b372-bcc855836fff.png" />
+    <Content Include="Asset\SaveImgProduct\9facf22a-c606-4298-9902-bf8eb19d5de9.png" />
+    <Content Include="Asset\SaveImgProduct\a0abfbe6-10c7-4010-ad9b-ac9b73cdde56.png" />
+    <Content Include="Asset\SaveImgProduct\a26872ac-6b9a-4a7a-bbc5-08bf6fd06ff5.png" />
+    <Content Include="Asset\SaveImgProduct\a40853c7-27b8-40a5-a69d-74476b798978.png" />
+    <Content Include="Asset\SaveImgProduct\a4117776-522e-4010-94d1-d4a7aa5d7eb2.png" />
+    <Content Include="Asset\SaveImgProduct\a4c7ad01-73a1-4b8a-b5c3-ed63931f0d51.png" />
+    <Content Include="Asset\SaveImgProduct\a5174e70-0650-45ff-ab0e-31982c572b02.png" />
+    <Content Include="Asset\SaveImgProduct\a56fa260-c783-4fb5-85db-0d12e730891f.png" />
+    <Content Include="Asset\SaveImgProduct\a70d0bbc-8dac-4c86-9b13-93d6c19ad53c.png" />
+    <Content Include="Asset\SaveImgProduct\a788abe1-7029-44a8-86dc-59e48c318ba4.png" />
+    <Content Include="Asset\SaveImgProduct\a7d1991e-9535-40c4-b10a-ff6c22ff119f.png" />
+    <Content Include="Asset\SaveImgProduct\a8379e04-f686-49ae-b26a-a9ee1f95fe55.png" />
+    <Content Include="Asset\SaveImgProduct\a9c959d7-ad8e-4b29-8ce0-89dfd5271af5.png" />
+    <Content Include="Asset\SaveImgProduct\a9e39244-afc7-46fd-9d59-a75b8f831202.png" />
+    <Content Include="Asset\SaveImgProduct\aa003c57-f5ca-4b5a-a518-3e8ec6673c8f.png" />
+    <Content Include="Asset\SaveImgProduct\aa96f1c7-4e16-4d92-8413-e49194abc234.png" />
+    <Content Include="Asset\SaveImgProduct\aafef915-f7f5-4389-9acf-c966feaeaa15.jpg" />
+    <Content Include="Asset\SaveImgProduct\af3e92c0-725b-4e1e-ac2a-52914cda022c.png" />
+    <Content Include="Asset\SaveImgProduct\af3ecbdc-0983-4700-9592-a402edb5a57e.png" />
+    <Content Include="Asset\SaveImgProduct\afabd057-ce2e-4761-8508-19a05401a6a4.png" />
+    <Content Include="Asset\SaveImgProduct\afb56aaa-72dd-4044-a220-d9dc640c8ec9.png" />
+    <Content Include="Asset\SaveImgProduct\aff5345c-d8dc-4f66-b7f7-46db4c56a74c.png" />
+    <Content Include="Asset\SaveImgProduct\b01b2d19-bcf0-4814-89d2-af7415b0e5e3.png" />
+    <Content Include="Asset\SaveImgProduct\b255e582-b3ff-421b-ac10-8b2468b1ff9a.png" />
+    <Content Include="Asset\SaveImgProduct\b30ce61a-6b41-41c0-a80b-462c2e0bc7b7.png" />
+    <Content Include="Asset\SaveImgProduct\b35e6a5e-86a8-492e-940a-4ff0b0598757.png" />
+    <Content Include="Asset\SaveImgProduct\b3931a6c-5e61-42e8-bf14-c0d4fb834dd2.png" />
+    <Content Include="Asset\SaveImgProduct\b4e93964-93e2-44ec-825d-f427a66db530.png" />
+    <Content Include="Asset\SaveImgProduct\b56c3146-b297-427d-b890-2fe5c1a1b435.png" />
+    <Content Include="Asset\SaveImgProduct\b58ec30f-2c52-4521-8902-b6361bde8292.png" />
+    <Content Include="Asset\SaveImgProduct\b933f529-ea3a-4f24-8544-cc754cb31c97.png" />
+    <Content Include="Asset\SaveImgProduct\bb73e6c6-212c-44e3-a26a-7ce3807d8b2f.png" />
+    <Content Include="Asset\SaveImgProduct\bcf1bc1a-ecb1-4fb9-a1ca-77d80e43c049.png" />
+    <Content Include="Asset\SaveImgProduct\bf5dc795-c38b-468e-a611-51210f99c49a.png" />
+    <Content Include="Asset\SaveImgProduct\c235d7f3-0cfa-4cf9-9ff2-2b43d1a89512.png" />
+    <Content Include="Asset\SaveImgProduct\c292010f-e6cc-4821-92fc-36bc3ca6b82f.png" />
+    <Content Include="Asset\SaveImgProduct\c49dc708-dfa1-4abe-b24f-6fd727937479.png" />
+    <Content Include="Asset\SaveImgProduct\c7373692-0919-4ab1-8314-aed5f31bd0f8.png" />
+    <Content Include="Asset\SaveImgProduct\c75384fa-a770-4cfe-868e-70d835131a1e.png" />
+    <Content Include="Asset\SaveImgProduct\c7c75d67-cc4d-4483-9e3a-c953c2556bc8.png" />
+    <Content Include="Asset\SaveImgProduct\c7de2a84-93e4-452a-bb31-34e6bda4e8b5.png" />
+    <Content Include="Asset\SaveImgProduct\c8aa3163-79b4-4ac7-82cf-64dc02963ad2.png" />
+    <Content Include="Asset\SaveImgProduct\c8d22d3f-5f2a-4595-9373-5a6a18ea19e0.png" />
+    <Content Include="Asset\SaveImgProduct\cc1869db-29e7-47d1-9e88-4156e014c6e1.png" />
+    <Content Include="Asset\SaveImgProduct\ce4b8fd1-9356-4c26-9837-fd11e468b9f9.png" />
+    <Content Include="Asset\SaveImgProduct\cedca55b-29fb-45ef-b1aa-e654161ff5c3.png" />
+    <Content Include="Asset\SaveImgProduct\cef4c924-9de8-45aa-85be-f8ac8c08d921.png" />
+    <Content Include="Asset\SaveImgProduct\cf42f104-f7a7-48c3-8086-7bd37b26ac6b.png" />
+    <Content Include="Asset\SaveImgProduct\cf90b356-1d95-40e6-a65f-0b712aa0d320.png" />
+    <Content Include="Asset\SaveImgProduct\d103e396-4f9c-4221-bfad-76e50eecb85f.png" />
+    <Content Include="Asset\SaveImgProduct\d2139104-2846-42b5-8acb-5bfe8d59cebb.png" />
+    <Content Include="Asset\SaveImgProduct\d45a79bd-e976-4817-8850-02371590e1a8.png" />
+    <Content Include="Asset\SaveImgProduct\d7617dda-adb1-42a3-838e-3d7c5ba7ffa3.png" />
+    <Content Include="Asset\SaveImgProduct\d7629815-2d9a-4670-9cbd-767123cd8bfe.png" />
+    <Content Include="Asset\SaveImgProduct\da0edf31-ead1-454e-a9cc-d49afa5f8c4e.png" />
+    <Content Include="Asset\SaveImgProduct\ddb231af-408f-4249-8170-1676767af464.png" />
+    <Content Include="Asset\SaveImgProduct\df6657d7-7b34-459e-8915-8b68388e37cc.png" />
+    <Content Include="Asset\SaveImgProduct\dfb1119a-26eb-4931-8708-b43caec2cb6f.png" />
+    <Content Include="Asset\SaveImgProduct\e095056e-b51b-49cd-b225-9b18a2e9b11f.png" />
+    <Content Include="Asset\SaveImgProduct\e271f409-590a-4120-8f5f-d73139c540e8.png" />
+    <Content Include="Asset\SaveImgProduct\e3197285-0435-4d7b-87d3-eb28ad626a44.png" />
+    <Content Include="Asset\SaveImgProduct\e31ace20-ab87-477c-a936-06f098e8e763.png" />
+    <Content Include="Asset\SaveImgProduct\e3790127-07b6-4b0f-81c3-8a535b1554d0.png" />
+    <Content Include="Asset\SaveImgProduct\e4fdb2f4-47fb-4d4a-b412-bc6ceba5db4b.png" />
+    <Content Include="Asset\SaveImgProduct\e5265926-f566-4221-b733-d4dc818ca519.png" />
+    <Content Include="Asset\SaveImgProduct\e52c5b84-f412-4bc6-91b6-c1fc655ccaee.png" />
+    <Content Include="Asset\SaveImgProduct\e587f541-ca0b-4d32-b755-cecdebe7aee8.png" />
+    <Content Include="Asset\SaveImgProduct\e622fd12-673f-4fa8-aa78-d36c8ee4405f.png" />
+    <Content Include="Asset\SaveImgProduct\e74dde24-3c43-4167-bbe7-6e9a2599df0b.png" />
+    <Content Include="Asset\SaveImgProduct\e778192f-c32c-4b65-8de7-9797a6ae203f.png" />
+    <Content Include="Asset\SaveImgProduct\e92766d3-daac-414e-b968-a46486894d9a.png" />
+    <Content Include="Asset\SaveImgProduct\eae661a1-8d1c-44dd-b2a0-229c019923e4.png" />
+    <Content Include="Asset\SaveImgProduct\eb09969d-8ccf-4c39-9d36-1db70a3f9286.png" />
+    <Content Include="Asset\SaveImgProduct\eeafc497-7abd-497b-9688-e8ddc74a9865.png" />
+    <Content Include="Asset\SaveImgProduct\eebef846-e71c-486e-83fe-0d748221adb0.png" />
+    <Content Include="Asset\SaveImgProduct\ef3cec61-cba9-4943-bb37-0ff5eb97b2f9.png" />
+    <Content Include="Asset\SaveImgProduct\effca901-0247-4f3e-b638-60fd2cd1ca41.png" />
+    <Content Include="Asset\SaveImgProduct\f3796b9c-7865-4ed3-a818-2d982cf34c74.png" />
+    <Content Include="Asset\SaveImgProduct\f5e1b625-8745-40c4-a643-2010178f6378.png" />
+    <Content Include="Asset\SaveImgProduct\f5f2bb67-99d8-49eb-8415-2160a3621853.png" />
+    <Content Include="Asset\SaveImgProduct\f6fa3180-9b14-4fca-bb2d-fcea598de5c0.png" />
+    <Content Include="Asset\SaveImgProduct\f9d9ffe9-2290-41bf-be6b-1db39fc8423e.png" />
+    <Content Include="Asset\SaveImgProduct\fb0d9e98-a7e3-41bd-bca6-774a539429ae.png" />
+    <Content Include="Asset\SaveImgProduct\fb95c31b-d7f8-4341-8416-9523656e7bde.png" />
+    <Content Include="Asset\SaveImgProduct\fc89620e-5bef-4abf-aba8-a2a4c8796f15.png" />
+    <Content Include="Asset\SaveImgProduct\fdd7539f-f528-4a7d-ae72-eba8c2bca3c3.png" />
+    <Content Include="Asset\SaveImgProduct\fdedb032-e75f-45f0-be38-a4927af3eac6.png" />
+    <Content Include="Asset\SaveImgProduct\fe483365-8759-47ae-a564-f49367e65449.png" />
+    <Content Include="Asset\SaveImgProduct\fe5d7e31-51e5-4fa0-9bd3-405dee725fc6.png" />
+    <Content Include="Asset\SaveImgProduct\ff9e1d9d-6422-4937-9796-fd6c09b93cb5.png" />
+    <Content Include="Content\adminlte.min.css" />
+    <Content Include="Content\availability-calendar.css" />
+    <Content Include="Content\bootstrap-grid.css" />
+    <Content Include="Content\bootstrap-grid.min.css" />
+    <Content Include="Content\bootstrap-grid.rtl.css" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css" />
+    <Content Include="Content\bootstrap-reboot.css" />
+    <Content Include="Content\bootstrap-reboot.min.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css" />
+    <Content Include="Content\bootstrap-utilities.css" />
+    <Content Include="Content\bootstrap-utilities.min.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\bootstrap.rtl.css" />
+    <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\buttons.bootstrap4.min.css" />
+    <Content Include="Content\dataTables.bootstrap4.min.css" />
+    <Content Include="Content\daterangepicker.css" />
+    <Content Include="Content\ekko-lightbox.css" />
+    <Content Include="Content\font-awesome.min.css" />
+    <Content Include="Content\fontawesome-free\css\all.css" />
+    <Content Include="Content\fontawesome-free\css\all.min.css" />
+    <Content Include="Content\fontawesome-free\css\brands.css" />
+    <Content Include="Content\fontawesome-free\css\brands.min.css" />
+    <Content Include="Content\fontawesome-free\css\fontawesome.css" />
+    <Content Include="Content\fontawesome-free\css\fontawesome.min.css" />
+    <Content Include="Content\fontawesome-free\css\regular.css" />
+    <Content Include="Content\fontawesome-free\css\regular.min.css" />
+    <Content Include="Content\fontawesome-free\css\solid.css" />
+    <Content Include="Content\fontawesome-free\css\solid.min.css" />
+    <Content Include="Content\fontawesome-free\css\svg-with-js.css" />
+    <Content Include="Content\fontawesome-free\css\svg-with-js.min.css" />
+    <Content Include="Content\fontawesome-free\css\v4-shims.css" />
+    <Content Include="Content\fontawesome-free\css\v4-shims.min.css" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-brands-400.svg" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-regular-400.svg" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-solid-900.svg" />
+    <Content Include="Content\icheck-bootstrap.min.css" />
+    <Content Include="Content\ion.rangeSlider.css" />
+    <Content Include="Content\ion.rangeSlider.skinFlat.css" />
+    <Content Include="Content\jquerysctipttop.css" />
+    <Content Include="Content\jqvmap.min.css" />
+    <Content Include="Content\linearicons.css" />
+    <Content Include="Content\magnific-popup.css" />
+    <Content Include="Content\main.css" />
+    <Content Include="Content\nice-select.css" />
+    <Content Include="Content\nouislider.min.css" />
+    <Content Include="Content\OverlayScrollbars.min.css" />
+    <Content Include="Content\owl.carousel.css" />
+    <Content Include="Content\responsive.bootstrap4.min.css" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Content\summernote-bs4.min.css" />
+    <Content Include="Content\tempusdominus-bootstrap-4.min.css" />
+    <Content Include="Content\themify-icons.css" />
+    <Content Include="fonts\fontawesome-webfont.svg" />
+    <Content Include="fonts\Linearicons-Free.svg" />
+    <Content Include="fonts\themify.svg" />
+    <Content Include="Global.asax" />
+    <Content Include="Models\DataModel.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>DataModel.edmx</DependentUpon>
+      <LastGenOutput>DataModel.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Models\DataModel.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>DataModel.edmx</DependentUpon>
+      <LastGenOutput>DataModel.cs</LastGenOutput>
+    </Content>
+    <Content Include="Scripts\adminlte.min.js" />
+    <Content Include="Scripts\bootstrap.bundle.js" />
+    <Content Include="Scripts\bootstrap.bundle.min.js" />
+    <Content Include="Scripts\bootstrap.esm.js" />
+    <Content Include="Scripts\bootstrap.esm.min.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Scripts\buttons.bootstrap4.min.js" />
+    <Content Include="Scripts\buttons.colVis.min.js" />
+    <Content Include="Scripts\buttons.html5.min.js" />
+    <Content Include="Scripts\buttons.print.min.js" />
+    <Content Include="Scripts\Chart.min.js" />
+    <Content Include="Scripts\countdown.js" />
+    <Content Include="Scripts\dashboard.js" />
+    <Content Include="Scripts\dataTables.bootstrap4.min.js" />
+    <Content Include="Scripts\dataTables.buttons.min.js" />
+    <Content Include="Scripts\dataTables.responsive.min.js" />
+    <Content Include="Scripts\daterangepicker.js" />
+    <Content Include="Scripts\demo.js" />
+    <Content Include="Scripts\ekko-lightbox.min.js" />
+    <Content Include="Scripts\gmaps.min.js" />
+    <Content Include="Scripts\ion.rangeSlider.js" />
+    <Content Include="Scripts\face-ai.js" />
+    <Content Include="Scripts\jquery-ui.min.js" />
+    <Content Include="Scripts\jquery.ajaxchimp.min.js" />
+    <Content Include="Scripts\jquery.dataTables.min.js" />
+    <Content Include="Scripts\jquery.filterizr.min.js" />
+    <Content Include="Scripts\jquery.knob.min.js" />
+    <Content Include="Scripts\jquery.magnific-popup.min.js" />
+    <Content Include="Scripts\jquery.min.js" />
+    <Content Include="Scripts\jquery.nice-select.min.js" />
+    <Content Include="Scripts\jquery.overlayScrollbars.min.js" />
+    <Content Include="Scripts\jquery.sticky.js" />
+    <Content Include="Scripts\jquery.vmap.min.js" />
+    <Content Include="Scripts\jquery.vmap.usa.js" />
+    <Content Include="Scripts\jszip.min.js" />
+    <Content Include="Scripts\main.js" />
+    <Content Include="Scripts\moment.min.js" />
+    <Content Include="Scripts\nouislider.min.js" />
+    <Content Include="Scripts\owl.carousel.min.js" />
+    <Content Include="Scripts\parallax.min.js" />
+    <Content Include="Scripts\pdfmake.min.js" />
+    <Content Include="Scripts\responsive.bootstrap4.min.js" />
+    <Content Include="Scripts\sparkline.js" />
+    <Content Include="Scripts\summernote-bs4.min.js" />
+    <Content Include="Scripts\tempusdominus-bootstrap-4.min.js" />
+    <Content Include="Scripts\vendor\bootstrap.min.js" />
+    <Content Include="Scripts\vendor\jquery-2.2.4.min.js" />
+    <Content Include="Scripts\vendor\popper.js" />
+    <Content Include="Scripts\vfs_fonts.js" />
+    <Content Include="Web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Areas\AdminPage\AdminPageAreaRegistration.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\DashboardController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ListBlogController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ListBrandController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ListOrderController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ListProductController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ListTypeProductController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ManagerAccountController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ManagerBlogController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ManagerProductController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ManagerRevenueController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ProfileController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\SettingInformationWebsiteController.cs" />
+    <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\BlogController.cs" />
+    <Compile Include="Controllers\CheckoutController.cs" />
+    <Compile Include="Controllers\ContactController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Controllers\FaceAIController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ProductController.cs" />
+    <Compile Include="Controllers\ProfileUserController.cs" />
+    <Compile Include="Controllers\ShoppingCartController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\baiViet.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\chiTietDonHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CustomAuthenticationAttribute.cs" />
+    <Compile Include="Models\CustomAuthorizeAttribute.cs" />
+    <Compile Include="Models\danhSachHinh.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DataModel.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DataModel.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DataModel.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataModel.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\donHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\HashPassword.cs" />
+    <Compile Include="Models\khachHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\loaiSP.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\nhomTaiKhoan.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Payments\VnPayLibrary.cs" />
+    <Compile Include="Models\sanPham.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\taiKhoanThanhVien.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\thongTinCuaHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\thuongHieu.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModel\Cart.cs" />
+    <Compile Include="ViewModel\FiltersProduct.cs" />
+    <Compile Include="ViewModel\Login.cs" />
+    <Compile Include="ViewModel\PostVM.cs" />
+    <Compile Include="ViewModel\ProductVM.cs" />
+    <Compile Include="ViewModel\PurchaseInformation.cs" />
+    <Compile Include="ViewModel\Register.cs" />
+    <Compile Include="ViewModel\UpdateAccount.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\web.config" />
+    <Content Include="Asset\img\.DS_Store" />
+    <Content Include="Asset\img\organic-food\.DS_Store" />
+    <Content Include="Content\.DS_Store" />
+    <Content Include="Content\bootstrap-grid.css.map" />
+    <Content Include="Content\bootstrap-grid.min.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.css.map" />
+    <Content Include="Content\bootstrap-reboot.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.css.map" />
+    <Content Include="Content\bootstrap-utilities.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\bootstrap.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.rtl.css.map" />
+    <Content Include="Content\bootstrap.rtl.min.css.map" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-brands-400.eot" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-brands-400.ttf" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-brands-400.woff" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-brands-400.woff2" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-regular-400.eot" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-regular-400.ttf" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-regular-400.woff" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-regular-400.woff2" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-solid-900.eot" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-solid-900.ttf" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-solid-900.woff" />
+    <Content Include="Content\fontawesome-free\webfonts\fa-solid-900.woff2" />
+    <Content Include="Content\main.css.map" />
+    <Content Include="Content\main.map" />
+    <Content Include="fonts\fontawesome-webfont.eot" />
+    <Content Include="fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\fontawesome-webfont.woff2" />
+    <Content Include="fonts\FontAwesome.otf" />
+    <Content Include="fonts\Linearicons-Free.eot" />
+    <Content Include="fonts\Linearicons-Free.ttf" />
+    <Content Include="fonts\Linearicons-Free.woff" />
+    <Content Include="fonts\Linearicons-Free.woff2" />
+    <Content Include="fonts\themify.eot" />
+    <Content Include="fonts\themify.ttf" />
+    <Content Include="fonts\themify.woff" />
+    <Content Include="Areas\AdminPage\Views\Dashboard\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListBlog\AddBlog.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListBlog\BlogList.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListBrand\Brand.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListOrder\DetailOrder.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListOrder\OrdersList.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListProduct\AddProduct.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListProduct\ProductsList.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ListTypeProduct\ProductType.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ManagerAccount\AccountManager.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ManagerAccount\DetailAccountUser.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ManagerBlog\ManagerBlog.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ManagerProduct\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ManagerRevenue\Revenue.cshtml" />
+    <Content Include="Areas\AdminPage\Views\Profile\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\SettingInformationWebsite\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\Shared\_Layout.cshtml" />
+    <Content Include="Areas\AdminPage\Views\web.config" />
+    <Content Include="Areas\AdminPage\Views\_ViewStart.cshtml" />
+    <EntityDeploy Include="Models\DataModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>DataModel.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <Content Include="Models\DataModel.edmx.diagram">
+      <DependentUpon>DataModel.edmx</DependentUpon>
+    </Content>
+    <None Include="packages.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Account\LoginAccount.cshtml" />
+    <Content Include="Views\Account\RegisterAccount.cshtml" />
+    <Content Include="Views\Blog\DetailBlog.cshtml" />
+    <Content Include="Views\Blog\Index.cshtml" />
+    <Content Include="Views\Checkout\CheckoutSuccess.cshtml" />
+    <Content Include="Views\Checkout\Index.cshtml" />
+    <Content Include="Views\Contact\Index.cshtml" />
+    <Content Include="Views\Error\Index.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Product\DetailProduct.cshtml" />
+    <Content Include="Views\Product\Index.cshtml" />
+    <Content Include="Views\ProfileUser\DetailPurchaseOrder.cshtml" />
+    <Content Include="Views\ProfileUser\Profile.cshtml" />
+    <Content Include="Views\ShoppingCart\Cart.cshtml" />
+    <Content Include="Scripts\.DS_Store" />
+    <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
+    <Content Include="Scripts\bootstrap.esm.js.map" />
+    <Content Include="Scripts\bootstrap.esm.min.js.map" />
+    <Content Include="Scripts\bootstrap.js.map" />
+    <Content Include="Scripts\bootstrap.min.js.map" />
+    <Content Include="Views\FaceAI\Index.cshtml" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Areas\AdminPage\Data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>49756</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:49756/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

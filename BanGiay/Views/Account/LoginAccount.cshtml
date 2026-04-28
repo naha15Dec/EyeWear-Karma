@@ -1,0 +1,71 @@
+﻿@model BanGiay.ViewModel.Login
+@{
+    ViewBag.Title = "Đăng nhập";
+}
+<section class="banner-area organic-breadcrumb">
+    <div class="container">
+        <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+            <div class="col-first">
+                <h1>Đăng nhập</h1>
+                <nav class="d-flex align-items-center">
+                    <a href="@Url.Action("Index","Home")">Trang chủ<span class="lnr lnr-arrow-right"></span></a>
+                    <a href="@Url.Action("LoginAccount","Account")">Đăng nhập</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="login_box_area section_gap">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-lg-6">
+                <div class="login_box_img">
+                    <img class="img-fluid" src="../Asset/img/login.jpg" alt="">
+                    <div class="hover">
+                        <h4>Bạn là người mới ?</h4>
+                        <p>Hãy đăng ký tài khoản để được hỗ trợ tốt nhất khi mua tại cửa hàng</p>
+                        <a class="primary-btn" href='@Url.Action("RegisterAccount","Account")'>Tạo tài khoản</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="login_form_inner">
+                    <h3>Đăng nhập</h3>
+
+                    @* THÔNG BÁO TỪ ADD TO CART *@
+                    @if (TempData["NotificationLogin"] != null)
+                    {
+                        <div class="alert alert-warning" style="font-size:15px;">
+                            @TempData["NotificationLogin"]
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("LoginAccount", "Account", FormMethod.Post,
+                        new { @class = "row login_form", id = "contactForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="col-md-12 form-group">
+                            @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Tài khoản" })
+                            @Html.ValidationMessageFor(m => m.Username)
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Mật khẩu" })
+                            @Html.ValidationMessageFor(m => m.Password)
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            <button type="submit" class="primary-btn">Đăng nhập</button>
+                            <a style="cursor:pointer;" data-toggle="modal" data-target="#customModal">Quên mật khẩu</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
