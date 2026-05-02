@@ -212,18 +212,27 @@
 
     <section class="product-section-modern">
         <div class="container">
+
             <div class="section-heading">
                 <span class="eyebrow">Lựa chọn nổi bật</span>
                 <h2>Sản phẩm được yêu thích</h2>
                 <p>
-                    Những mẫu kính đang thu hút nhiều sự quan tâm bởi thiết kế đẹp, mức giá hợp lý
-                    và khả năng ứng dụng cao trong nhiều phong cách khác nhau.
+                    Những mẫu kính đang thu hút nhiều sự quan tâm bởi thiết kế đẹp,
+                    mức giá hợp lý và khả năng ứng dụng cao trong nhiều phong cách khác nhau.
                 </p>
             </div>
 
-            <div class="product-tabs-head">
-                <span class="tab-pill">Giảm giá</span>
-                <span class="tab-pill">Sản phẩm mới</span>
+            <!-- ====================== SẢN PHẨM GIẢM GIÁ ====================== -->
+
+            <div class="d-flex align-items-center justify-content-between mb-4 product-subheading">
+                <div>
+                    <span class="eyebrow d-block mb-1">Ưu đãi nổi bật</span>
+                    <h4 class="mb-0">Sản phẩm đang giảm giá</h4>
+                </div>
+
+                <a href="@Url.Action("Index", "Product")" class="view-more-link">
+                    Xem thêm <i class="fa fa-long-arrow-right ml-1"></i>
+                </a>
             </div>
 
             <div class="mb-5">
@@ -240,10 +249,12 @@
                                 <div class="product-card-modern">
                                     <div class="product-thumb">
                                         <span class="product-badge">Sale</span>
+
                                         <img src="@imageUrl"
                                              alt="@item.TenSanPham"
                                              onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
                                     </div>
+
                                     <div class="product-body">
                                         <div class="product-name">@item.TenSanPham</div>
 
@@ -259,7 +270,8 @@
                                         <div class="product-actions">
                                             @if (conHang)
                                             {
-                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })" class="btn-cart">
+                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })"
+                                                   class="btn-cart">
                                                     <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
                                                 </a>
                                             }
@@ -268,7 +280,8 @@
                                                 <span class="btn-cart disabled">Hết hàng</span>
                                             }
 
-                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="btn-detail">
+                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
+                                               class="btn-detail">
                                                 Chi tiết
                                             </a>
                                         </div>
@@ -280,10 +293,25 @@
                     else
                     {
                         <div class="col-12">
-                            <div class="alert alert-light border">Hiện chưa có sản phẩm giảm giá.</div>
+                            <div class="alert alert-light border">
+                                Hiện chưa có sản phẩm giảm giá.
+                            </div>
                         </div>
                     }
                 </div>
+            </div>
+
+            <!-- ====================== SẢN PHẨM MỚI ====================== -->
+
+            <div class="d-flex align-items-center justify-content-between mb-4 mt-5 product-subheading">
+                <div>
+                    <span class="eyebrow d-block mb-1">Bộ sưu tập mới</span>
+                    <h4 class="mb-0">Sản phẩm mới cập nhật</h4>
+                </div>
+
+                <a href="@Url.Action("Index", "Product")" class="view-more-link">
+                    Xem thêm <i class="fa fa-long-arrow-right ml-1"></i>
+                </a>
             </div>
 
             <div>
@@ -298,13 +326,19 @@
                             <div class="col-lg-3 col-md-6 mb-4">
                                 <div class="product-card-modern">
                                     <div class="product-thumb">
-                                        <span class="product-badge" style="background:#b08d57;">New</span>
+                                        <span class="product-badge" style="background:#b08d57;">
+                                            New
+                                        </span>
+
                                         <img src="@imageUrl"
                                              alt="@item.TenSanPham"
                                              onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
                                     </div>
+
                                     <div class="product-body">
-                                        <div class="product-name">@item.TenSanPham</div>
+                                        <div class="product-name">
+                                            @item.TenSanPham
+                                        </div>
 
                                         <div class="product-price">
                                             <span class="sale">@money(item.GiaBan)đ</span>
@@ -313,7 +347,8 @@
                                         <div class="product-actions">
                                             @if (conHang)
                                             {
-                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })" class="btn-cart">
+                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })"
+                                                   class="btn-cart">
                                                     <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
                                                 </a>
                                             }
@@ -322,7 +357,8 @@
                                                 <span class="btn-cart disabled">Hết hàng</span>
                                             }
 
-                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="btn-detail">
+                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
+                                               class="btn-detail">
                                                 Chi tiết
                                             </a>
                                         </div>
@@ -334,11 +370,14 @@
                     else
                     {
                         <div class="col-12">
-                            <div class="alert alert-light border">Hiện chưa có sản phẩm mới.</div>
+                            <div class="alert alert-light border">
+                                Hiện chưa có sản phẩm mới.
+                            </div>
                         </div>
                     }
                 </div>
             </div>
+
         </div>
     </section>
 
@@ -490,28 +529,11 @@
             </div>
         </div>
     </section>
-
-    <section class="section-space pt-0">
-        <div class="container">
-            <div class="recommend-box-modern">
-                <h3>Gợi ý dành riêng cho bạn</h3>
-                <p>
-                    Hệ thống sẽ tự động đề xuất những mẫu kính phù hợp dựa trên hành vi và sở thích mua sắm của bạn.
-                </p>
-
-                <div id="recommendation-box">
-                    Đang tải gợi ý cho bạn...
-                </div>
-            </div>
-        </div>
-    </section>
 </div>
 
 @section Scripts {
     <script>
         $(function () {
-            $("#recommendation-box").load("/Recommendation/ForUser?maKH=1");
-
             var countdown = document.getElementById("homeDealCountdown");
             if (countdown) {
                 var endTimeStr = countdown.getAttribute("data-end");

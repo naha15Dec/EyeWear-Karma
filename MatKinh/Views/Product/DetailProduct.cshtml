@@ -8,7 +8,6 @@
     ViewBag.Title = "Chi tiết sản phẩm";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
 
-    var relatedProducts = ViewBag.RelatedProducts as List<SanPham> ?? new List<SanPham>();
     var recommendedProducts = ViewBag.RecommendedProducts as List<SanPham> ?? new List<SanPham>();
 
     Func<string, string> normalizeImage = (path) =>
@@ -279,35 +278,36 @@
             <div class="section-heading">
                 <span class="eyebrow">Gợi ý cho bạn</span>
                 <h2>Sản phẩm gợi ý</h2>
-                <p>Những mẫu kính có phong cách hoặc đặc điểm gần với sản phẩm bạn đang xem.</p>
+                <p>
+                    Những mẫu kính được hệ thống đề xuất dựa trên hành vi người dùng,
+                    sản phẩm tương đồng, cùng thương hiệu hoặc mức giá gần tương đương.
+                </p>
             </div>
 
-            @{
-                var displayProducts = recommendedProducts.Any() ? recommendedProducts : relatedProducts;
-            }
-
-            @if (displayProducts.Any())
+            @if (recommendedProducts.Any())
             {
                 <div class="row">
-                    @foreach (var item in displayProducts)
+                    @foreach (var item in recommendedProducts)
                     {
                         string itemImg = normalizeImage(item.HinhAnhChinh);
                         bool itemIsSale = item.GiaGoc > item.GiaBan;
+                        string itemName = item.TenSanPham ?? "Sản phẩm";
 
                         <div class="col-md-6 col-lg-3 mb-4">
                             <div class="recommend-product-card">
-                                <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })" class="recommend-product-link">
+                                <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
+                                   class="recommend-product-link">
                                     <div class="recommend-product-image">
                                         <img src="@itemImg"
-                                             alt="@item.TenSanPham"
+                                             alt="@itemName"
                                              onerror="this.onerror=null;this.src='@fallbackImg';" />
                                     </div>
 
                                     <div class="recommend-product-body">
                                         <h5 class="recommend-product-title">
-                                            @(item.TenSanPham != null && item.TenSanPham.Length > 45
-                                                ? item.TenSanPham.Substring(0, 45) + "..."
-                                                : item.TenSanPham)
+                                            @(itemName.Length > 45
+                                                ? itemName.Substring(0, 45) + "..."
+                                                : itemName)
                                         </h5>
 
                                         @if (itemIsSale)

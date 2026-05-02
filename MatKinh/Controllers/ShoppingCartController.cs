@@ -85,8 +85,27 @@ namespace MatKinh.Controllers
             }
 
             SaveCart(cart);
-            TempData["CartSuccess"] = "Đã thêm sản phẩm vào giỏ hàng.";
 
+            try
+            {
+                UserBehaviorLogger.Log(
+                    db,
+                    Session,
+                    product.SanPhamId,
+                    UserBehaviorConstants.ADD_TO_CART,
+                    UserBehaviorConstants.ADD_TO_CART_WEIGHT,
+                    "CART",
+                    null
+                );
+
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+
+            TempData["CartSuccess"] = "Đã thêm sản phẩm vào giỏ hàng.";
             return RedirectToAction("Cart");
         }
 

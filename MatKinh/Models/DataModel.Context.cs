@@ -36,5 +36,6 @@ namespace MatKinh.Models
         public virtual DbSet<ThongTinCuaHang> ThongTinCuaHangs { get; set; }
         public virtual DbSet<ThuongHieu> ThuongHieux { get; set; }
         public virtual DbSet<VaiTro> VaiTroes { get; set; }
+        public virtual DbSet<HanhViNguoiDung> HanhViNguoiDungs { get; set; }
     }
 }

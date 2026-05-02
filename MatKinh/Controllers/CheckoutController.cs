@@ -107,6 +107,7 @@ namespace MatKinh.Controllers
                     }
 
                     KhachHang customer = GetOrCreateCustomer(accountInDb, model);
+                    Session["KhachHangId"] = customer.KhachHangId;
 
                     decimal tongTienHang = 0m;
                     decimal tongGiamGia = 0m;
@@ -171,6 +172,16 @@ namespace MatKinh.Controllers
                         };
 
                         db.ChiTietDonHangs.Add(detail);
+
+                        UserBehaviorLogger.Log(
+                            db,
+                            Session,
+                            product.SanPhamId,
+                            UserBehaviorConstants.PURCHASE,
+                            UserBehaviorConstants.PURCHASE_WEIGHT,
+                            "CHECKOUT",
+                            "DonHangId=" + order.DonHangId
+                        );
 
                         tongTienHang += donGia * soLuong;
                         tongGiamGia += giamGia * soLuong;

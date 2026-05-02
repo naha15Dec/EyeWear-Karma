@@ -70,14 +70,14 @@ namespace MatKinh.Controllers
                 .Where(x => x.GiaGoc > x.GiaBan)
                 .OrderByDescending(x => (x.GiaGoc - x.GiaBan))
                 .ThenByDescending(x => x.CreatedAt)
-                .Take(8)
+                .Take(4)
                 .ToList();
 
             // Sản phẩm mới: ưu tiên sản phẩm active mới tạo gần đây
             ViewData["listNewProduct"] = baseQuery
                 .OrderByDescending(x => x.CreatedAt)
                 .ThenByDescending(x => x.SanPhamId)
-                .Take(8)
+                .Take(4)
                 .ToList();
 
             // Deal hot: sản phẩm giảm mạnh nhất

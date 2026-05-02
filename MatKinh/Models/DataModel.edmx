@@ -65,6 +65,20 @@
           <Property Name="MaGiaoDichThanhToan" Type="nvarchar" MaxLength="100" />
           <Property Name="NgayThanhToan" Type="datetime" />
         </EntityType>
+        <EntityType Name="HanhViNguoiDung">
+          <Key>
+            <PropertyRef Name="HanhViId" />
+          </Key>
+          <Property Name="HanhViId" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="KhachHangId" Type="int" />
+          <Property Name="SanPhamId" Type="int" Nullable="false" />
+          <Property Name="LoaiHanhVi" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="Nguon" Type="varchar" MaxLength="30" />
+          <Property Name="SessionId" Type="varchar" MaxLength="100" />
+          <Property Name="TrongSo" Type="decimal" Precision="5" Scale="2" Nullable="false" />
+          <Property Name="GhiChu" Type="nvarchar" MaxLength="255" />
+          <Property Name="CreatedAt" Type="datetime2" Precision="7" Nullable="false" />
+        </EntityType>
         <EntityType Name="KhachHang">
           <Key>
             <PropertyRef Name="KhachHangId" />
@@ -275,6 +289,30 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_HanhViNguoiDung_KhachHang">
+          <End Role="KhachHang" Type="Self.KhachHang" Multiplicity="0..1" />
+          <End Role="HanhViNguoiDung" Type="Self.HanhViNguoiDung" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KhachHang">
+              <PropertyRef Name="KhachHangId" />
+            </Principal>
+            <Dependent Role="HanhViNguoiDung">
+              <PropertyRef Name="KhachHangId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HanhViNguoiDung_SanPham">
+          <End Role="SanPham" Type="Self.SanPham" Multiplicity="1" />
+          <End Role="HanhViNguoiDung" Type="Self.HanhViNguoiDung" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SanPham">
+              <PropertyRef Name="SanPhamId" />
+            </Principal>
+            <Dependent Role="HanhViNguoiDung">
+              <PropertyRef Name="SanPhamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_LichSuTrangThai_DonHang">
           <End Role="DonHang" Type="Self.DonHang" Multiplicity="1" />
           <End Role="LichSuTrangThaiDonHang" Type="Self.LichSuTrangThaiDonHang" Multiplicity="*" />
@@ -363,6 +401,7 @@
           <EntitySet Name="BaiViet" EntityType="Self.BaiViet" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ChiTietDonHang" EntityType="Self.ChiTietDonHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="DonHang" EntityType="Self.DonHang" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="HanhViNguoiDung" EntityType="Self.HanhViNguoiDung" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KhachHang" EntityType="Self.KhachHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LichSuTrangThaiDonHang" EntityType="Self.LichSuTrangThaiDonHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LoaiSanPham" EntityType="Self.LoaiSanPham" Schema="dbo" store:Type="Tables" />
@@ -398,6 +437,14 @@
           <AssociationSet Name="FK_DonHang_Shipper" Association="Self.FK_DonHang_Shipper">
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
             <End Role="DonHang" EntitySet="DonHang" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HanhViNguoiDung_KhachHang" Association="Self.FK_HanhViNguoiDung_KhachHang">
+            <End Role="KhachHang" EntitySet="KhachHang" />
+            <End Role="HanhViNguoiDung" EntitySet="HanhViNguoiDung" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HanhViNguoiDung_SanPham" Association="Self.FK_HanhViNguoiDung_SanPham">
+            <End Role="SanPham" EntitySet="SanPham" />
+            <End Role="HanhViNguoiDung" EntitySet="HanhViNguoiDung" />
           </AssociationSet>
           <AssociationSet Name="FK_LichSuTrangThai_DonHang" Association="Self.FK_LichSuTrangThai_DonHang">
             <End Role="DonHang" EntitySet="DonHang" />
@@ -518,6 +565,7 @@
           <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
           <Property Name="UpdatedAt" Type="DateTime" Precision="3" />
           <NavigationProperty Name="DonHangs" Relationship="Self.FK_DonHang_KhachHang" FromRole="KhachHang" ToRole="DonHang" />
+          <NavigationProperty Name="HanhViNguoiDungs" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" FromRole="KhachHang" ToRole="HanhViNguoiDung" />
         </EntityType>
         <EntityType Name="LichSuTrangThaiDonHang">
           <Key>
@@ -570,6 +618,7 @@
           <NavigationProperty Name="LoaiSanPham" Relationship="Self.FK_SanPham_LoaiSanPham" FromRole="SanPham" ToRole="LoaiSanPham" />
           <NavigationProperty Name="TaiKhoan" Relationship="Self.FK_SanPham_CreatedBy" FromRole="SanPham" ToRole="TaiKhoan" />
           <NavigationProperty Name="ThuongHieu" Relationship="Self.FK_SanPham_ThuongHieu" FromRole="SanPham" ToRole="ThuongHieu" />
+          <NavigationProperty Name="HanhViNguoiDungs" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" FromRole="SanPham" ToRole="HanhViNguoiDung" />
         </EntityType>
         <EntityType Name="TaiKhoan">
           <Key>
@@ -882,7 +931,56 @@
             <End Role="TaiKhoan" EntitySet="TaiKhoans" />
             <End Role="ThongTinCuaHang" EntitySet="ThongTinCuaHangs" />
           </AssociationSet>
+          <EntitySet Name="HanhViNguoiDungs" EntityType="BanMatKinhModel.HanhViNguoiDung" />
+          <AssociationSet Name="FK_HanhViNguoiDung_KhachHang" Association="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang">
+            <End Role="KhachHang" EntitySet="KhachHangs" />
+            <End Role="HanhViNguoiDung" EntitySet="HanhViNguoiDungs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_HanhViNguoiDung_SanPham" Association="BanMatKinhModel.FK_HanhViNguoiDung_SanPham">
+            <End Role="SanPham" EntitySet="SanPhams" />
+            <End Role="HanhViNguoiDung" EntitySet="HanhViNguoiDungs" />
+          </AssociationSet>
         </EntityContainer>
+        <EntityType Name="HanhViNguoiDung">
+          <Key>
+            <PropertyRef Name="HanhViId" />
+          </Key>
+          <Property Name="HanhViId" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="KhachHangId" Type="Int32" />
+          <Property Name="SanPhamId" Type="Int32" Nullable="false" />
+          <Property Name="LoaiHanhVi" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="Nguon" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="SessionId" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="TrongSo" Type="Decimal" Nullable="false" Precision="5" Scale="2" />
+          <Property Name="GhiChu" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="7" />
+          <NavigationProperty Name="KhachHang" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" FromRole="HanhViNguoiDung" ToRole="KhachHang" />
+          <NavigationProperty Name="SanPham" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" FromRole="HanhViNguoiDung" ToRole="SanPham" />
+        </EntityType>
+        <Association Name="FK_HanhViNguoiDung_KhachHang">
+          <End Type="BanMatKinhModel.KhachHang" Role="KhachHang" Multiplicity="0..1" />
+          <End Type="BanMatKinhModel.HanhViNguoiDung" Role="HanhViNguoiDung" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KhachHang">
+              <PropertyRef Name="KhachHangId" />
+            </Principal>
+            <Dependent Role="HanhViNguoiDung">
+              <PropertyRef Name="KhachHangId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_HanhViNguoiDung_SanPham">
+          <End Type="BanMatKinhModel.SanPham" Role="SanPham" Multiplicity="1" />
+          <End Type="BanMatKinhModel.HanhViNguoiDung" Role="HanhViNguoiDung" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SanPham">
+              <PropertyRef Name="SanPhamId" />
+            </Principal>
+            <Dependent Role="HanhViNguoiDung">
+              <PropertyRef Name="SanPhamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1083,6 +1181,21 @@
                 <ScalarProperty Name="IsActive" ColumnName="IsActive" />
                 <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
                 <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="HanhViNguoiDungs">
+            <EntityTypeMapping TypeName="BanMatKinhModel.HanhViNguoiDung">
+              <MappingFragment StoreEntitySet="HanhViNguoiDung">
+                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
+                <ScalarProperty Name="GhiChu" ColumnName="GhiChu" />
+                <ScalarProperty Name="TrongSo" ColumnName="TrongSo" />
+                <ScalarProperty Name="SessionId" ColumnName="SessionId" />
+                <ScalarProperty Name="Nguon" ColumnName="Nguon" />
+                <ScalarProperty Name="LoaiHanhVi" ColumnName="LoaiHanhVi" />
+                <ScalarProperty Name="SanPhamId" ColumnName="SanPhamId" />
+                <ScalarProperty Name="KhachHangId" ColumnName="KhachHangId" />
+                <ScalarProperty Name="HanhViId" ColumnName="HanhViId" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

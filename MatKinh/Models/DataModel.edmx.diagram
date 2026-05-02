@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="5f9c191940f64430bc0e851f7a29f121" Name="Diagram1" ZoomLevel="77">
+      <Diagram DiagramId="5f9c191940f64430bc0e851f7a29f121" Name="Diagram1" ZoomLevel="45">
         <EntityTypeShape EntityType="BanMatKinhModel.BaiViet" Width="1.5" PointX="5.25" PointY="8.25" IsExpanded="true" />
         <EntityTypeShape EntityType="BanMatKinhModel.ChiTietDonHang" Width="1.5" PointX="10.5" PointY="12" IsExpanded="true" />
         <EntityTypeShape EntityType="BanMatKinhModel.DonHang" Width="1.5" PointX="8.25" PointY="9.125" IsExpanded="true" />
@@ -30,6 +30,12 @@
         <AssociationConnector Association="BanMatKinhModel.FK_SanPham_ThuongHieu" ManuallyRouted="false" />
         <AssociationConnector Association="BanMatKinhModel.FK_TaiKhoan_VaiTro" ManuallyRouted="false" />
         <AssociationConnector Association="BanMatKinhModel.FK_ThongTinCuaHang_UpdatedBy" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="BanMatKinhModel.HanhViNguoiDung" Width="1.5" PointX="8.625" PointY="5.25" />
+        <EntityTypeShape EntityType="BanMatKinhModel.sysdiagram" Width="1.5" PointX="1.75" PointY="1.75" />
+        <AssociationConnector Association="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" />
+        <AssociationConnector Association="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
