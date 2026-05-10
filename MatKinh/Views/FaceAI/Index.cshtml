@@ -1,0 +1,115 @@
+﻿@{
+    ViewBag.Title = "AI tư vấn chọn kính";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="@Url.Content("~/Content/css/face-ai.css")" rel="stylesheet" />
+
+<section class="face-ai-page">
+    <div class="container">
+
+        <div class="face-ai-hero">
+            <span class="face-ai-badge">
+                <i class="fa fa-magic"></i>
+                AI FACE RECOMMENDATION
+            </span>
+
+            <h1>AI tư vấn gọng kính phù hợp với khuôn mặt</h1>
+
+            <p>
+                Tải ảnh khuôn mặt của bạn, hệ thống sẽ phân tích dáng mặt và gợi ý
+                những mẫu kính phù hợp với phong cách cá nhân.
+            </p>
+        </div>
+
+        <div class="face-ai-layout">
+            <div class="face-ai-left">
+                <div class="face-ai-card upload-card">
+                    <div class="upload-zone">
+                        <div class="upload-icon">
+                            <i class="fa fa-cloud-upload"></i>
+                        </div>
+
+                        <h3>Tải ảnh khuôn mặt</h3>
+                        <p>Chọn ảnh rõ mặt, nhìn thẳng, ánh sáng tốt để AI phân tích chính xác hơn.</p>
+
+                        <label for="imageUpload" class="upload-label">
+                            <i class="fa fa-image"></i>
+                            Chọn ảnh
+                        </label>
+
+                        <input type="file" id="imageUpload" accept="image/*" />
+
+                        <img id="previewImage" alt="Ảnh xem trước" />
+                    </div>
+
+                    <div class="ai-result-box">
+                        <span class="result-label">Kết quả phân tích</span>
+                        <h3 id="result">Chưa có kết quả</h3>
+                        <p id="suggestion">Hãy tải ảnh khuôn mặt để AI bắt đầu tư vấn.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="face-ai-right">
+                <div class="face-ai-card guide-card">
+                    <span class="guide-label">Hướng dẫn</span>
+                    <h3>Cách dùng AI chọn kính</h3>
+
+                    <div class="guide-list">
+                        <div class="guide-item">
+                            <div class="guide-number">1</div>
+                            <div>
+                                <strong>Chọn ảnh rõ mặt</strong>
+                                <p>Nên dùng ảnh nhìn thẳng, không che mắt, không quá tối.</p>
+                            </div>
+                        </div>
+
+                        <div class="guide-item">
+                            <div class="guide-number">2</div>
+                            <div>
+                                <strong>Chờ AI phân tích</strong>
+                                <p>Hệ thống nhận diện dáng mặt như tròn, vuông, dài hoặc oval.</p>
+                            </div>
+                        </div>
+
+                        <div class="guide-item">
+                            <div class="guide-number">3</div>
+                            <div>
+                                <strong>Xem gợi ý sản phẩm</strong>
+                                <p>Các mẫu gọng kính phù hợp sẽ được hiển thị bên dưới.</p>
+                            </div>
+                        </div>
+
+                        <div class="guide-item">
+                            <div class="guide-number">4</div>
+                            <div>
+                                <strong>Chọn mẫu yêu thích</strong>
+                                <p>Bấm xem chi tiết để kiểm tra giá, kiểu dáng và thông tin sản phẩm.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="products-heading">
+            <span>Sản phẩm phù hợp</span>
+            <h2 id="recommendedTitle">Gợi ý dành riêng cho bạn</h2>
+            <p id="recommendedDesc">
+                Danh sách sản phẩm sẽ hiển thị sau khi AI hoàn tất phân tích khuôn mặt.
+            </p>
+        </div>
+
+        <div id="recommendedProducts" class="recommended-products"></div>
+
+        <div class="face-ai-layout">
+</section>
+
+@section Scripts {
+<script>
+        var getProductsUrl = '@Url.Action("GetRecommendedProducts", "FaceAI")';
+</script>
+
+<script src="@Url.Content("~/Scripts/face-ai.js?v=999")"></script>
+}

@@ -111,6 +111,10 @@ namespace MatKinh.Controllers
 
             return View(product);
         }
+        public ActionResult Detail(int? id)
+        {
+            return RedirectToAction("DetailProduct", new { sanPhamId = id });
+        }
 
         // ========================= TÌM NHANH =========================
 

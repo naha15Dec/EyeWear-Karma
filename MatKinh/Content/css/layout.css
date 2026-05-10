@@ -538,3 +538,167 @@ body.search-open {
         width: 100%;
     }
 }
+/* ===== FIX HEADER THẲNG HÀNG FINAL ===== */
+
+.main-header {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+.navbar.main_box {
+    min-height: 96px;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo {
+    width: 260px;
+    flex: 0 0 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-decoration: none !important;
+}
+
+.brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 0.95;
+    color: #111;
+}
+
+.brand-sub {
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 5px;
+    color: #777;
+    text-transform: uppercase;
+}
+
+.navbar-collapse.offset {
+    margin-left: 0 !important;
+}
+
+#navbarSupportedContent {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+}
+
+.menu_nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap !important;
+    justify-content: center;
+    gap: 34px;
+    margin: 0 auto !important;
+}
+
+    .menu_nav .nav-item {
+        margin: 0 !important;
+    }
+
+    .menu_nav .nav-link {
+        padding: 0 !important;
+        line-height: 96px;
+        color: #222 !important;
+        font-size: 16px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+        .menu_nav .nav-link::after {
+            display: none !important;
+        }
+
+.header-actions {
+    width: 315px;
+    flex: 0 0 315px;
+    margin-left: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+    .header-actions ul {
+        margin: 0;
+    }
+
+.account-chip {
+    height: 54px;
+    padding: 0 20px !important;
+    border-radius: 999px;
+    background: #f6f1eb !important;
+    color: #111 !important;
+    display: inline-flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.action-btn {
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    border-radius: 50%;
+    border: none;
+    background: #f6f1eb !important;
+    color: #111 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .action-btn:hover,
+    .account-chip:hover {
+        background: #111 !important;
+        color: #fff !important;
+    }
+
+/* Mobile */
+@media (max-width: 991px) {
+    .navbar.main_box {
+        min-height: auto;
+        padding: 15px 0 !important;
+    }
+
+    .brand-logo {
+        width: auto;
+        flex: unset;
+    }
+
+    #navbarSupportedContent {
+        display: none !important;
+    }
+
+        #navbarSupportedContent.show {
+            display: block !important;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+    .menu_nav {
+        display: block;
+        margin: 0 !important;
+    }
+
+        .menu_nav .nav-link {
+            line-height: normal;
+            padding: 12px 0 !important;
+        }
+
+    .header-actions {
+        width: auto;
+        flex: unset;
+        justify-content: flex-start;
+        margin-top: 15px;
+    }
+}

@@ -617,6 +617,7 @@
     <Content Include="Content\css\contact.css" />
     <Content Include="Content\css\detail.css" />
     <Content Include="Content\css\error.css" />
+    <Content Include="Content\css\face-ai.css" />
     <Content Include="Content\css\home.css" />
     <Content Include="Content\css\layout.css" />
     <Content Include="Content\css\order-detail.css" />
@@ -696,6 +697,7 @@
     <Content Include="Scripts\daterangepicker.js" />
     <Content Include="Scripts\demo.js" />
     <Content Include="Scripts\ekko-lightbox.min.js" />
+    <Content Include="Scripts\face-ai.js" />
     <Content Include="Scripts\gmaps.min.js" />
     <Content Include="Scripts\ion.rangeSlider.js" />
     <Content Include="Scripts\jquery-ui.min.js" />
@@ -747,6 +749,7 @@
     <Compile Include="Controllers\CheckoutController.cs" />
     <Compile Include="Controllers\ContactController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Controllers\FaceAIController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\ProfileUserController.cs" />
@@ -936,6 +939,7 @@
     <Content Include="Scripts\bootstrap.esm.min.js.map" />
     <Content Include="Scripts\bootstrap.js.map" />
     <Content Include="Scripts\bootstrap.min.js.map" />
+    <Content Include="Views\FaceAI\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
