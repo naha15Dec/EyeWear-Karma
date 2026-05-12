@@ -5,39 +5,81 @@
     ViewBag.Title = "Chi tiết đơn hàng";
 
     List<ChiTietDonHang> details = ViewData["listOfProductInOrder"] as List<ChiTietDonHang> ?? new List<ChiTietDonHang>();
+    List<LichSuTrangThaiDonHang> histories = ViewData["orderHistories"] as List<LichSuTrangThaiDonHang> ?? new List<LichSuTrangThaiDonHang>();
 
-    Func<int, string> orderStatusText = status =>
-    {
-        switch (status)
-        {
-            case 1: return "Chờ xác nhận";
-            case 2: return "Đã xác nhận";
-            case 3: return "Đang chuẩn bị";
-            case 4: return "Đã giao shipper";
-            case 5: return "Đang giao";
-            case 6: return "Đã giao";
-            case 7: return "Giao thất bại";
-            case 8: return "Đã hủy";
-            default: return "Không xác định";
-        }
-    };
+    bool canCancelOrder = ViewBag.CanCancelOrder != null && (bool)ViewBag.CanCancelOrder;
 
     Func<int, string> orderStatusClass = status =>
     {
         switch (status)
         {
-            case 6: return "success";
-            case 8: return "danger";
-            case 7: return "warning";
-            default: return "processing";
+            case OrderStatusConstants.DELIVERED:
+                return "success";
+
+            case OrderStatusConstants.CANCELLED:
+                return "danger";
+
+            case OrderStatusConstants.DELIVERY_FAILED:
+                return "warning";
+
+            case OrderStatusConstants.DELIVERING:
+            case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
+                return "info";
+
+            default:
+                return "processing";
         }
     };
 
-    string paymentText = "Thanh toán khi nhận hàng";
-    if (Model.GhiChu != null && Model.GhiChu.ToLower().Contains("vnpay"))
+    Func<string, string> paymentMethodText = method =>
     {
-        paymentText = "Thanh toán online";
-    }
+        if (string.Equals(method, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán VNPAY";
+        }
+
+        return "Thanh toán khi nhận hàng";
+    };
+
+    Func<string, string> paymentStatusText = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán thất bại";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã hoàn tiền";
+        }
+
+        return "Chờ thanh toán";
+    };
+
+    Func<string, string> paymentStatusClass = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "success";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "danger";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "warning";
+        }
+
+        return "processing";
+    };
 
     decimal tongTienHang = Model.TongTienHang;
     decimal phiVanChuyen = Model.PhiVanChuyen;
@@ -64,6 +106,17 @@
 
     <section class="order-detail-section">
         <div class="container">
+
+            @if (TempData["ProfileSuccess"] != null)
+            {
+                <div class="alert alert-success mb-4">@TempData["ProfileSuccess"]</div>
+            }
+
+            @if (TempData["ProfileError"] != null)
+            {
+                <div class="alert alert-danger mb-4">@TempData["ProfileError"]</div>
+            }
+
             <div class="order-detail-header">
                 <div>
                     <span class="order-detail-eyebrow">Order #@Model.MaDonHang</span>
@@ -72,7 +125,7 @@
 
                 <div class="order-detail-status">
                     <span class="status-badge @orderStatusClass(Model.TrangThai)">
-                        @orderStatusText(Model.TrangThai)
+                        @OrderStatusConstants.GetName(Model.TrangThai)
                     </span>
                 </div>
             </div>
@@ -82,26 +135,41 @@
                     <h3>Thông tin giao hàng</h3>
                     <ul>
                         <li><strong>Người nhận:</strong> @Model.HoTenNguoiNhan</li>
-                        <li><strong>Địa chỉ:</strong> @Model.DiaChiNhanHang</li>
                         <li><strong>SĐT:</strong> @Model.SoDienThoaiNguoiNhan</li>
-                        <li><strong>Email:</strong> @(Model.KhachHang != null ? Model.KhachHang.Email : "—")</li>
+                        <li><strong>Địa chỉ:</strong> @Model.DiaChiNhanHang</li>
+                        <li><strong>Email:</strong> @(Model.KhachHang != null && !string.IsNullOrWhiteSpace(Model.KhachHang.Email) ? Model.KhachHang.Email : "—")</li>
                     </ul>
                 </div>
 
                 <div class="order-info-card">
-                    <h3>Thông tin đơn</h3>
+                    <h3>Thông tin đơn hàng</h3>
                     <ul>
                         <li><strong>Mã đơn:</strong> #@Model.MaDonHang</li>
                         <li><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</li>
-                        <li><strong>Trạng thái:</strong> @orderStatusText(Model.TrangThai)</li>
-                        <li><strong>Thanh toán:</strong> @paymentText</li>
+                        <li><strong>Trạng thái đơn:</strong> @OrderStatusConstants.GetName(Model.TrangThai)</li>
+                        <li><strong>Ghi chú:</strong> @(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</li>
+                    </ul>
+                </div>
+
+                <div class="order-info-card">
+                    <h3>Thông tin thanh toán</h3>
+                    <ul>
+                        <li><strong>Phương thức:</strong> @paymentMethodText(Model.PhuongThucThanhToan)</li>
+                        <li>
+                            <strong>Trạng thái:</strong>
+                            <span class="status-badge @paymentStatusClass(Model.TrangThaiThanhToan)">
+                                @paymentStatusText(Model.TrangThaiThanhToan)
+                            </span>
+                        </li>
+                        <li><strong>Mã giao dịch:</strong> @(string.IsNullOrWhiteSpace(Model.MaGiaoDichThanhToan) ? "—" : Model.MaGiaoDichThanhToan)</li>
+                        <li><strong>Ngày thanh toán:</strong> @(Model.NgayThanhToan.HasValue ? Model.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "—")</li>
                     </ul>
                 </div>
             </div>
 
             <div class="order-products-card">
                 <div class="order-products-head">
-                    <h3>Sản phẩm</h3>
+                    <h3>Sản phẩm trong đơn</h3>
                 </div>
 
                 <div class="order-table-wrap">
@@ -119,20 +187,28 @@
                         <tbody>
                             @foreach (var item in details)
                             {
+                                string imageUrl = item.SanPham != null ? item.SanPham.HinhAnhChinh : "";
+                                string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
                                 <tr>
                                     <td>
                                         <div class="order-product">
+                                            @if (!string.IsNullOrWhiteSpace(imageUrl))
+                                            {
+                                                <div class="order-product__image">
+                                                    <img src="@imageUrl" alt="@item.TenSanPhamSnapshot" />
+                                                </div>
+                                            }
+
                                             <div class="order-product__info">
                                                 <h4>@item.TenSanPhamSnapshot</h4>
-                                                <span>Mã SP ID: @item.SanPhamId</span>
+                                                <span>Mã SP: @productCode</span>
                                             </div>
                                         </div>
                                     </td>
 
                                     <td>x @item.SoLuong</td>
-
                                     <td>@string.Format("{0:N0}", item.DonGiaSnapshot) ₫</td>
-
                                     <td>@string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</td>
 
                                     <td class="order-total-line">
@@ -147,9 +223,22 @@
                 <div class="order-mobile-list">
                     @foreach (var item in details)
                     {
+                        string imageUrl = item.SanPham != null ? item.SanPham.HinhAnhChinh : "";
+                        string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
                         <div class="order-mobile-item">
-                            <h4>@item.TenSanPhamSnapshot</h4>
-                            <p>Mã SP ID: @item.SanPhamId</p>
+                            <div class="order-mobile-product">
+                                @if (!string.IsNullOrWhiteSpace(imageUrl))
+                                {
+                                    <img src="@imageUrl" alt="@item.TenSanPhamSnapshot" />
+                                }
+
+                                <div>
+                                    <h4>@item.TenSanPhamSnapshot</h4>
+                                    <p>Mã SP: @productCode</p>
+                                </div>
+                            </div>
+
                             <p>Số lượng: x @item.SoLuong</p>
                             <p>Giá: @string.Format("{0:N0}", item.DonGiaSnapshot) ₫</p>
                             <p>Giảm: @string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</p>
@@ -161,7 +250,39 @@
 
             <div class="order-summary-card">
                 <div class="order-summary-left">
-                    <p><strong>Ghi chú:</strong> @(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</p>
+                    <h3>Lịch sử trạng thái</h3>
+
+                    @if (histories.Any())
+                    {
+                        <div class="order-timeline">
+                            @foreach (var history in histories)
+                            {
+                                <div class="order-timeline__item">
+                                    <div class="order-timeline__dot"></div>
+
+                                    <div class="order-timeline__content">
+                                        <div class="order-timeline__top">
+                                            <strong>@OrderStatusConstants.GetName(history.TrangThaiMoi)</strong>
+                                            <span>@history.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+
+                                        <p>
+                                            @(string.IsNullOrWhiteSpace(history.GhiChu) ? "Cập nhật trạng thái đơn hàng." : history.GhiChu)
+                                        </p>
+
+                                        @if (history.TaiKhoan != null)
+                                        {
+                                            <small>Cập nhật bởi: @history.TaiKhoan.HoTen</small>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Chưa có lịch sử trạng thái.</p>
+                    }
                 </div>
 
                 <div class="order-summary-right">
@@ -186,6 +307,50 @@
                     </div>
                 </div>
             </div>
+
+            @if (canCancelOrder)
+            {
+                <div class="order-cancel-card">
+                    <div>
+                        <h3>Hủy đơn hàng</h3>
+                        <p>Bạn có thể hủy đơn khi đơn chưa được giao cho shipper hoặc chưa chuyển sang trạng thái giao hàng.</p>
+                    </div>
+
+                    @using (Html.BeginForm("CancelPurchaseOrder", "ProfileUser", FormMethod.Post, new { @class = "order-cancel-form", onsubmit = "return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="maDonHang" value="@Model.MaDonHang" />
+
+                        <input type="text"
+                               name="lyDoHuy"
+                               class="order-cancel-input"
+                               placeholder="Lý do hủy đơn, có thể bỏ trống" />
+
+                        <button type="submit" class="optical-btn optical-btn--danger">
+                            Hủy đơn hàng
+                        </button>
+                    }
+                </div>
+            }
+            else if (Model.TrangThai != OrderStatusConstants.CANCELLED &&
+                     Model.TrangThai != OrderStatusConstants.DELIVERED)
+            {
+                <div class="order-cancel-card order-cancel-card--disabled">
+                    <div>
+                        <h3>Không thể hủy đơn hàng</h3>
+                        <p>
+                            Đơn hàng hiện đang ở trạng thái
+                            <strong>@OrderStatusConstants.GetName(Model.TrangThai)</strong>,
+                            nên bạn không thể tự hủy trên hệ thống.
+                            Nếu cần hỗ trợ, vui lòng liên hệ cửa hàng.
+                        </p>
+                    </div>
+
+                    <button type="button" class="optical-btn optical-btn--disabled" disabled>
+                        Không thể hủy
+                    </button>
+                </div>
+            }
 
             <div class="order-actions">
                 <a href="@Url.Action("Profile", "ProfileUser")"

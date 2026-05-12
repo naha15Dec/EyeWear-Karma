@@ -45,28 +45,28 @@
 
     Func<int, string> orderStatusText = status =>
     {
-        switch (status)
-        {
-            case 1: return "Chờ xác nhận";
-            case 2: return "Đã xác nhận";
-            case 3: return "Đang chuẩn bị";
-            case 4: return "Đã giao shipper";
-            case 5: return "Đang giao";
-            case 6: return "Đã giao";
-            case 7: return "Giao thất bại";
-            case 8: return "Đã hủy";
-            default: return "Không xác định";
-        }
+        return OrderStatusConstants.GetName(status);
     };
 
     Func<int, string> orderStatusClass = status =>
     {
         switch (status)
         {
-            case 6: return "success";
-            case 8: return "danger";
-            case 7: return "warning";
-            default: return "processing";
+            case OrderStatusConstants.DELIVERED:
+                return "success";
+
+            case OrderStatusConstants.CANCELLED:
+                return "danger";
+
+            case OrderStatusConstants.DELIVERY_FAILED:
+                return "warning";
+
+            case OrderStatusConstants.DELIVERING:
+            case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
+                return "info";
+
+            default:
+                return "processing";
         }
     };
 }

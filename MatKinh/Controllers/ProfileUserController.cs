@@ -146,7 +146,10 @@ namespace MatKinh.Controllers
 
             DonHang order = db.DonHangs
                 .Include(x => x.KhachHang)
-                .FirstOrDefault(x => x.MaDonHang == maDonHang && x.CreatedById == currentAccount.TaiKhoanId);
+                .Include(x => x.LichSuTrangThaiDonHangs.Select(ls => ls.TaiKhoan))
+                .FirstOrDefault(x =>
+                    x.MaDonHang == maDonHang &&
+                    x.CreatedById == currentAccount.TaiKhoanId);
 
             if (order == null)
             {
@@ -155,11 +158,134 @@ namespace MatKinh.Controllers
             }
 
             ViewData["listOfProductInOrder"] = db.ChiTietDonHangs
+                .Include(x => x.SanPham)
                 .Where(x => x.DonHangId == order.DonHangId)
                 .OrderBy(x => x.ChiTietDonHangId)
                 .ToList();
 
+            ViewData["orderHistories"] = db.LichSuTrangThaiDonHangs
+                .Include(x => x.TaiKhoan)
+                .Where(x => x.DonHangId == order.DonHangId)
+                .OrderBy(x => x.CreatedAt)
+                .ToList();
+
+            ViewBag.CanCancelOrder = CanCustomerCancelOrder(order);
+
             return View(order);
+        }
+
+        /// <summary>
+        /// Khách hàng hủy đơn hàng của chính mình
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CancelPurchaseOrder(string maDonHang, string lyDoHuy)
+        {
+            TaiKhoan currentAccount = GetCurrentAccount();
+            if (currentAccount == null)
+            {
+                return RedirectToAction("LoginAccount", "Account");
+            }
+
+            if (string.IsNullOrWhiteSpace(maDonHang))
+            {
+                TempData["ProfileError"] = "Mã đơn hàng không hợp lệ.";
+                return RedirectToAction("Profile");
+            }
+
+            maDonHang = maDonHang.Trim();
+
+            DonHang order = db.DonHangs
+                .Include(x => x.ChiTietDonHangs)
+                .FirstOrDefault(x =>
+                    x.MaDonHang == maDonHang &&
+                    x.CreatedById == currentAccount.TaiKhoanId);
+
+            if (order == null)
+            {
+                TempData["ProfileError"] = "Không tìm thấy đơn hàng phù hợp.";
+                return RedirectToAction("Profile");
+            }
+
+            if (!CanCustomerCancelOrder(order))
+            {
+                TempData["ProfileError"] = "Đơn hàng này không thể hủy ở trạng thái hiện tại.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    int oldStatus = order.TrangThai;
+
+                    order.TrangThai = OrderStatusConstants.CANCELLED;
+                    order.NgayHuy = DateTime.Now;
+                    order.UpdatedAt = DateTime.Now;
+
+                    if (string.Equals(order.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(order.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+                    {
+                        order.TrangThaiThanhToan = PaymentConstants.REFUNDED;
+                    }
+
+                    RestoreStockForOrder(order);
+
+                    db.LichSuTrangThaiDonHangs.Add(new LichSuTrangThaiDonHang
+                    {
+                        DonHangId = order.DonHangId,
+                        TrangThaiCu = oldStatus,
+                        TrangThaiMoi = OrderStatusConstants.CANCELLED,
+                        ThayDoiBoiId = currentAccount.TaiKhoanId,
+                        GhiChu = string.IsNullOrWhiteSpace(lyDoHuy)
+                            ? "Khách hàng hủy đơn hàng."
+                            : "Khách hàng hủy đơn hàng. Lý do: " + lyDoHuy.Trim(),
+                        CreatedAt = DateTime.Now
+                    });
+
+                    db.SaveChanges();
+                    transaction.Commit();
+
+                    TempData["ProfileSuccess"] = "Đã hủy đơn hàng thành công.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    TempData["ProfileError"] = "Hủy đơn hàng thất bại: " + ex.Message;
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+            }
+        }
+
+        private bool CanCustomerCancelOrder(DonHang order)
+        {
+            if (order == null)
+            {
+                return false;
+            }
+
+            return order.TrangThai == OrderStatusConstants.PENDING
+                || order.TrangThai == OrderStatusConstants.CONFIRMED
+                || order.TrangThai == OrderStatusConstants.PREPARING;
+        }
+
+        private void RestoreStockForOrder(DonHang order)
+        {
+            if (order == null || order.ChiTietDonHangs == null)
+            {
+                return;
+            }
+
+            foreach (var item in order.ChiTietDonHangs)
+            {
+                SanPham product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == item.SanPhamId);
+                if (product != null)
+                {
+                    product.SoLuongTon += item.SoLuong;
+                    product.UpdatedAt = DateTime.Now;
+                }
+            }
         }
 
         private void BuildOrderPagination(IQueryable<DonHang> orderQuery, int page)

@@ -131,20 +131,45 @@ namespace MatKinh.Models.Payments
         }
         public static string GetIpAddress()
         {
-            string ipAddress;
             try
             {
-                ipAddress = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                var request = HttpContext.Current?.Request;
+                if (request == null)
+                {
+                    return "127.0.0.1";
+                }
 
-                if (string.IsNullOrEmpty(ipAddress) || (ipAddress.ToLower() == "unknown") || ipAddress.Length > 45)
-                    ipAddress = HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"];
+                string ipAddress = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+                if (!string.IsNullOrWhiteSpace(ipAddress))
+                {
+                    string[] addresses = ipAddress.Split(',');
+                    if (addresses.Length > 0)
+                    {
+                        ipAddress = addresses[0].Trim();
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(ipAddress)
+                    || ipAddress.ToLower() == "unknown"
+                    || ipAddress.Length > 45)
+                {
+                    ipAddress = request.ServerVariables["REMOTE_ADDR"];
+                }
+
+                if (string.IsNullOrWhiteSpace(ipAddress)
+                    || ipAddress == "::1"
+                    || ipAddress == "0:0:0:0:0:0:0:1")
+                {
+                    ipAddress = "127.0.0.1";
+                }
+
+                return ipAddress;
             }
-            catch (Exception ex)
+            catch
             {
-                ipAddress = "Invalid IP:" + ex.Message;
+                return "127.0.0.1";
             }
-
-            return ipAddress;
         }
     }
 

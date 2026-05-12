@@ -206,6 +206,10 @@
     </header>
 
     <main class="site-content">
+        <div class="premium-toast-container">
+            @Html.Partial("~/Views/Shared/_FlashMessage.cshtml")
+        </div>
+
         @RenderBody()
     </main>
 

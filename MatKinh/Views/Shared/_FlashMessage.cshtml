@@ -1,0 +1,65 @@
+﻿@{
+    string success = TempData["SuccessMessage"] as string
+        ?? TempData["ProfileSuccess"] as string
+        ?? TempData["CartSuccess"] as string
+        ?? TempData["OrderSuccess"] as string;
+
+    string error = TempData["ErrorMessage"] as string
+        ?? TempData["ProfileError"] as string
+        ?? TempData["CartError"] as string
+        ?? TempData["PaymentError"] as string
+        ?? TempData["OrderError"] as string
+        ?? TempData["PasswordError"] as string;
+
+    string warning = TempData["WarningMessage"] as string;
+    string info = TempData["InfoMessage"] as string
+        ?? TempData["NotificationLogin"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(success))
+{
+    <div class="premium-toast premium-toast--success">
+        <div class="premium-toast__mark">✓</div>
+        <div class="premium-toast__body">
+            <strong>Thành công</strong>
+            <p>@success</p>
+        </div>
+        <button type="button" class="premium-toast__close" onclick="this.parentElement.remove()">×</button>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div class="premium-toast premium-toast--error">
+        <div class="premium-toast__mark">!</div>
+        <div class="premium-toast__body">
+            <strong>Có lỗi xảy ra</strong>
+            <p>@error</p>
+        </div>
+        <button type="button" class="premium-toast__close" onclick="this.parentElement.remove()">×</button>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(warning))
+{
+    <div class="premium-toast premium-toast--warning">
+        <div class="premium-toast__mark">!</div>
+        <div class="premium-toast__body">
+            <strong>Lưu ý</strong>
+            <p>@warning</p>
+        </div>
+        <button type="button" class="premium-toast__close" onclick="this.parentElement.remove()">×</button>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(info))
+{
+    <div class="premium-toast premium-toast--info">
+        <div class="premium-toast__mark">i</div>
+        <div class="premium-toast__body">
+            <strong>Thông báo</strong>
+            <p>@info</p>
+        </div>
+        <button type="button" class="premium-toast__close" onclick="this.parentElement.remove()">×</button>
+    </div>
+}

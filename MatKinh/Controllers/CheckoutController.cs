@@ -66,31 +66,48 @@ namespace MatKinh.Controllers
                 .Where(x => productIds.Contains(x.SanPhamId))
                 .ToList();
 
-            if (products.Count != productIds.Count)
+            string validateError = ValidateCartBeforeCheckout(cart, products, productIds);
+            if (!string.IsNullOrWhiteSpace(validateError))
             {
-                ModelState.AddModelError("", "Một hoặc nhiều sản phẩm không còn tồn tại.");
+                ModelState.AddModelError("", validateError);
                 return View(model);
             }
 
-            foreach (var cartItem in cart)
+            bool isVnPay = string.Equals(
+                model.PhuongThucThanhToan,
+                "Payment_Auto",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (isVnPay)
             {
-                var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
-
-                if (product.TrangThai != ProductStatusActive)
+                try
                 {
-                    ModelState.AddModelError("", $"Sản phẩm '{product.TenSanPham}' hiện không khả dụng.");
-                    return View(model);
+                    decimal tongTienHang;
+                    decimal tongGiamGia;
+                    decimal phiVanChuyen;
+                    decimal tongThanhToan;
+
+                    CalculateOrderAmount(cart, products, model, out tongTienHang, out tongGiamGia, out phiVanChuyen, out tongThanhToan);
+
+                    if (tongThanhToan <= 0)
+                    {
+                        ModelState.AddModelError("", "Tổng thanh toán không hợp lệ.");
+                        return View(model);
+                    }
+
+                    string pendingOrderCode = GenerateOrderCode();
+
+                    Session["PendingVnPayOrderCode"] = pendingOrderCode;
+                    Session["PendingVnPayPurchaseInformation"] = model;
+                    Session["PendingVnPayCart"] = CloneCart(cart);
+                    Session["PendingVnPayAmount"] = tongThanhToan;
+
+                    string paymentUrl = BuildVnPayUrl(pendingOrderCode, tongThanhToan);
+                    return Redirect(paymentUrl);
                 }
-
-                if (cartItem.SoLuong <= 0)
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError("", $"Số lượng của sản phẩm '{product.TenSanPham}' không hợp lệ.");
-                    return View(model);
-                }
-
-                if (product.SoLuongTon < cartItem.SoLuong)
-                {
-                    ModelState.AddModelError("", $"Sản phẩm '{product.TenSanPham}' không đủ số lượng tồn kho.");
+                    ModelState.AddModelError("", "Không thể khởi tạo thanh toán VNPAY: " + ex.Message);
                     return View(model);
                 }
             }
@@ -106,130 +123,24 @@ namespace MatKinh.Controllers
                         return View(model);
                     }
 
-                    KhachHang customer = GetOrCreateCustomer(accountInDb, model);
-                    Session["KhachHangId"] = customer.KhachHangId;
-
-                    decimal tongTienHang = 0m;
-                    decimal tongGiamGia = 0m;
-                    decimal phiVanChuyen = CalculateShippingFee(cart, model);
-
-                    bool isVnPay = string.Equals(
-                          model.PhuongThucThanhToan,
-                          "Payment_Auto",
-                    StringComparison.OrdinalIgnoreCase);
-
-                    var order = new DonHang
-                    {
-                        MaDonHang = GenerateOrderCode(),
-                        KhachHangId = customer.KhachHangId,
-                        HoTenNguoiNhan = model.HoTenNguoiNhan.Trim(),
-                        SoDienThoaiNguoiNhan = model.SoDienThoaiNguoiNhan.Trim(),
-                        DiaChiNhanHang = model.DiaChiNhanHang.Trim(),
-                        TongTienHang = 0m,
-                        PhiVanChuyen = phiVanChuyen,
-                        GiamGia = 0m,
-                        TongThanhToan = 0m,
-                        TrangThai = OrderStatusPending,
-                        GhiChu = string.IsNullOrWhiteSpace(model.GhiChu) ? null : model.GhiChu.Trim(),
-                        CreatedById = accountInDb.TaiKhoanId,
-                        NgayDat = DateTime.Now,
-                        CreatedAt = DateTime.Now,
-                        UpdatedAt = null,
-                        NgayHuy = null,
-
-                        PhuongThucThanhToan = isVnPay ? PaymentConstants.VNPAY : PaymentConstants.COD,
-                        TrangThaiThanhToan = PaymentConstants.PENDING,
-                        MaGiaoDichThanhToan = null,
-                        NgayThanhToan = null
-                    };
-
-                    db.DonHangs.Add(order);
-                    db.SaveChanges();
-
-                    foreach (var cartItem in cart)
-                    {
-                        var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
-
-                        decimal donGia = product.GiaBan;
-                        decimal giamGia = cartItem.GiamGia;
-                        int soLuong = cartItem.SoLuong;
-                        decimal thanhTien = (donGia - giamGia) * soLuong;
-
-                        if (thanhTien < 0)
-                        {
-                            throw new InvalidOperationException($"Thành tiền của sản phẩm '{product.TenSanPham}' không hợp lệ.");
-                        }
-
-                        var detail = new ChiTietDonHang
-                        {
-                            DonHangId = order.DonHangId,
-                            SanPhamId = product.SanPhamId,
-                            TenSanPhamSnapshot = product.TenSanPham,
-                            DonGiaSnapshot = donGia,
-                            SoLuong = soLuong,
-                            GiamGiaSnapshot = giamGia,
-                            ThanhTien = thanhTien
-                        };
-
-                        db.ChiTietDonHangs.Add(detail);
-
-                        UserBehaviorLogger.Log(
-                            db,
-                            Session,
-                            product.SanPhamId,
-                            UserBehaviorConstants.PURCHASE,
-                            UserBehaviorConstants.PURCHASE_WEIGHT,
-                            "CHECKOUT",
-                            "DonHangId=" + order.DonHangId
-                        );
-
-                        tongTienHang += donGia * soLuong;
-                        tongGiamGia += giamGia * soLuong;
-
-                        product.SoLuongTon -= soLuong;
-                        product.UpdatedAt = DateTime.Now;
-                    }
-
-                    order.TongTienHang = tongTienHang;
-                    order.GiamGia = tongGiamGia;
-                    order.TongThanhToan = tongTienHang + phiVanChuyen - tongGiamGia;
-
-                    if (order.TongThanhToan < 0)
-                    {
-                        throw new InvalidOperationException("Tổng thanh toán không hợp lệ.");
-                    }
-
-                    db.LichSuTrangThaiDonHangs.Add(new LichSuTrangThaiDonHang
-                    {
-                        DonHangId = order.DonHangId,
-                        TrangThaiCu = null,
-                        TrangThaiMoi = OrderStatusPending,
-                        ThayDoiBoiId = accountInDb.TaiKhoanId,
-                        GhiChu = "Khởi tạo đơn hàng từ website.",
-                        CreatedAt = DateTime.Now
-                    });
-
-                    accountInDb.HoTen = string.IsNullOrWhiteSpace(model.HoTenNguoiNhan)
-                        ? accountInDb.HoTen
-                        : model.HoTenNguoiNhan.Trim();
-                    accountInDb.SoDienThoai = model.SoDienThoaiNguoiNhan.Trim();
-                    accountInDb.Email = model.Email.Trim();
-                    accountInDb.DiaChi = model.DiaChiNhanHang.Trim();
-                    accountInDb.UpdatedAt = DateTime.Now;
+                    DonHang order = CreateOrderFromCart(
+                        accountInDb,
+                        model,
+                        cart,
+                        products,
+                        PaymentConstants.COD,
+                        PaymentConstants.PENDING,
+                        null,
+                        null,
+                        "Khởi tạo đơn hàng COD từ website.");
 
                     db.SaveChanges();
                     transaction.Commit();
 
                     Session["LastCreatedOrderId"] = order.DonHangId;
                     Session["LastCreatedOrderCode"] = order.MaDonHang;
-
-                    if (string.Equals(model.PhuongThucThanhToan, "Payment_Auto", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string paymentUrl = BuildVnPayUrl(order);
-                        return Redirect(paymentUrl);
-                    }
-
                     Session["ShoppingCart"] = null;
+
                     return RedirectToAction("CheckoutSuccess", new { id = order.DonHangId });
                 }
                 catch (Exception ex)
@@ -293,65 +204,104 @@ namespace MatKinh.Controllers
         public ActionResult VnPayReturn()
         {
             string result = ValidateVnPayResponse();
+
             string maDonHang = Request.QueryString["vnp_TxnRef"];
             string vnpTransactionNo = Request.QueryString["vnp_TransactionNo"];
 
             if (string.IsNullOrWhiteSpace(maDonHang))
             {
-                TempData["PaymentError"] = "Không nhận được mã đơn hàng từ cổng thanh toán.";
-                return RedirectToAction("Index", "ShoppingCart");
+                ClearPendingVnPaySession();
+                TempData["PaymentError"] = "Không nhận được mã thanh toán từ VNPAY. Đơn hàng chưa được tạo.";
+                return RedirectToAction("Index", "Checkout");
             }
 
-            var order = db.DonHangs.FirstOrDefault(x => x.MaDonHang == maDonHang);
-            if (order == null)
+            string pendingOrderCode = Session["PendingVnPayOrderCode"] as string;
+            PurchaseInformation model = Session["PendingVnPayPurchaseInformation"] as PurchaseInformation;
+            List<Cart> cart = Session["PendingVnPayCart"] as List<Cart>;
+
+            if (!string.Equals(maDonHang, pendingOrderCode, StringComparison.OrdinalIgnoreCase))
             {
-                TempData["PaymentError"] = "Không tìm thấy đơn hàng tương ứng.";
-                return RedirectToAction("Index", "ShoppingCart");
+                ClearPendingVnPaySession();
+                TempData["PaymentError"] = "Mã thanh toán không khớp với phiên thanh toán hiện tại. Đơn hàng chưa được tạo.";
+                return RedirectToAction("Index", "Checkout");
             }
 
-            if (result == "ok")
+            if (result != "ok")
             {
-                order.TrangThaiThanhToan = PaymentConstants.PAID;
-                order.MaGiaoDichThanhToan = string.IsNullOrWhiteSpace(vnpTransactionNo) ? null : vnpTransactionNo;
-                order.NgayThanhToan = DateTime.Now;
-                order.UpdatedAt = DateTime.Now;
-
-                db.SaveChanges();
-
-                Session["ShoppingCart"] = null;
-                Session["LastCreatedOrderId"] = order.DonHangId;
-                Session["LastCreatedOrderCode"] = order.MaDonHang;
-
-                return RedirectToAction("CheckoutSuccess", new { id = order.DonHangId });
+                ClearPendingVnPaySession();
+                TempData["PaymentError"] = "Thanh toán VNPAY không thành công hoặc đã bị hủy. Đơn hàng chưa được tạo.";
+                return RedirectToAction("Index", "Checkout");
             }
 
-            if (order.TrangThai != OrderStatusCancelled)
+            if (model == null || cart == null || !cart.Any())
             {
-                int? actorId = GetCurrentAccount()?.TaiKhoanId;
-                int oldStatus = order.TrangThai;
+                ClearPendingVnPaySession();
+                TempData["PaymentError"] = "Phiên thanh toán đã hết hạn hoặc giỏ hàng không còn dữ liệu. Đơn hàng chưa được tạo.";
+                return RedirectToAction("Index", "Checkout");
+            }
 
-                order.TrangThaiThanhToan = PaymentConstants.FAILED;
-                order.TrangThai = OrderStatusCancelled;
-                order.NgayHuy = DateTime.Now;
-                order.UpdatedAt = DateTime.Now;
+            TaiKhoan currentAccount = GetCurrentAccount();
+            if (currentAccount == null)
+            {
+                ClearPendingVnPaySession();
+                TempData["NotificationLogin"] = "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.";
+                return RedirectToAction("LoginAccount", "Account");
+            }
 
-                RestoreStockForOrder(order);
-
-                db.LichSuTrangThaiDonHangs.Add(new LichSuTrangThaiDonHang
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
                 {
-                    DonHangId = order.DonHangId,
-                    TrangThaiCu = oldStatus,
-                    TrangThaiMoi = OrderStatusCancelled,
-                    ThayDoiBoiId = actorId,
-                    GhiChu = "Thanh toán VNPay thất bại hoặc bị hủy.",
-                    CreatedAt = DateTime.Now
-                });
+                    TaiKhoan accountInDb = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId);
+                    if (accountInDb == null)
+                    {
+                        throw new InvalidOperationException("Không tìm thấy tài khoản trong hệ thống.");
+                    }
 
-                db.SaveChanges();
+                    List<int> productIds = cart.Select(x => x.SanPhamId).Distinct().ToList();
+
+                    var products = db.SanPhams
+                        .Where(x => productIds.Contains(x.SanPhamId))
+                        .ToList();
+
+                    string validateError = ValidateCartBeforeCheckout(cart, products, productIds);
+                    if (!string.IsNullOrWhiteSpace(validateError))
+                    {
+                        throw new InvalidOperationException(validateError);
+                    }
+
+                    DonHang order = CreateOrderFromCart(
+                        accountInDb,
+                        model,
+                        cart,
+                        products,
+                        PaymentConstants.VNPAY,
+                        PaymentConstants.PAID,
+                        string.IsNullOrWhiteSpace(vnpTransactionNo) ? null : vnpTransactionNo,
+                        DateTime.Now,
+                        "Khởi tạo đơn hàng sau khi thanh toán VNPAY thành công.");
+
+                    db.SaveChanges();
+                    transaction.Commit();
+
+                    Session["LastCreatedOrderId"] = order.DonHangId;
+                    Session["LastCreatedOrderCode"] = order.MaDonHang;
+
+                    Session["ShoppingCart"] = null;
+                    ClearPendingVnPaySession();
+
+                    return RedirectToAction("CheckoutSuccess", new { id = order.DonHangId });
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    ClearPendingVnPaySession();
+
+                    TempData["PaymentError"] = "Thanh toán VNPAY đã thành công nhưng tạo đơn hàng thất bại: " + ex.Message;
+                    return RedirectToAction("Index", "Checkout");
+                }
             }
-
-            TempData["PaymentError"] = "Thanh toán không thành công hoặc đã bị hủy.";
-            return RedirectToAction("Index", "ShoppingCart");
         }
 
         private TaiKhoan GetCurrentAccount()
@@ -421,12 +371,37 @@ namespace MatKinh.Controllers
             return 30000m;
         }
 
-        private string BuildVnPayUrl(DonHang order)
+        private string BuildVnPayUrl(string maDonHang, decimal tongThanhToan)
         {
             string vnp_Returnurl = ConfigurationManager.AppSettings["vnp_Returnurl"];
             string vnp_Url = ConfigurationManager.AppSettings["vnp_Url"];
             string vnp_TmnCode = ConfigurationManager.AppSettings["vnp_TmnCode"];
             string vnp_HashSecret = ConfigurationManager.AppSettings["vnp_HashSecret"];
+
+            if (string.IsNullOrWhiteSpace(vnp_Returnurl))
+            {
+                throw new InvalidOperationException("Thiếu cấu hình vnp_Returnurl.");
+            }
+
+            if (string.IsNullOrWhiteSpace(vnp_Url))
+            {
+                throw new InvalidOperationException("Thiếu cấu hình vnp_Url.");
+            }
+
+            if (string.IsNullOrWhiteSpace(vnp_TmnCode))
+            {
+                throw new InvalidOperationException("Thiếu cấu hình vnp_TmnCode.");
+            }
+
+            if (string.IsNullOrWhiteSpace(vnp_HashSecret))
+            {
+                throw new InvalidOperationException("Thiếu cấu hình vnp_HashSecret.");
+            }
+
+            if (tongThanhToan <= 0)
+            {
+                throw new InvalidOperationException("Số tiền thanh toán không hợp lệ.");
+            }
 
             var vnNow = DateTime.UtcNow.AddHours(7);
             var vnpay = new VnPayLibrary();
@@ -434,16 +409,16 @@ namespace MatKinh.Controllers
             vnpay.AddRequestData("vnp_Version", "2.1.0");
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-            vnpay.AddRequestData("vnp_Amount", ((long)(order.TongThanhToan * 100)).ToString());
+            vnpay.AddRequestData("vnp_Amount", ((long)(tongThanhToan * 100)).ToString());
             vnpay.AddRequestData("vnp_CreateDate", vnNow.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_ExpireDate", vnNow.AddMinutes(15).ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
             vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress());
             vnpay.AddRequestData("vnp_Locale", "vn");
-            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + order.MaDonHang);
+            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + maDonHang);
             vnpay.AddRequestData("vnp_OrderType", "other");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
-            vnpay.AddRequestData("vnp_TxnRef", order.MaDonHang);
+            vnpay.AddRequestData("vnp_TxnRef", maDonHang);
 
             return vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
         }
@@ -480,6 +455,227 @@ namespace MatKinh.Controllers
             return null;
         }
 
+
+        private string ValidateCartBeforeCheckout(List<Cart> cart, List<SanPham> products, List<int> productIds)
+        {
+            if (cart == null || !cart.Any())
+            {
+                return "Giỏ hàng của bạn đang trống, không thể thanh toán.";
+            }
+
+            if (products == null || products.Count != productIds.Count)
+            {
+                return "Một hoặc nhiều sản phẩm không còn tồn tại.";
+            }
+
+            foreach (var cartItem in cart)
+            {
+                var product = products.FirstOrDefault(x => x.SanPhamId == cartItem.SanPhamId);
+
+                if (product == null)
+                {
+                    return "Một hoặc nhiều sản phẩm không còn tồn tại.";
+                }
+
+                if (product.TrangThai != ProductStatusActive)
+                {
+                    return $"Sản phẩm '{product.TenSanPham}' hiện không khả dụng.";
+                }
+
+                if (cartItem.SoLuong <= 0)
+                {
+                    return $"Số lượng của sản phẩm '{product.TenSanPham}' không hợp lệ.";
+                }
+
+                if (product.SoLuongTon < cartItem.SoLuong)
+                {
+                    return $"Sản phẩm '{product.TenSanPham}' không đủ số lượng tồn kho.";
+                }
+            }
+
+            return null;
+        }
+
+        private void CalculateOrderAmount(
+            List<Cart> cart,
+            List<SanPham> products,
+            PurchaseInformation model,
+            out decimal tongTienHang,
+            out decimal tongGiamGia,
+            out decimal phiVanChuyen,
+            out decimal tongThanhToan)
+        {
+            tongTienHang = 0m;
+            tongGiamGia = 0m;
+            phiVanChuyen = CalculateShippingFee(cart, model);
+
+            foreach (var cartItem in cart)
+            {
+                var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
+
+                decimal donGia = product.GiaBan;
+                decimal giamGia = cartItem.GiamGia;
+                int soLuong = cartItem.SoLuong;
+
+                tongTienHang += donGia * soLuong;
+                tongGiamGia += giamGia * soLuong;
+            }
+
+            tongThanhToan = tongTienHang + phiVanChuyen - tongGiamGia;
+        }
+
+        private DonHang CreateOrderFromCart(
+            TaiKhoan accountInDb,
+            PurchaseInformation model,
+            List<Cart> cart,
+            List<SanPham> products,
+            string paymentMethod,
+            string paymentStatus,
+            string transactionNo,
+            DateTime? paidAt,
+            string historyNote)
+        {
+            KhachHang customer = GetOrCreateCustomer(accountInDb, model);
+            Session["KhachHangId"] = customer.KhachHangId;
+
+            decimal tongTienHang = 0m;
+            decimal tongGiamGia = 0m;
+            decimal phiVanChuyen = CalculateShippingFee(cart, model);
+
+            string orderCode = Session["PendingVnPayOrderCode"] as string;
+            if (string.IsNullOrWhiteSpace(orderCode) || !string.Equals(paymentMethod, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+            {
+                orderCode = GenerateOrderCode();
+            }
+
+            var order = new DonHang
+            {
+                MaDonHang = orderCode,
+                KhachHangId = customer.KhachHangId,
+                HoTenNguoiNhan = model.HoTenNguoiNhan.Trim(),
+                SoDienThoaiNguoiNhan = model.SoDienThoaiNguoiNhan.Trim(),
+                DiaChiNhanHang = model.DiaChiNhanHang.Trim(),
+                TongTienHang = 0m,
+                PhiVanChuyen = phiVanChuyen,
+                GiamGia = 0m,
+                TongThanhToan = 0m,
+                TrangThai = OrderStatusConstants.PENDING,
+                GhiChu = string.IsNullOrWhiteSpace(model.GhiChu) ? null : model.GhiChu.Trim(),
+                CreatedById = accountInDb.TaiKhoanId,
+                NgayDat = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null,
+                NgayHuy = null,
+
+                PhuongThucThanhToan = paymentMethod,
+                TrangThaiThanhToan = paymentStatus,
+                MaGiaoDichThanhToan = transactionNo,
+                NgayThanhToan = paidAt
+            };
+
+            db.DonHangs.Add(order);
+            db.SaveChanges();
+
+            foreach (var cartItem in cart)
+            {
+                var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
+
+                decimal donGia = product.GiaBan;
+                decimal giamGia = cartItem.GiamGia;
+                int soLuong = cartItem.SoLuong;
+                decimal thanhTien = (donGia - giamGia) * soLuong;
+
+                if (thanhTien < 0)
+                {
+                    throw new InvalidOperationException($"Thành tiền của sản phẩm '{product.TenSanPham}' không hợp lệ.");
+                }
+
+                var detail = new ChiTietDonHang
+                {
+                    DonHangId = order.DonHangId,
+                    SanPhamId = product.SanPhamId,
+                    TenSanPhamSnapshot = product.TenSanPham,
+                    DonGiaSnapshot = donGia,
+                    SoLuong = soLuong,
+                    GiamGiaSnapshot = giamGia,
+                    ThanhTien = thanhTien
+                };
+
+                db.ChiTietDonHangs.Add(detail);
+
+                UserBehaviorLogger.Log(
+                    db,
+                    Session,
+                    product.SanPhamId,
+                    UserBehaviorConstants.PURCHASE,
+                    UserBehaviorConstants.PURCHASE_WEIGHT,
+                    "CHECKOUT",
+                    "DonHangId=" + order.DonHangId
+                );
+
+                tongTienHang += donGia * soLuong;
+                tongGiamGia += giamGia * soLuong;
+
+                product.SoLuongTon -= soLuong;
+                product.UpdatedAt = DateTime.Now;
+            }
+
+            order.TongTienHang = tongTienHang;
+            order.GiamGia = tongGiamGia;
+            order.TongThanhToan = tongTienHang + phiVanChuyen - tongGiamGia;
+
+            if (order.TongThanhToan < 0)
+            {
+                throw new InvalidOperationException("Tổng thanh toán không hợp lệ.");
+            }
+
+            db.LichSuTrangThaiDonHangs.Add(new LichSuTrangThaiDonHang
+            {
+                DonHangId = order.DonHangId,
+                TrangThaiCu = null,
+                TrangThaiMoi = OrderStatusConstants.PENDING,
+                ThayDoiBoiId = accountInDb.TaiKhoanId,
+                GhiChu = historyNote,
+                CreatedAt = DateTime.Now
+            });
+
+            accountInDb.HoTen = string.IsNullOrWhiteSpace(model.HoTenNguoiNhan)
+                ? accountInDb.HoTen
+                : model.HoTenNguoiNhan.Trim();
+
+            accountInDb.SoDienThoai = model.SoDienThoaiNguoiNhan.Trim();
+            accountInDb.Email = model.Email.Trim();
+            accountInDb.DiaChi = model.DiaChiNhanHang.Trim();
+            accountInDb.UpdatedAt = DateTime.Now;
+
+            return order;
+        }
+
+        private List<Cart> CloneCart(List<Cart> cart)
+        {
+            if (cart == null)
+            {
+                return new List<Cart>();
+            }
+
+            return cart.Select(x => new Cart
+            {
+                SanPhamId = x.SanPhamId,
+                TenSanPham = x.TenSanPham,
+                HinhAnh = x.HinhAnh,
+                DonGia = x.DonGia,
+                GiamGia = x.GiamGia,
+                SoLuong = x.SoLuong
+            }).ToList();
+        }
+
+        private void ClearPendingVnPaySession()
+        {
+            Session["PendingVnPayOrderCode"] = null;
+            Session["PendingVnPayPurchaseInformation"] = null;
+            Session["PendingVnPayCart"] = null;
+            Session["PendingVnPayAmount"] = null;
+        }
         private string GenerateOrderCode()
         {
             string code;
