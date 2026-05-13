@@ -3,7 +3,11 @@
 
 @{
     ViewBag.Title = "Checkout";
-    List<Cart> listProductOrder = (Session["ShoppingCart"] as List<Cart>) ?? new List<Cart>();
+
+    List<Cart> listProductOrder = ViewData["CheckoutCart"] as List<Cart> ?? new List<Cart>();
+
+    decimal totalBeforeDiscount = listProductOrder.Sum(x => x.DonGia * x.SoLuong);
+    decimal totalDiscount = listProductOrder.Sum(x => x.GiamGia * x.SoLuong);
     decimal total = listProductOrder.Sum(x => x.ThanhTien);
     decimal shippingFee = 30000m;
     decimal grandTotal = total + shippingFee;
@@ -48,7 +52,8 @@
                                 @Html.TextBoxFor(m => m.HoTenNguoiNhan, new
                                 {
                                     @class = "checkout-input",
-                                    placeholder = "Nhập họ và tên người nhận"
+                                    placeholder = "Nhập họ và tên người nhận",
+                                    autocomplete = "name"
                                 })
                                 @Html.ValidationMessageFor(m => m.HoTenNguoiNhan, "", new { @class = "checkout-field-error" })
                             </div>
@@ -58,7 +63,8 @@
                                 @Html.TextBoxFor(m => m.SoDienThoaiNguoiNhan, new
                                 {
                                     @class = "checkout-input",
-                                    placeholder = "Nhập số điện thoại"
+                                    placeholder = "Nhập số điện thoại",
+                                    autocomplete = "tel"
                                 })
                                 @Html.ValidationMessageFor(m => m.SoDienThoaiNguoiNhan, "", new { @class = "checkout-field-error" })
                             </div>
@@ -68,7 +74,8 @@
                                 @Html.TextBoxFor(m => m.Email, new
                                 {
                                     @class = "checkout-input",
-                                    placeholder = "Nhập email"
+                                    placeholder = "Nhập email",
+                                    autocomplete = "email"
                                 })
                                 @Html.ValidationMessageFor(m => m.Email, "", new { @class = "checkout-field-error" })
                             </div>
@@ -78,7 +85,8 @@
                                 @Html.TextBoxFor(m => m.DiaChiNhanHang, new
                                 {
                                     @class = "checkout-input",
-                                    placeholder = "Nhập địa chỉ giao hàng"
+                                    placeholder = "Nhập địa chỉ giao hàng",
+                                    autocomplete = "street-address"
                                 })
                                 @Html.ValidationMessageFor(m => m.DiaChiNhanHang, "", new { @class = "checkout-field-error" })
                             </div>
@@ -114,7 +122,16 @@
                                         <div class="checkout-order-item__left">
                                             <strong>@item.TenSanPham</strong>
                                             <span>x @item.SoLuong</span>
+
+                                            @if (item.GiamGia > 0)
+                                            {
+                                                <small>
+                                                    Giá gốc: @string.Format("{0:N0}", item.DonGia) ₫
+                                                    - Giảm: @string.Format("{0:N0}", item.GiamGia) ₫
+                                                </small>
+                                            }
                                         </div>
+
                                         <div class="checkout-order-item__right">
                                             @string.Format("{0:N0}", item.ThanhTien) ₫
                                         </div>
@@ -130,6 +147,19 @@
                         </div>
 
                         <div class="checkout-total-box">
+                            <div class="checkout-total-line">
+                                <span>Tổng tiền hàng</span>
+                                <strong>@string.Format("{0:N0}", totalBeforeDiscount) ₫</strong>
+                            </div>
+
+                            @if (totalDiscount > 0)
+                            {
+                                <div class="checkout-total-line">
+                                    <span>Giảm giá sản phẩm</span>
+                                    <strong>-@string.Format("{0:N0}", totalDiscount) ₫</strong>
+                                </div>
+                            }
+
                             <div class="checkout-total-line">
                                 <span>Tạm tính</span>
                                 <strong>@string.Format("{0:N0}", total) ₫</strong>
@@ -173,7 +203,9 @@
                         </div>
 
                         <div class="checkout-submit-wrap">
-                            <button class="optical-btn optical-btn--dark checkout-submit-btn" type="submit">
+                            <button class="optical-btn optical-btn--dark checkout-submit-btn"
+                                    type="submit"
+                                    @(listProductOrder.Any() ? "" : "disabled")>
                                 Đặt hàng
                             </button>
 

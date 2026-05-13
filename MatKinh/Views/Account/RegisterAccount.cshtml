@@ -1,4 +1,5 @@
 ﻿@model MatKinh.ViewModel.Register
+
 @{
     ViewBag.Title = "Đăng ký";
 }
@@ -49,8 +50,8 @@
                         <div class="auth-form-wrap auth-form-wrap--register">
                             <div class="auth-form-head">
                                 <span class="auth-form-head__eyebrow">Create account</span>
-                                <h3>Đăng ký</h3>
-                                <p>Tạo tài khoản để lưu thông tin, mua sắm tiện lợi và nhận hỗ trợ tốt hơn.</p>
+                                <h2>Đăng ký</h2>
+                                <p>Tạo tài khoản để lưu giỏ hàng, thanh toán nhanh hơn và theo dõi lịch sử đơn hàng.</p>
                             </div>
 
                             @using (Html.BeginForm("RegisterAccount", "Account", FormMethod.Post, new { @class = "auth-form auth-form--register", id = "registerForm", autocomplete = "off" }))
@@ -68,19 +69,21 @@
                                         @Html.TextBoxFor(m => m.Username, new
                                         {
                                             @class = "auth-input",
-                                            placeholder = "Nhập tên đăng nhập"
+                                            placeholder = "Ví dụ: karma_user01",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
                                         <label class="auth-label">Mật khẩu</label>
                                         @Html.PasswordFor(m => m.Password, new
-                                        {
-                                            @class = "auth-input",
-                                            placeholder = "Nhập mật khẩu"
-                                        })
-                                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small d-block mt-2" })
+                                       {
+                                           @class = "auth-input",
+                                           placeholder = "Tối thiểu 8 ký tự, gồm chữ và số",
+                                           autocomplete = "off"
+                                       })
+                                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
@@ -88,33 +91,34 @@
                                         @Html.PasswordFor(m => m.ConfirmPassword, new
                                         {
                                             @class = "auth-input",
-                                            placeholder = "Nhập lại mật khẩu"
+                                            placeholder = "Nhập lại mật khẩu",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
                                         <label class="auth-label">Số điện thoại</label>
                                         @Html.TextBoxFor(m => m.Mobile, new
-                                        {
-                                            @class = "auth-input",
-                                            placeholder = "Nhập số điện thoại",
-                                            type = "tel",
-                                            autocomplete = "tel"
-                                        })
-                                        @Html.ValidationMessageFor(m => m.Mobile, "", new { @class = "text-danger small d-block mt-2" })
+                                       {
+                                           @class = "auth-input",
+                                           placeholder = "Ví dụ: 0901234567",
+                                           type = "tel",
+                                           autocomplete = "off"
+                                       })
+                                        @Html.ValidationMessageFor(m => m.Mobile, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
                                         <label class="auth-label">Email</label>
                                         @Html.TextBoxFor(m => m.Email, new
-                                         {
-                                             @class = "auth-input",
-                                             placeholder = "Nhập email",
-                                             type = "email",
-                                             autocomplete = "email"
-                                         })
-                                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small d-block mt-2" })
+                                        {
+                                            @class = "auth-input",
+                                            placeholder = "Nhập email",
+                                            type = "email",
+                                            autocomplete = "off"
+                                        })
+                                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
@@ -122,9 +126,10 @@
                                         @Html.TextBoxFor(m => m.LastName, new
                                         {
                                             @class = "auth-input",
-                                            placeholder = "Nhập họ"
+                                            placeholder = "Nhập họ",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
@@ -132,19 +137,21 @@
                                         @Html.TextBoxFor(m => m.FirstName, new
                                         {
                                             @class = "auth-input",
-                                            placeholder = "Nhập tên"
+                                            placeholder = "Nhập tên",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
                                         <label class="auth-label">Ngày sinh</label>
-                                        @Html.TextBoxFor(m => m.DateOfBirth, new
+                                        @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new
                                         {
                                             @class = "auth-input",
-                                            type = "date"
+                                            type = "date",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group">
@@ -161,17 +168,18 @@
                                             m => m.Sex,
                                             new SelectList(sexList, "Value", "Text"),
                                             new { @class = "auth-input auth-select" })
-                                        @Html.ValidationMessageFor(m => m.Sex, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.Sex, "", new { @class = "auth-field-error" })
                                     </div>
 
                                     <div class="auth-form-group auth-grid-full">
-                                        <label class="auth-label">Địa chỉ</label>
+                                        <label class="auth-label">Địa chỉ giao hàng</label>
                                         @Html.TextBoxFor(m => m.Address, new
                                         {
                                             @class = "auth-input",
-                                            placeholder = "Nhập địa chỉ của bạn"
+                                            placeholder = "Nhập địa chỉ giao hàng",
+                                            autocomplete = "off"
                                         })
-                                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger small d-block mt-2" })
+                                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "auth-field-error" })
                                     </div>
                                 </div>
 
@@ -194,38 +202,6 @@
     </section>
 </section>
 
-<div class="modal fade" id="customModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog custom-modal-dialog modal-dialog-centered">
-        <div class="modal-content auth-modal-content">
-            <div class="modal-header auth-modal-header">
-                <h5 class="modal-title">Hỗ trợ quên mật khẩu</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-
-            <div class="modal-body auth-modal-body">
-                <p>
-                    Bạn hãy liên hệ qua thông tin bên dưới để được hỗ trợ cấp lại mật khẩu:
-                </p>
-
-                <div class="auth-support-list">
-                    <a href="tel:0942962762">
-                        <i class="fa fa-phone mr-2"></i>094.296.2762
-                    </a>
-                    <a href="mailto:nguyennhat025.go@gmail.com">
-                        <i class="fa fa-envelope mr-2"></i>nguyennhat025.go@gmail.com
-                    </a>
-                </div>
-            </div>
-
-            <div class="modal-footer auth-modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
         $(function () {
@@ -246,7 +222,7 @@
                     type: "POST",
                     data: form.serialize(),
                     success: function (resp) {
-                        if (resp.success) {
+                        if (resp && resp.success) {
                             window.location.href = resp.redirectUrl;
                         } else {
                             showErrors(resp);
@@ -263,11 +239,16 @@
 
             function clearFieldErrors() {
                 $("span[data-valmsg-for]").text("");
+                $("#ajaxMessage").empty();
             }
 
             function showErrors(resp) {
                 clearFieldErrors();
-                $("#ajaxMessage").empty();
+
+                if (!resp) {
+                    $("#ajaxMessage").text("Đăng ký thất bại, vui lòng kiểm tra lại thông tin.");
+                    return;
+                }
 
                 if (resp.globalErrors && resp.globalErrors.length > 0) {
                     $("#ajaxMessage").html(resp.globalErrors.join("<br/>"));
@@ -282,6 +263,31 @@
                         if (span.length) {
                             span.text(msg);
                         }
+                    }
+                }
+
+                if (resp.errors && resp.errors.length > 0) {
+                    var globalMessages = [];
+
+                    for (var i = 0; i < resp.errors.length; i++) {
+                        var item = resp.errors[i];
+                        var key = item.key || "";
+                        var messages = item.messages || [];
+
+                        if (key) {
+                            var spanByKey = $("span[data-valmsg-for='" + key + "']");
+                            if (spanByKey.length && messages.length > 0) {
+                                spanByKey.text(messages[0]);
+                            } else {
+                                globalMessages = globalMessages.concat(messages);
+                            }
+                        } else {
+                            globalMessages = globalMessages.concat(messages);
+                        }
+                    }
+
+                    if (globalMessages.length > 0) {
+                        $("#ajaxMessage").html(globalMessages.join("<br/>"));
                     }
                 }
             }

@@ -9,6 +9,7 @@ namespace MatKinh.Controllers
     {
         private readonly BanMatKinhEntities db = new BanMatKinhEntities();
 
+        [HttpGet]
         public ActionResult Index()
         {
             ThongTinCuaHang storeInfo = db.ThongTinCuaHangs
@@ -16,6 +17,11 @@ namespace MatKinh.Controllers
                 .Where(x => x.IsActive)
                 .OrderByDescending(x => x.UpdatedAt)
                 .FirstOrDefault();
+
+            if (storeInfo == null)
+            {
+                ViewBag.ContactNotice = "Thông tin cửa hàng đang được cập nhật.";
+            }
 
             return View(storeInfo);
         }

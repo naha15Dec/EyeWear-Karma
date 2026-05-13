@@ -1223,3 +1223,112 @@
     margin-bottom: 10px;
     line-height: 1.6;
 }
+
+.optical-product-card.is-soldout .optical-product-card__thumb img {
+    opacity: 0.58;
+    filter: grayscale(28%);
+}
+
+.product-status-badge.soldout {
+    background: #1f2937;
+    color: #fff;
+}
+
+.product-status-badge.sale {
+    background: #b45309;
+    color: #fff;
+}
+
+.optical-btn--disabled {
+    border: none;
+    background: #e5e7eb;
+    color: #6b7280;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.product-stock-line {
+    margin: 8px 0 12px;
+    min-height: 22px;
+}
+
+.stock-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stock-status--in {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.stock-status--low {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.stock-status--out {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.catalog-pagination .disabled {
+    pointer-events: none;
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.detail-card.is-soldout .detail-gallery__main img {
+    opacity: 0.62;
+    filter: grayscale(28%);
+}
+
+.detail-gallery__main {
+    position: relative;
+}
+
+.detail-image-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 2;
+}
+
+.detail-stock.low-stock {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.detail-stock-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f9fafb;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.optical-btn--disabled {
+    border: none;
+    background: #e5e7eb;
+    color: #6b7280;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.recommend-product-card.is-soldout .recommend-product-image img {
+    opacity: 0.58;
+    filter: grayscale(28%);
+}
+
+.recommend-product-action {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+}

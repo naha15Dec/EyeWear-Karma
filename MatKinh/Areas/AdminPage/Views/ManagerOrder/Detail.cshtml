@@ -3,6 +3,7 @@
 
 @{
     ViewBag.Title = "Chi tiết đơn hàng";
+
     var login = Session["LoginInformation"] as TaiKhoan;
     var roleCode = login != null && login.VaiTro != null ? login.VaiTro.MaVaiTro : string.Empty;
 
@@ -51,12 +52,98 @@
                 Model.TrangThai == OrderStatusConstants.DELIVERING;
         }
     }
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallbackImg;
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    Func<string, string> paymentMethodText = method =>
+    {
+        if (string.Equals(method, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán online qua VNPay";
+        }
+
+        if (string.Equals(method, PaymentConstants.COD, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán khi nhận hàng";
+        }
+
+        return "Không xác định";
+    };
+
+    Func<string, string> paymentStatusText = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán thất bại";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã hoàn tiền";
+        }
+
+        return "Chờ thanh toán";
+    };
+
+    Func<string, string> paymentStatusClass = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "success";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "danger";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "warning";
+        }
+
+        return "processing";
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Chi tiết đơn hàng #@Model.MaDonHang</h1>
-        <p class="admin-page-subtitle">Theo dõi xử lý đơn, giao hàng và lịch sử trạng thái.</p>
+        <p class="admin-page-subtitle">
+            Theo dõi xử lý đơn, giao hàng, thanh toán và lịch sử trạng thái.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -72,6 +159,23 @@
 
 <section class="content">
     <div class="container-fluid p-0">
+
+        @if (Model.CanRequireManualRefund)
+        {
+            <div class="admin-refund-alert mb-3">
+                <div class="admin-refund-alert__icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <strong>Cần xử lý hoàn tiền</strong>
+                    <p>
+                        Đơn hàng đã thanh toán qua VNPay nhưng hiện ở trạng thái
+                        <b>@Model.TrangThaiText</b>. Cửa hàng cần kiểm tra giao dịch và xử lý hoàn tiền
+                        trong vòng 3–5 ngày làm việc. Không tự đánh dấu “Đã hoàn tiền” nếu chưa xử lý hoàn tiền thật.
+                    </p>
+                </div>
+            </div>
+        }
 
         <div class="row">
             <div class="col-lg-8">
@@ -134,7 +238,9 @@
                             <div class="col-md-6 mb-3">
                                 <div class="admin-detail-box">
                                     <div class="admin-detail-label">Khách hàng</div>
-                                    <div class="admin-detail-value">@Model.TenKhachHang</div>
+                                    <div class="admin-detail-value">
+                                        @(string.IsNullOrWhiteSpace(Model.TenKhachHang) ? "—" : Model.TenKhachHang)
+                                    </div>
                                 </div>
                             </div>
 
@@ -234,24 +340,22 @@
                                     {
                                         foreach (var item in Model.Items)
                                         {
+                                            string imageUrl = normalizeImage(item.HinhAnhChinh);
+
                                             <tr>
                                                 <td>
                                                     <div class="admin-product-cell">
                                                         <div class="admin-product-thumb">
-                                                            @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
-                                                            {
-                                                                <img src="@item.HinhAnhChinh" alt="@item.TenSanPhamSnapshot" />
-                                                            }
-                                                            else
-                                                            {
-                                                                <div class="admin-product-thumb-placeholder">
-                                                                    <i class="fas fa-image"></i>
-                                                                </div>
-                                                            }
+                                                            <img src="@imageUrl"
+                                                                 alt="@item.TenSanPhamSnapshot"
+                                                                 onerror="this.onerror=null;this.src='@fallbackImg';" />
                                                         </div>
+
                                                         <div>
                                                             <div class="admin-product-name">@item.TenSanPhamSnapshot</div>
-                                                            <div class="admin-product-sub">@(string.IsNullOrWhiteSpace(item.MaSanPham) ? "" : "#" + item.MaSanPham)</div>
+                                                            <div class="admin-product-sub">
+                                                                @(string.IsNullOrWhiteSpace(item.MaSanPham) ? "#" + item.SanPhamId : "#" + item.MaSanPham)
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -288,7 +392,11 @@
                             <div class="admin-timeline">
                                 @foreach (var item in Model.Histories)
                                 {
-                                    <div class="admin-timeline-item">
+                                    bool isRefundHistory =
+                                        !string.IsNullOrWhiteSpace(item.GhiChu) &&
+                                        item.GhiChu.ToLower().Contains("hoàn tiền");
+
+                                    <div class="admin-timeline-item @(isRefundHistory ? "admin-timeline-item-refund" : "")">
                                         <div class="admin-timeline-dot"></div>
                                         <div class="admin-timeline-content">
                                             <div class="admin-timeline-title">
@@ -325,20 +433,63 @@
                     <div class="card-header admin-card-header border-0">
                         <h3 class="admin-card-title">Thanh toán</h3>
                     </div>
+
                     <div class="card-body">
+                        <div class="admin-payment-summary mb-3">
+                            <div class="admin-payment-row">
+                                <span>Phương thức</span>
+                                <strong>@paymentMethodText(Model.PhuongThucThanhToan)</strong>
+                            </div>
+
+                            <div class="admin-payment-row">
+                                <span>Trạng thái</span>
+                                <span class="admin-status-badge @paymentStatusClass(Model.TrangThaiThanhToan)">
+                                    @paymentStatusText(Model.TrangThaiThanhToan)
+                                </span>
+                            </div>
+
+                            <div class="admin-payment-row">
+                                <span>Mã giao dịch</span>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.MaGiaoDichThanhToan) ? "—" : Model.MaGiaoDichThanhToan)</strong>
+                            </div>
+
+                            <div class="admin-payment-row">
+                                <span>Ngày thanh toán</span>
+                                <strong>@(Model.NgayThanhToan.HasValue ? Model.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                            </div>
+                        </div>
+
+                        @if (Model.CanRequireManualRefund)
+                        {
+                            <div class="admin-refund-note mb-3">
+                                <strong>Cần xử lý hoàn tiền</strong>
+                                <p>
+                                    VNPay đã thanh toán nhưng đơn đã bị hủy/giao thất bại.
+                                    Vui lòng kiểm tra giao dịch và xử lý hoàn tiền trong 3–5 ngày làm việc.
+                                </p>
+                            </div>
+                        }
+
                         <div class="admin-summary-row">
                             <span>Tiền hàng</span>
                             <strong>@Model.TongTienHang.ToString("N0") đ</strong>
                         </div>
+
+                        @if (Model.GiamGia > 0)
+                        {
+                            <div class="admin-summary-row">
+                                <span>Giảm giá</span>
+                                <strong>-@Model.GiamGia.ToString("N0") đ</strong>
+                            </div>
+                        }
+
                         <div class="admin-summary-row">
                             <span>Phí vận chuyển</span>
                             <strong>@Model.PhiVanChuyen.ToString("N0") đ</strong>
                         </div>
-                        <div class="admin-summary-row">
-                            <span>Giảm giá</span>
-                            <strong>- @Model.GiamGia.ToString("N0") đ</strong>
-                        </div>
+
                         <hr />
+
                         <div class="admin-summary-row total">
                             <span>Tổng thanh toán</span>
                             <strong>@Model.TongThanhToan.ToString("N0") đ</strong>
@@ -415,6 +566,18 @@
                                             }
                                         </select>
                                     </div>
+                                    if (string.Equals(Model.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(Model.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <div class="admin-order-note-box mb-3">
+                                            <strong>Lưu ý đơn VNPay</strong>
+                                            <p>
+                                                Nếu chuyển đơn sang <b>Đã hủy</b> hoặc <b>Giao thất bại</b>,
+                                                hệ thống sẽ giữ trạng thái thanh toán là <b>Đã thanh toán</b>
+                                                và ghi nhận yêu cầu xử lý hoàn tiền trong 3–5 ngày làm việc.
+                                            </p>
+                                        </div>
+                                    }
 
                                     <div class="form-group">
                                         <label>Ghi chú</label>
@@ -598,16 +761,6 @@
             object-fit: cover;
         }
 
-    .admin-product-thumb-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #a0a7b0;
-        font-size: 18px;
-    }
-
     .admin-product-name {
         font-weight: 700;
         color: #2f3542;
@@ -624,22 +777,96 @@
         color: #2f3542;
     }
 
-    .admin-summary-row {
+    .admin-summary-row,
+    .admin-payment-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
+        gap: 12px;
         padding: 10px 0;
         color: #4b5563;
         border-bottom: 1px dashed #ececec;
     }
 
-        .admin-summary-row:last-child {
+        .admin-summary-row:last-child,
+        .admin-payment-row:last-child {
             border-bottom: none;
         }
 
         .admin-summary-row.total {
             font-size: 16px;
             color: #2f3542;
+        }
+
+        .admin-payment-row span:first-child,
+        .admin-summary-row span:first-child {
+            color: #7f8c8d;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-payment-row strong,
+        .admin-summary-row strong {
+            text-align: right;
+            color: #2f3542;
+        }
+
+    .admin-payment-summary {
+        background: #fbf9f6;
+        border: 1px solid #efe7dc;
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .admin-status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+        .admin-status-badge.info {
+            background: #eef6ff;
+            color: #1d4ed8;
+        }
+
+        .admin-status-badge.warning {
+            background: #fff8e6;
+            color: #b7791f;
+        }
+
+        .admin-status-badge.processing {
+            background: #fffdf3;
+            color: #a16207;
+        }
+
+        .admin-status-badge.assigned {
+            background: #f7f3ff;
+            color: #7c3aed;
+        }
+
+        .admin-status-badge.shipping {
+            background: #eefbf6;
+            color: #0f766e;
+        }
+
+        .admin-status-badge.success {
+            background: #edfdf3;
+            color: #15803d;
+        }
+
+        .admin-status-badge.danger {
+            background: #fff1f2;
+            color: #dc2626;
+        }
+
+        .admin-status-badge.muted {
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
     .admin-timeline {
@@ -691,44 +918,15 @@
         padding: 10px 12px;
     }
 
-    .admin-status-badge.info {
-        background: #eef6ff;
-        color: #1d4ed8;
+    .admin-timeline-item-refund .admin-timeline-dot {
+        background: #f97316;
+        box-shadow: 0 0 0 2px #fed7aa;
     }
 
-    .admin-status-badge.warning {
-        background: #fff8e6;
-        color: #b7791f;
-    }
-
-    .admin-status-badge.processing {
-        background: #fffdf3;
-        color: #a16207;
-    }
-
-    .admin-status-badge.assigned {
-        background: #f7f3ff;
-        color: #7c3aed;
-    }
-
-    .admin-status-badge.shipping {
-        background: #eefbf6;
-        color: #0f766e;
-    }
-
-    .admin-status-badge.success {
-        background: #edfdf3;
-        color: #15803d;
-    }
-
-    .admin-status-badge.danger {
-        background: #fff1f2;
-        color: #dc2626;
-    }
-
-    .admin-status-badge.muted {
-        background: #f3f4f6;
-        color: #6b7280;
+    .admin-timeline-item-refund .admin-timeline-note {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #9a3412;
     }
 
     .admin-order-note-box {
@@ -750,4 +948,46 @@
             margin: 0;
             line-height: 1.6;
         }
+
+    .admin-refund-alert,
+    .admin-refund-note {
+        display: flex;
+        gap: 12px;
+        border-radius: 16px;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #9a3412;
+        padding: 14px 16px;
+    }
+
+    .admin-refund-note {
+        display: block;
+    }
+
+    .admin-refund-alert__icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #ffedd5;
+        color: #c2410c;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .admin-refund-alert strong,
+    .admin-refund-note strong {
+        color: #7c2d12;
+        font-weight: 900;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .admin-refund-alert p,
+    .admin-refund-note p {
+        margin: 0;
+        line-height: 1.55;
+        font-size: 14px;
+    }
 </style>

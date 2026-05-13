@@ -33,11 +33,8 @@ namespace MatKinh.Areas.AdminPage.Controllers
              * 1. Đơn đã giao thành công
              * 2. Trạng thái thanh toán là Paid
              *
-             * Với COD: khi admin/shipper cập nhật Giao thành công,
-             * ManagerOrderController đã set TrangThaiThanhToan = Paid.
-             *
-             * Với VNPAY: đơn chỉ được tạo sau khi VNPAY thành công,
-             * nên trạng thái thanh toán là Paid ngay từ đầu.
+             * COD: khi giao thành công, hệ thống set Paid.
+             * VNPAY: đã Paid từ lúc thanh toán thành công, nhưng chỉ tính doanh thu khi giao thành công.
              */
             var successOrders = db.DonHangs.Where(x =>
                 x.TrangThai == OrderStatusConstants.DELIVERED &&
@@ -70,17 +67,25 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 x.PhuongThucThanhToan == PaymentConstants.VNPAY);
 
             /*
-             * Với flow VNPAY mới:
-             * - VNPAY lỗi/hủy: không tạo DonHang
-             * - Vì vậy TotalPaymentFailed chỉ đếm được các đơn lỗi cũ còn nằm trong DB
-             * - Muốn thống kê mọi lần VNPAY lỗi thì cần bảng log giao dịch riêng
+             * Payment failed chỉ đếm các đơn thật sự có trạng thái thanh toán Failed.
+             * Với VNPAY lỗi/hủy trước khi thanh toán: flow mới không tạo đơn.
              */
             int paymentFailedCount = db.DonHangs.Count(x =>
-                x.TrangThaiThanhToan == PaymentConstants.FAILED ||
+                x.TrangThaiThanhToan == PaymentConstants.FAILED);
+
+            /*
+             * Đơn cần xử lý hoàn tiền:
+             * - Thanh toán qua VNPAY
+             * - Đã Paid
+             * - Nhưng đơn bị hủy hoặc giao thất bại
+             * Không tự tính là Refunded vì chưa hoàn tiền thật.
+             */
+            var manualRefundOrders = db.DonHangs.Where(x =>
+                x.PhuongThucThanhToan == PaymentConstants.VNPAY &&
+                x.TrangThaiThanhToan == PaymentConstants.PAID &&
                 (
-                    x.PhuongThucThanhToan == PaymentConstants.VNPAY &&
-                    x.TrangThai == OrderStatusConstants.CANCELLED &&
-                    x.TrangThaiThanhToan != PaymentConstants.PAID
+                    x.TrangThai == OrderStatusConstants.CANCELLED ||
+                    x.TrangThai == OrderStatusConstants.DELIVERY_FAILED
                 ));
 
             var model = new AdminRevenueVm
@@ -116,7 +121,12 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 TotalRevenueVnpay = vnpaySuccessOrders.Sum(x => (decimal?)x.TongThanhToan) ?? 0,
 
                 // Payment failed
-                TotalPaymentFailed = paymentFailedCount
+                TotalPaymentFailed = paymentFailedCount,
+
+                // Manual refund required
+                TotalManualRefundRequired = manualRefundOrders.Count(),
+
+                TotalManualRefundAmount = manualRefundOrders.Sum(x => (decimal?)x.TongThanhToan) ?? 0
             };
 
             return model;

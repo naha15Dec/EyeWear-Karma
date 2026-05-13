@@ -65,6 +65,17 @@
           <Property Name="MaGiaoDichThanhToan" Type="nvarchar" MaxLength="100" />
           <Property Name="NgayThanhToan" Type="datetime" />
         </EntityType>
+        <EntityType Name="GioHangChiTiet">
+          <Key>
+            <PropertyRef Name="GioHangChiTietId" />
+          </Key>
+          <Property Name="GioHangChiTietId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="KhachHangId" Type="int" Nullable="false" />
+          <Property Name="SanPhamId" Type="int" Nullable="false" />
+          <Property Name="SoLuong" Type="int" Nullable="false" />
+          <Property Name="CreatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" />
+        </EntityType>
         <EntityType Name="HanhViNguoiDung">
           <Key>
             <PropertyRef Name="HanhViId" />
@@ -160,6 +171,19 @@
           <Property Name="LastLoginAt" Type="datetime" />
           <Property Name="CreatedAt" Type="datetime" Nullable="false" />
           <Property Name="UpdatedAt" Type="datetime" />
+        </EntityType>
+        <EntityType Name="TaiKhoanRememberToken">
+          <Key>
+            <PropertyRef Name="RememberTokenId" />
+          </Key>
+          <Property Name="RememberTokenId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TaiKhoanId" Type="int" Nullable="false" />
+          <Property Name="TokenHash" Type="varchar" MaxLength="255" Nullable="false" />
+          <Property Name="ExpiresAt" Type="datetime" Nullable="false" />
+          <Property Name="CreatedAt" Type="datetime" Nullable="false" />
+          <Property Name="RevokedAt" Type="datetime" />
+          <Property Name="UserAgent" Type="nvarchar" MaxLength="500" />
+          <Property Name="IpAddress" Type="varchar" MaxLength="45" />
         </EntityType>
         <EntityType Name="ThongTinCuaHang">
           <Key>
@@ -289,6 +313,30 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_GioHangChiTiet_KhachHang">
+          <End Role="KhachHang" Type="Self.KhachHang" Multiplicity="1" />
+          <End Role="GioHangChiTiet" Type="Self.GioHangChiTiet" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KhachHang">
+              <PropertyRef Name="KhachHangId" />
+            </Principal>
+            <Dependent Role="GioHangChiTiet">
+              <PropertyRef Name="KhachHangId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_GioHangChiTiet_SanPham">
+          <End Role="SanPham" Type="Self.SanPham" Multiplicity="1" />
+          <End Role="GioHangChiTiet" Type="Self.GioHangChiTiet" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SanPham">
+              <PropertyRef Name="SanPhamId" />
+            </Principal>
+            <Dependent Role="GioHangChiTiet">
+              <PropertyRef Name="SanPhamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_HanhViNguoiDung_KhachHang">
           <End Role="KhachHang" Type="Self.KhachHang" Multiplicity="0..1" />
           <End Role="HanhViNguoiDung" Type="Self.HanhViNguoiDung" Multiplicity="*" />
@@ -385,6 +433,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_TaiKhoanRememberToken_TaiKhoan">
+          <End Role="TaiKhoan" Type="Self.TaiKhoan" Multiplicity="1" />
+          <End Role="TaiKhoanRememberToken" Type="Self.TaiKhoanRememberToken" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TaiKhoan">
+              <PropertyRef Name="TaiKhoanId" />
+            </Principal>
+            <Dependent Role="TaiKhoanRememberToken">
+              <PropertyRef Name="TaiKhoanId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_ThongTinCuaHang_UpdatedBy">
           <End Role="TaiKhoan" Type="Self.TaiKhoan" Multiplicity="0..1" />
           <End Role="ThongTinCuaHang" Type="Self.ThongTinCuaHang" Multiplicity="*" />
@@ -401,12 +461,14 @@
           <EntitySet Name="BaiViet" EntityType="Self.BaiViet" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ChiTietDonHang" EntityType="Self.ChiTietDonHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="DonHang" EntityType="Self.DonHang" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="GioHangChiTiet" EntityType="Self.GioHangChiTiet" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="HanhViNguoiDung" EntityType="Self.HanhViNguoiDung" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KhachHang" EntityType="Self.KhachHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LichSuTrangThaiDonHang" EntityType="Self.LichSuTrangThaiDonHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LoaiSanPham" EntityType="Self.LoaiSanPham" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SanPham" EntityType="Self.SanPham" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TaiKhoan" EntityType="Self.TaiKhoan" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TaiKhoanRememberToken" EntityType="Self.TaiKhoanRememberToken" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ThongTinCuaHang" EntityType="Self.ThongTinCuaHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ThuongHieu" EntityType="Self.ThuongHieu" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="VaiTro" EntityType="Self.VaiTro" Schema="dbo" store:Type="Tables" />
@@ -437,6 +499,14 @@
           <AssociationSet Name="FK_DonHang_Shipper" Association="Self.FK_DonHang_Shipper">
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
             <End Role="DonHang" EntitySet="DonHang" />
+          </AssociationSet>
+          <AssociationSet Name="FK_GioHangChiTiet_KhachHang" Association="Self.FK_GioHangChiTiet_KhachHang">
+            <End Role="KhachHang" EntitySet="KhachHang" />
+            <End Role="GioHangChiTiet" EntitySet="GioHangChiTiet" />
+          </AssociationSet>
+          <AssociationSet Name="FK_GioHangChiTiet_SanPham" Association="Self.FK_GioHangChiTiet_SanPham">
+            <End Role="SanPham" EntitySet="SanPham" />
+            <End Role="GioHangChiTiet" EntitySet="GioHangChiTiet" />
           </AssociationSet>
           <AssociationSet Name="FK_HanhViNguoiDung_KhachHang" Association="Self.FK_HanhViNguoiDung_KhachHang">
             <End Role="KhachHang" EntitySet="KhachHang" />
@@ -469,6 +539,10 @@
           <AssociationSet Name="FK_TaiKhoan_VaiTro" Association="Self.FK_TaiKhoan_VaiTro">
             <End Role="VaiTro" EntitySet="VaiTro" />
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TaiKhoanRememberToken_TaiKhoan" Association="Self.FK_TaiKhoanRememberToken_TaiKhoan">
+            <End Role="TaiKhoan" EntitySet="TaiKhoan" />
+            <End Role="TaiKhoanRememberToken" EntitySet="TaiKhoanRememberToken" />
           </AssociationSet>
           <AssociationSet Name="FK_ThongTinCuaHang_UpdatedBy" Association="Self.FK_ThongTinCuaHang_UpdatedBy">
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
@@ -566,6 +640,7 @@
           <Property Name="UpdatedAt" Type="DateTime" Precision="3" />
           <NavigationProperty Name="DonHangs" Relationship="Self.FK_DonHang_KhachHang" FromRole="KhachHang" ToRole="DonHang" />
           <NavigationProperty Name="HanhViNguoiDungs" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" FromRole="KhachHang" ToRole="HanhViNguoiDung" />
+          <NavigationProperty Name="GioHangChiTiets" Relationship="BanMatKinhModel.FK_GioHangChiTiet_KhachHang" FromRole="KhachHang" ToRole="GioHangChiTiet" />
         </EntityType>
         <EntityType Name="LichSuTrangThaiDonHang">
           <Key>
@@ -619,6 +694,7 @@
           <NavigationProperty Name="TaiKhoan" Relationship="Self.FK_SanPham_CreatedBy" FromRole="SanPham" ToRole="TaiKhoan" />
           <NavigationProperty Name="ThuongHieu" Relationship="Self.FK_SanPham_ThuongHieu" FromRole="SanPham" ToRole="ThuongHieu" />
           <NavigationProperty Name="HanhViNguoiDungs" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" FromRole="SanPham" ToRole="HanhViNguoiDung" />
+          <NavigationProperty Name="GioHangChiTiets" Relationship="BanMatKinhModel.FK_GioHangChiTiet_SanPham" FromRole="SanPham" ToRole="GioHangChiTiet" />
         </EntityType>
         <EntityType Name="TaiKhoan">
           <Key>
@@ -647,6 +723,7 @@
           <NavigationProperty Name="SanPhams" Relationship="Self.FK_SanPham_CreatedBy" FromRole="TaiKhoan" ToRole="SanPham" />
           <NavigationProperty Name="VaiTro" Relationship="Self.FK_TaiKhoan_VaiTro" FromRole="TaiKhoan" ToRole="VaiTro" />
           <NavigationProperty Name="ThongTinCuaHangs" Relationship="Self.FK_ThongTinCuaHang_UpdatedBy" FromRole="TaiKhoan" ToRole="ThongTinCuaHang" />
+          <NavigationProperty Name="TaiKhoanRememberTokens" Relationship="BanMatKinhModel.FK_TaiKhoanRememberToken_TaiKhoan" FromRole="TaiKhoan" ToRole="TaiKhoanRememberToken" />
         </EntityType>
         <EntityType Name="ThongTinCuaHang">
           <Key>
@@ -940,6 +1017,20 @@
             <End Role="SanPham" EntitySet="SanPhams" />
             <End Role="HanhViNguoiDung" EntitySet="HanhViNguoiDungs" />
           </AssociationSet>
+          <EntitySet Name="GioHangChiTiets" EntityType="BanMatKinhModel.GioHangChiTiet" />
+          <AssociationSet Name="FK_GioHangChiTiet_KhachHang" Association="BanMatKinhModel.FK_GioHangChiTiet_KhachHang">
+            <End Role="KhachHang" EntitySet="KhachHangs" />
+            <End Role="GioHangChiTiet" EntitySet="GioHangChiTiets" />
+          </AssociationSet>
+          <AssociationSet Name="FK_GioHangChiTiet_SanPham" Association="BanMatKinhModel.FK_GioHangChiTiet_SanPham">
+            <End Role="SanPham" EntitySet="SanPhams" />
+            <End Role="GioHangChiTiet" EntitySet="GioHangChiTiets" />
+          </AssociationSet>
+          <EntitySet Name="TaiKhoanRememberTokens" EntityType="BanMatKinhModel.TaiKhoanRememberToken" />
+          <AssociationSet Name="FK_TaiKhoanRememberToken_TaiKhoan" Association="BanMatKinhModel.FK_TaiKhoanRememberToken_TaiKhoan">
+            <End Role="TaiKhoan" EntitySet="TaiKhoans" />
+            <End Role="TaiKhoanRememberToken" EntitySet="TaiKhoanRememberTokens" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="HanhViNguoiDung">
           <Key>
@@ -978,6 +1069,69 @@
             </Principal>
             <Dependent Role="HanhViNguoiDung">
               <PropertyRef Name="SanPhamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="GioHangChiTiet">
+          <Key>
+            <PropertyRef Name="GioHangChiTietId" />
+          </Key>
+          <Property Name="GioHangChiTietId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="KhachHangId" Type="Int32" Nullable="false" />
+          <Property Name="SanPhamId" Type="Int32" Nullable="false" />
+          <Property Name="SoLuong" Type="Int32" Nullable="false" />
+          <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedAt" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="KhachHang" Relationship="BanMatKinhModel.FK_GioHangChiTiet_KhachHang" FromRole="GioHangChiTiet" ToRole="KhachHang" />
+          <NavigationProperty Name="SanPham" Relationship="BanMatKinhModel.FK_GioHangChiTiet_SanPham" FromRole="GioHangChiTiet" ToRole="SanPham" />
+        </EntityType>
+        <Association Name="FK_GioHangChiTiet_KhachHang">
+          <End Type="BanMatKinhModel.KhachHang" Role="KhachHang" Multiplicity="1" />
+          <End Type="BanMatKinhModel.GioHangChiTiet" Role="GioHangChiTiet" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KhachHang">
+              <PropertyRef Name="KhachHangId" />
+            </Principal>
+            <Dependent Role="GioHangChiTiet">
+              <PropertyRef Name="KhachHangId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_GioHangChiTiet_SanPham">
+          <End Type="BanMatKinhModel.SanPham" Role="SanPham" Multiplicity="1" />
+          <End Type="BanMatKinhModel.GioHangChiTiet" Role="GioHangChiTiet" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SanPham">
+              <PropertyRef Name="SanPhamId" />
+            </Principal>
+            <Dependent Role="GioHangChiTiet">
+              <PropertyRef Name="SanPhamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="TaiKhoanRememberToken">
+          <Key>
+            <PropertyRef Name="RememberTokenId" />
+          </Key>
+          <Property Name="RememberTokenId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TaiKhoanId" Type="Int32" Nullable="false" />
+          <Property Name="TokenHash" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="ExpiresAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="RevokedAt" Type="DateTime" Precision="3" />
+          <Property Name="UserAgent" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="IpAddress" Type="String" MaxLength="45" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="TaiKhoan" Relationship="BanMatKinhModel.FK_TaiKhoanRememberToken_TaiKhoan" FromRole="TaiKhoanRememberToken" ToRole="TaiKhoan" />
+        </EntityType>
+        <Association Name="FK_TaiKhoanRememberToken_TaiKhoan">
+          <End Type="BanMatKinhModel.TaiKhoan" Role="TaiKhoan" Multiplicity="1" />
+          <End Type="BanMatKinhModel.TaiKhoanRememberToken" Role="TaiKhoanRememberToken" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TaiKhoan">
+              <PropertyRef Name="TaiKhoanId" />
+            </Principal>
+            <Dependent Role="TaiKhoanRememberToken">
+              <PropertyRef Name="TaiKhoanId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1196,6 +1350,32 @@
                 <ScalarProperty Name="SanPhamId" ColumnName="SanPhamId" />
                 <ScalarProperty Name="KhachHangId" ColumnName="KhachHangId" />
                 <ScalarProperty Name="HanhViId" ColumnName="HanhViId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="GioHangChiTiets">
+            <EntityTypeMapping TypeName="BanMatKinhModel.GioHangChiTiet">
+              <MappingFragment StoreEntitySet="GioHangChiTiet">
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
+                <ScalarProperty Name="SoLuong" ColumnName="SoLuong" />
+                <ScalarProperty Name="SanPhamId" ColumnName="SanPhamId" />
+                <ScalarProperty Name="KhachHangId" ColumnName="KhachHangId" />
+                <ScalarProperty Name="GioHangChiTietId" ColumnName="GioHangChiTietId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TaiKhoanRememberTokens">
+            <EntityTypeMapping TypeName="BanMatKinhModel.TaiKhoanRememberToken">
+              <MappingFragment StoreEntitySet="TaiKhoanRememberToken">
+                <ScalarProperty Name="IpAddress" ColumnName="IpAddress" />
+                <ScalarProperty Name="UserAgent" ColumnName="UserAgent" />
+                <ScalarProperty Name="RevokedAt" ColumnName="RevokedAt" />
+                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
+                <ScalarProperty Name="ExpiresAt" ColumnName="ExpiresAt" />
+                <ScalarProperty Name="TokenHash" ColumnName="TokenHash" />
+                <ScalarProperty Name="TaiKhoanId" ColumnName="TaiKhoanId" />
+                <ScalarProperty Name="RememberTokenId" ColumnName="RememberTokenId" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

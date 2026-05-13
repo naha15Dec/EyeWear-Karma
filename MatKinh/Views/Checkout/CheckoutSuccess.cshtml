@@ -10,9 +10,43 @@
     var orderDetails = ViewData["OrderDetails"] as List<ChiTietDonHang> ?? new List<ChiTietDonHang>();
 
     string paymentMethodText = "Thanh toán khi nhận hàng";
-    if (Request.QueryString["vnp_TxnRef"] != null || Request.Url.AbsoluteUri.ToLower().Contains("vnpay"))
+    string paymentStatusText = "Chờ thanh toán";
+
+    if (order != null)
     {
-        paymentMethodText = "Thanh toán online qua VNPay";
+        if (!string.IsNullOrWhiteSpace(order.PhuongThucThanhToan) &&
+            order.PhuongThucThanhToan.Equals("VNPAY", StringComparison.OrdinalIgnoreCase))
+        {
+            paymentMethodText = "Thanh toán online qua VNPay";
+        }
+        else if (!string.IsNullOrWhiteSpace(order.PhuongThucThanhToan) &&
+                 order.PhuongThucThanhToan.Equals("COD", StringComparison.OrdinalIgnoreCase))
+        {
+            paymentMethodText = "Thanh toán khi nhận hàng";
+        }
+
+        switch ((order.TrangThaiThanhToan ?? "").ToLower())
+        {
+            case "paid":
+                paymentStatusText = "Đã thanh toán";
+                break;
+
+            case "pending":
+                paymentStatusText = "Chờ thanh toán";
+                break;
+
+            case "failed":
+                paymentStatusText = "Thanh toán thất bại";
+                break;
+
+            case "refunded":
+                paymentStatusText = "Đã hoàn tiền";
+                break;
+
+            default:
+                paymentStatusText = "Chờ thanh toán";
+                break;
+        }
     }
 
     string orderStatusText = "Chờ xác nhận";
@@ -46,6 +80,18 @@
                 break;
         }
     }
+
+    string successTitle = "Cảm ơn bạn! Chúng tôi đã nhận được đơn hàng.";
+    string successDesc = "Đơn hàng của bạn đã được ghi nhận thành công. Chúng tôi sẽ sớm liên hệ để xác nhận và tiến hành giao hàng trong thời gian sớm nhất.";
+
+    if (order != null &&
+        !string.IsNullOrWhiteSpace(order.PhuongThucThanhToan) &&
+        order.PhuongThucThanhToan.Equals("VNPAY", StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(order.TrangThaiThanhToan, "Paid", StringComparison.OrdinalIgnoreCase))
+    {
+        successTitle = "Thanh toán thành công! Đơn hàng đã được ghi nhận.";
+        successDesc = "Giao dịch VNPay đã hoàn tất. Cửa hàng sẽ xử lý và chuẩn bị đơn hàng của bạn trong thời gian sớm nhất.";
+    }
 }
 
 <section class="success-page">
@@ -71,11 +117,8 @@
                 </div>
 
                 <span class="success-eyebrow">Order completed</span>
-                <h2>Cảm ơn bạn! Chúng tôi đã nhận được đơn hàng.</h2>
-                <p>
-                    Đơn hàng của bạn đã được ghi nhận thành công. Chúng tôi sẽ sớm liên hệ để xác nhận
-                    và tiến hành giao hàng trong thời gian sớm nhất.
-                </p>
+                <h2>@successTitle</h2>
+                <p>@successDesc</p>
             </div>
 
             <div class="success-layout">
@@ -85,11 +128,11 @@
                     <div class="success-info-grid">
                         <div class="success-info-item">
                             <span class="label">Mã đơn hàng</span>
-                            <strong>@(order?.MaDonHang ?? "—")</strong>
+                            <strong>@(order != null ? order.MaDonHang : "—")</strong>
                         </div>
 
                         <div class="success-info-item">
-                            <span class="label">Trạng thái</span>
+                            <span class="label">Trạng thái đơn hàng</span>
                             <strong>@orderStatusText</strong>
                         </div>
 
@@ -102,6 +145,27 @@
                             <span class="label">Phương thức thanh toán</span>
                             <strong>@paymentMethodText</strong>
                         </div>
+
+                        <div class="success-info-item">
+                            <span class="label">Trạng thái thanh toán</span>
+                            <strong>@paymentStatusText</strong>
+                        </div>
+
+                        @if (order != null && !string.IsNullOrWhiteSpace(order.MaGiaoDichThanhToan))
+                        {
+                            <div class="success-info-item">
+                                <span class="label">Mã giao dịch</span>
+                                <strong>@order.MaGiaoDichThanhToan</strong>
+                            </div>
+                        }
+
+                        @if (order != null && order.NgayThanhToan.HasValue)
+                        {
+                            <div class="success-info-item">
+                                <span class="label">Ngày thanh toán</span>
+                                <strong>@order.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -111,23 +175,43 @@
                     <div class="success-info-grid">
                         <div class="success-info-item">
                             <span class="label">Mã khách hàng</span>
-                            <strong>@(customer?.MaKhachHang ?? "—")</strong>
+                            <strong>@(customer != null ? customer.MaKhachHang : "—")</strong>
                         </div>
 
                         <div class="success-info-item">
                             <span class="label">Số điện thoại</span>
-                            <strong>@(order?.SoDienThoaiNguoiNhan ?? customer?.SoDienThoai ?? "—")</strong>
+                            <strong>
+                                @(order != null && !string.IsNullOrWhiteSpace(order.SoDienThoaiNguoiNhan)
+                                    ? order.SoDienThoaiNguoiNhan
+                                    : (customer != null ? customer.SoDienThoai : "—"))
+                            </strong>
                         </div>
 
                         <div class="success-info-item">
                             <span class="label">Tên người nhận</span>
-                            <strong>@(order?.HoTenNguoiNhan ?? customer?.HoTen ?? "—")</strong>
+                            <strong>
+                                @(order != null && !string.IsNullOrWhiteSpace(order.HoTenNguoiNhan)
+                                    ? order.HoTenNguoiNhan
+                                    : (customer != null ? customer.HoTen : "—"))
+                            </strong>
                         </div>
 
                         <div class="success-info-item">
                             <span class="label">Địa chỉ</span>
-                            <strong>@(order?.DiaChiNhanHang ?? customer?.DiaChi ?? "—")</strong>
+                            <strong>
+                                @(order != null && !string.IsNullOrWhiteSpace(order.DiaChiNhanHang)
+                                    ? order.DiaChiNhanHang
+                                    : (customer != null ? customer.DiaChi : "—"))
+                            </strong>
                         </div>
+
+                        @if (order != null && !string.IsNullOrWhiteSpace(order.GhiChu))
+                        {
+                            <div class="success-info-item">
+                                <span class="label">Ghi chú</span>
+                                <strong>@order.GhiChu</strong>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -167,22 +251,25 @@
 
                                 <tr class="summary-row">
                                     <td colspan="4">Tổng tiền hàng</td>
-                                    <td>@((order?.TongTienHang ?? 0).ToString("N0", vi)) ₫</td>
+                                    <td>@((order != null ? order.TongTienHang : 0).ToString("N0", vi)) ₫</td>
                                 </tr>
+
+                                @if (order != null && order.GiamGia > 0)
+                                {
+                                    <tr class="summary-row">
+                                        <td colspan="4">Giảm giá</td>
+                                        <td>-@order.GiamGia.ToString("N0", vi) ₫</td>
+                                    </tr>
+                                }
 
                                 <tr class="summary-row">
                                     <td colspan="4">Phí giao hàng</td>
-                                    <td>@((order?.PhiVanChuyen ?? 0).ToString("N0", vi)) ₫</td>
-                                </tr>
-
-                                <tr class="summary-row">
-                                    <td colspan="4">Giảm giá</td>
-                                    <td>@((order?.GiamGia ?? 0).ToString("N0", vi)) ₫</td>
+                                    <td>@((order != null ? order.PhiVanChuyen : 0).ToString("N0", vi)) ₫</td>
                                 </tr>
 
                                 <tr class="summary-row grand-total">
                                     <td colspan="4">Tổng thanh toán</td>
-                                    <td>@((order?.TongThanhToan ?? 0).ToString("N0", vi)) ₫</td>
+                                    <td>@((order != null ? order.TongThanhToan : 0).ToString("N0", vi)) ₫</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -203,19 +290,25 @@
                         <div class="success-order-mobile__summary">
                             <div>
                                 <span>Tổng tiền hàng</span>
-                                <strong>@((order?.TongTienHang ?? 0).ToString("N0", vi)) ₫</strong>
+                                <strong>@((order != null ? order.TongTienHang : 0).ToString("N0", vi)) ₫</strong>
                             </div>
+
+                            @if (order != null && order.GiamGia > 0)
+                            {
+                                <div>
+                                    <span>Giảm giá</span>
+                                    <strong>-@order.GiamGia.ToString("N0", vi) ₫</strong>
+                                </div>
+                            }
+
                             <div>
                                 <span>Phí giao hàng</span>
-                                <strong>@((order?.PhiVanChuyen ?? 0).ToString("N0", vi)) ₫</strong>
+                                <strong>@((order != null ? order.PhiVanChuyen : 0).ToString("N0", vi)) ₫</strong>
                             </div>
-                            <div>
-                                <span>Giảm giá</span>
-                                <strong>@((order?.GiamGia ?? 0).ToString("N0", vi)) ₫</strong>
-                            </div>
+
                             <div class="grand">
                                 <span>Tổng thanh toán</span>
-                                <strong>@((order?.TongThanhToan ?? 0).ToString("N0", vi)) ₫</strong>
+                                <strong>@((order != null ? order.TongThanhToan : 0).ToString("N0", vi)) ₫</strong>
                             </div>
                         </div>
                     </div>

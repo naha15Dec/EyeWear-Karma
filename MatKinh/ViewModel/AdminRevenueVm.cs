@@ -21,5 +21,8 @@
         public decimal TotalRevenueVnpay { get; set; }
 
         public int TotalPaymentFailed { get; set; }
+
+        public int TotalManualRefundRequired { get; set; }
+        public decimal TotalManualRefundAmount { get; set; }
     }
 }

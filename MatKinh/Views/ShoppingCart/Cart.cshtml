@@ -7,7 +7,39 @@
 
     var cart = Model ?? new List<Cart>();
     var vi = CultureInfo.GetCultureInfo("vi-VN");
+
     decimal totalMoney = cart.Sum(x => x.ThanhTien);
+    decimal shippingFee = cart.Any() ? 30000m : 0m;
+    decimal grandTotal = totalMoney + shippingFee;
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    Func<string, string> normalizeImage = (path) =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallbackImg;
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
 }
 
 <section class="cart-page">
@@ -27,20 +59,6 @@
 
     <section class="cart-section">
         <div class="container">
-            @if (TempData["CartSuccess"] != null)
-            {
-                <div class="alert alert-success mb-3">
-                    @TempData["CartSuccess"]
-                </div>
-            }
-
-            @if (TempData["CartError"] != null)
-            {
-                <div class="alert alert-danger mb-3">
-                    @TempData["CartError"]
-                </div>
-            }
-
             @if (cart.Any())
             {
                 <div class="cart-layout">
@@ -51,7 +69,7 @@
                                 <h2>Sản phẩm đã chọn</h2>
                             </div>
                             <div class="cart-main-head__count">
-                                @cart.Count sản phẩm
+                                @cart.Sum(x => x.SoLuong) sản phẩm
                             </div>
                         </div>
 
@@ -70,15 +88,19 @@
                                 <tbody>
                                     @foreach (var item in cart)
                                     {
+                                        string imageUrl = normalizeImage(item.HinhAnh);
+
                                         <tr>
                                             <td>
                                                 <div class="cart-product">
                                                     <div class="cart-product__image">
-                                                        <img src="@item.HinhAnh" alt="@item.TenSanPham" />
+                                                        <img src="@imageUrl"
+                                                             alt="@item.TenSanPham"
+                                                             onerror="this.onerror=null;this.src='@fallbackImg';" />
                                                     </div>
                                                     <div class="cart-product__info">
                                                         <h4>@item.TenSanPham</h4>
-                                                        <p>Mã sản phẩm: @item.SanPhamId</p>
+                                                        <p>Mã sản phẩm: #@item.SanPhamId</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -104,6 +126,7 @@
                                                         <input type="number"
                                                                name="soLuong"
                                                                min="1"
+                                                               max="10"
                                                                value="@item.SoLuong"
                                                                onchange="this.form.submit();" />
                                                     </div>
@@ -117,8 +140,9 @@
                                             </td>
 
                                             <td class="cart-remove-cell">
-                                                @using (Html.BeginForm("RemoveItem", "ShoppingCart", FormMethod.Get, new { @class = "cart-remove-form" }))
+                                                @using (Html.BeginForm("RemoveItem", "ShoppingCart", FormMethod.Post, new { @class = "cart-remove-form" }))
                                                 {
+                                                    @Html.AntiForgeryToken()
                                                     <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
                                                     <button type="submit" class="cart-remove-btn" title="Xóa sản phẩm">
                                                         <i class="fa fa-trash"></i>
@@ -134,15 +158,19 @@
                         <div class="cart-mobile-list">
                             @foreach (var item in cart)
                             {
+                                string imageUrl = normalizeImage(item.HinhAnh);
+
                                 <div class="cart-mobile-item">
                                     <div class="cart-mobile-item__top">
                                         <div class="cart-product__image">
-                                            <img src="@item.HinhAnh" alt="@item.TenSanPham" />
+                                            <img src="@imageUrl"
+                                                 alt="@item.TenSanPham"
+                                                 onerror="this.onerror=null;this.src='@fallbackImg';" />
                                         </div>
 
                                         <div class="cart-mobile-item__info">
                                             <h4>@item.TenSanPham</h4>
-                                            <p>Mã sản phẩm: @item.SanPhamId</p>
+                                            <p>Mã sản phẩm: #@item.SanPhamId</p>
                                             <p>Đơn giá: @item.DonGia.ToString("N0", vi) ₫</p>
                                             <p>Giảm giá: @item.GiamGia.ToString("N0", vi) ₫</p>
                                             <div class="cart-total-line">
@@ -160,13 +188,15 @@
                                                 <input type="number"
                                                        name="soLuong"
                                                        min="1"
+                                                       max="10"
                                                        value="@item.SoLuong"
                                                        onchange="this.form.submit();" />
                                             </div>
                                         }
 
-                                        @using (Html.BeginForm("RemoveItem", "ShoppingCart", FormMethod.Get, new { @class = "cart-remove-form" }))
+                                        @using (Html.BeginForm("RemoveItem", "ShoppingCart", FormMethod.Post, new { @class = "cart-remove-form" }))
                                         {
+                                            @Html.AntiForgeryToken()
                                             <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
                                             <button type="submit" class="cart-remove-btn" title="Xóa sản phẩm">
                                                 <i class="fa fa-trash"></i>
@@ -188,22 +218,22 @@
                         </div>
 
                         <div class="cart-summary-line">
-                            <span>Tổng tạm tính</span>
+                            <span>Tạm tính</span>
                             <strong>@totalMoney.ToString("N0", vi) ₫</strong>
                         </div>
 
                         <div class="cart-summary-line">
-                            <span>Phí vận chuyển</span>
-                            <strong>30.000 ₫</strong>
+                            <span>Phí vận chuyển dự kiến</span>
+                            <strong>@shippingFee.ToString("N0", vi) ₫</strong>
                         </div>
 
                         <div class="cart-summary-total">
-                            <span>Tổng cộng tạm tính</span>
-                            <strong>@totalMoney.ToString("N0", vi) ₫</strong>
+                            <span>Tổng dự kiến</span>
+                            <strong>@grandTotal.ToString("N0", vi) ₫</strong>
                         </div>
 
                         <div class="cart-summary-note">
-                            Phí vận chuyển và tổng thanh toán cuối cùng sẽ được xác nhận ở bước checkout.
+                            Phí vận chuyển hiện được tạm tính theo mức mặc định 30.000đ và sẽ được xác nhận lại ở bước thanh toán.
                         </div>
 
                         <div class="cart-summary-actions">

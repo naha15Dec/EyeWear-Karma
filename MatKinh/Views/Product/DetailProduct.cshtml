@@ -6,15 +6,17 @@
 
 @{
     ViewBag.Title = "Chi tiết sản phẩm";
-    var vi = CultureInfo.GetCultureInfo("vi-VN");
 
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
     var recommendedProducts = ViewBag.RecommendedProducts as List<SanPham> ?? new List<SanPham>();
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
 
     Func<string, string> normalizeImage = (path) =>
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Url.Content("~/Asset/img/no-image.png");
+            return fallbackImg;
         }
 
         path = path.Trim();
@@ -37,23 +39,52 @@
         return Url.Content("~/" + path);
     };
 
-    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+    Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
+
     string mainImg = normalizeImage(Model != null ? Model.HinhAnhChinh : null);
 
     decimal giaGoc = Model != null ? Model.GiaGoc : 0m;
     decimal giaBan = Model != null ? Model.GiaBan : 0m;
     bool isSale = giaGoc > giaBan;
 
-    bool conHang = Model != null && Model.TrangThai == 1 && Model.SoLuongTon > 0;
+    int soLuongTon = Model != null ? Model.SoLuongTon : 0;
+    bool conHang = Model != null && Model.TrangThai == 1 && soLuongTon > 0;
 
-    string tenSP = Model != null ? Model.TenSanPham : "Sản phẩm";
-    string maSP = Model != null ? Model.MaSanPham : string.Empty;
-    string tenLoai = Model != null && Model.LoaiSanPham != null ? Model.LoaiSanPham.TenLoaiSanPham : "—";
-    string tenThuongHieu = Model != null && Model.ThuongHieu != null ? Model.ThuongHieu.TenThuongHieu : "—";
+    string stockText = "Hết hàng";
+    string stockCss = "out-stock";
+
+    if (conHang)
+    {
+        if (soLuongTon <= 3)
+        {
+            stockText = "Chỉ còn " + soLuongTon + " sản phẩm";
+            stockCss = "low-stock";
+        }
+        else
+        {
+            stockText = "Còn hàng";
+            stockCss = "in-stock";
+        }
+    }
+
+    string tenSP = Model != null && !string.IsNullOrWhiteSpace(Model.TenSanPham)
+        ? Model.TenSanPham
+        : "Sản phẩm";
+
+    string maSP = Model != null && !string.IsNullOrWhiteSpace(Model.MaSanPham)
+        ? Model.MaSanPham
+        : "—";
+
+    string tenLoai = Model != null && Model.LoaiSanPham != null
+        ? Model.LoaiSanPham.TenLoaiSanPham
+        : "—";
+
+    string tenThuongHieu = Model != null && Model.ThuongHieu != null
+        ? Model.ThuongHieu.TenThuongHieu
+        : "—";
+
     string moTaNgan = Model != null ? Model.MoTaNgan : null;
     string moTaChiTiet = Model != null ? Model.MoTaChiTiet : null;
-
-    Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
 }
 
 <section class="detail-page">
@@ -78,11 +109,20 @@
 
     <section class="detail-main-section">
         <div class="container">
-            <div class="detail-card">
+            <div class="detail-card @(conHang ? "" : "is-soldout")">
                 <div class="row align-items-start">
                     <div class="col-lg-6 mb-4 mb-lg-0">
                         <div class="detail-gallery">
                             <div class="detail-gallery__main">
+                                @if (!conHang)
+                                {
+                                    <span class="product-status-badge soldout detail-image-badge">Hết hàng</span>
+                                }
+                                else if (isSale)
+                                {
+                                    <span class="product-status-badge sale detail-image-badge">Sale</span>
+                                }
+
                                 <img id="mainImage"
                                      src="@mainImg"
                                      alt="@tenSP"
@@ -105,17 +145,15 @@
                             <div class="detail-badges">
                                 <span class="detail-badge">@tenLoai</span>
                                 <span class="detail-badge detail-badge--light">@tenThuongHieu</span>
-                                <span class="detail-stock @(conHang ? "in-stock" : "out-stock")">
-                                    @(conHang ? "Còn hàng" : "Hết hàng")
-                                </span>
+                                <span class="detail-stock @stockCss">@stockText</span>
                             </div>
 
                             <h2 class="detail-title">@tenSP</h2>
 
                             <div class="detail-meta">
-                                <span><strong>Mã sản phẩm:</strong> @(string.IsNullOrWhiteSpace(maSP) ? "—" : maSP)</span>
+                                <span><strong>Mã sản phẩm:</strong> @maSP</span>
                                 <span><strong>Thương hiệu:</strong> @tenThuongHieu</span>
-                                <span><strong>Tồn kho:</strong> @(Model != null ? Model.SoLuongTon : 0)</span>
+                                <span><strong>Tình trạng:</strong> @stockText</span>
                             </div>
 
                             <div class="detail-price-box">
@@ -124,6 +162,7 @@
                                     <div class="detail-price-sale">
                                         @money(giaBan) ₫
                                     </div>
+
                                     <div class="detail-price-row">
                                         <span class="detail-price-old">@money(giaGoc) ₫</span>
                                         <span class="detail-discount-save">
@@ -140,24 +179,38 @@
                             </div>
 
                             <div class="detail-short-desc">
-                                @(string.IsNullOrWhiteSpace(moTaNgan)
-                                    ? "Thiết kế mắt kính hiện đại, phù hợp cho nhu cầu sử dụng hằng ngày và định hình phong cách thanh lịch."
-                                    : moTaNgan)
+                                @if (!string.IsNullOrWhiteSpace(moTaNgan))
+                                {
+                                    @moTaNgan
+                                }
+                                else
+                                {
+                                    <text>Thiết kế mắt kính hiện đại, phù hợp cho nhu cầu sử dụng hằng ngày và định hình phong cách thanh lịch.</text>
+                                }
                             </div>
 
                             <div class="detail-actions">
                                 @if (conHang && Model != null)
                                 {
-                                    <a class="optical-btn optical-btn--dark"
-                                       href="@Url.Action("AddItemToCart", "ShoppingCart", new { sanPhamId = Model.SanPhamId })">
-                                        <i class="ti-bag mr-2"></i>Thêm vào giỏ hàng
-                                    </a>
+                                    using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden" name="sanPhamId" value="@Model.SanPhamId" />
+                                        <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                        <button type="submit" class="optical-btn optical-btn--dark">
+                                            <i class="ti-bag mr-2"></i>Thêm vào giỏ hàng
+                                        </button>
+                                    }
                                 }
                                 else
                                 {
-                                    <span class="optical-btn optical-btn--disabled">
+                                    <button type="button"
+                                            class="optical-btn optical-btn--disabled"
+                                            disabled>
                                         <i class="ti-na mr-2"></i>Hết hàng
-                                    </span>
+                                    </button>
                                 }
 
                                 <a class="optical-btn optical-btn--light"
@@ -166,22 +219,32 @@
                                 </a>
                             </div>
 
+                            @if (!conHang)
+                            {
+                                <div class="detail-stock-note">
+                                    Sản phẩm hiện đã hết hàng. Bạn có thể xem thêm các mẫu kính tương tự hoặc quay lại danh sách sản phẩm để lựa chọn mẫu khác.
+                                </div>
+                            }
+
                             <div class="detail-extra-grid">
                                 <div class="detail-extra-item">
                                     <span class="label">Loại sản phẩm</span>
                                     <span class="value">@tenLoai</span>
                                 </div>
+
                                 <div class="detail-extra-item">
                                     <span class="label">Thương hiệu</span>
                                     <span class="value">@tenThuongHieu</span>
                                 </div>
+
                                 <div class="detail-extra-item">
                                     <span class="label">Tình trạng</span>
-                                    <span class="value">@(conHang ? "Còn hàng" : "Hết hàng")</span>
+                                    <span class="value">@stockText</span>
                                 </div>
+
                                 <div class="detail-extra-item">
-                                    <span class="label">Tồn kho</span>
-                                    <span class="value">@(Model != null ? Model.SoLuongTon.ToString() : "0")</span>
+                                    <span class="label">Mã sản phẩm</span>
+                                    <span class="value">@maSP</span>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +257,7 @@
     <section class="detail-tabs-section">
         <div class="container">
             <div class="detail-tabs-card">
-                <ul class="nav nav-tabs detail-tabs-nav" id="myTab" role="tablist">
+                <ul class="nav nav-tabs detail-tabs-nav" id="productDetailTabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active"
                            id="description-tab"
@@ -206,6 +269,7 @@
                             Mô tả chi tiết
                         </a>
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link"
                            id="info-tab"
@@ -219,8 +283,11 @@
                     </li>
                 </ul>
 
-                <div class="tab-content detail-tabs-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                <div class="tab-content detail-tabs-content" id="productDetailTabsContent">
+                    <div class="tab-pane fade show active"
+                         id="description"
+                         role="tabpanel"
+                         aria-labelledby="description-tab">
                         @if (!string.IsNullOrWhiteSpace(moTaChiTiet))
                         {
                             @Html.Raw(moTaChiTiet)
@@ -231,13 +298,16 @@
                         }
                     </div>
 
-                    <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+                    <div class="tab-pane fade"
+                         id="info"
+                         role="tabpanel"
+                         aria-labelledby="info-tab">
                         <div class="table-responsive">
                             <table class="table detail-info-table">
                                 <tbody>
                                     <tr>
                                         <td>Mã sản phẩm</td>
-                                        <td>@(string.IsNullOrWhiteSpace(maSP) ? "—" : maSP)</td>
+                                        <td>@maSP</td>
                                     </tr>
                                     <tr>
                                         <td>Tên sản phẩm</td>
@@ -261,11 +331,11 @@
                                     </tr>
                                     <tr>
                                         <td>Tình trạng</td>
-                                        <td>@(conHang ? "Còn hàng" : "Hết hàng")</td>
+                                        <td>@stockText</td>
                                     </tr>
                                     <tr>
                                         <td>Số lượng tồn</td>
-                                        <td>@(Model != null ? Model.SoLuongTon : 0)</td>
+                                        <td>@soLuongTon</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -295,14 +365,17 @@
                         string itemImg = normalizeImage(item.HinhAnhChinh);
                         bool itemIsSale = item.GiaGoc > item.GiaBan;
                         bool itemConHang = item.TrangThai == 1 && item.SoLuongTon > 0;
-                        string itemName = item.TenSanPham ?? "Sản phẩm";
+
+                        string itemName = !string.IsNullOrWhiteSpace(item.TenSanPham)
+                            ? item.TenSanPham
+                            : "Sản phẩm";
 
                         string itemBrand = item.ThuongHieu != null
                             ? item.ThuongHieu.TenThuongHieu
                             : "Karma Eyewear";
 
                         <div class="col-md-6 col-lg-3 mb-4">
-                            <div class="recommend-product-card">
+                            <div class="recommend-product-card @(itemConHang ? "" : "is-soldout")">
                                 <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
                                    class="recommend-product-link">
                                     <div class="recommend-product-image">
@@ -326,9 +399,7 @@
                                         </div>
 
                                         <h5 class="recommend-product-title">
-                                            @(itemName.Length > 45
-                                                ? itemName.Substring(0, 45) + "..."
-                                                : itemName)
+                                            @(itemName.Length > 45 ? itemName.Substring(0, 45) + "..." : itemName)
                                         </h5>
 
                                         @if (itemIsSale)
@@ -346,6 +417,10 @@
                                                 @money(item.GiaBan) ₫
                                             </div>
                                         }
+
+                                        <div class="recommend-product-action">
+                                            <span>Xem chi tiết</span>
+                                        </div>
                                     </div>
                                 </a>
                             </div>
@@ -374,7 +449,10 @@
             var main = document.getElementById('mainImage');
             if (!main || !el) return;
 
-            main.src = el.getAttribute('data-src');
+            var nextSrc = el.getAttribute('data-src');
+            if (!nextSrc) return;
+
+            main.src = nextSrc;
 
             var thumbs = document.querySelectorAll('.detail-gallery__thumbs .thumb');
             for (var i = 0; i < thumbs.length; i++) {

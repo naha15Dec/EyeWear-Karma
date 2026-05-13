@@ -6,7 +6,9 @@
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Quản lý doanh thu</h1>
-        <p class="admin-page-subtitle">Theo dõi hiệu quả kinh doanh và các chỉ số bán hàng quan trọng.</p>
+        <p class="admin-page-subtitle">
+            Theo dõi hiệu quả kinh doanh, doanh thu theo phương thức thanh toán và các đơn cần xử lý hoàn tiền.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -35,7 +37,9 @@
                             <i class="fas fa-wallet"></i>
                         </div>
                     </div>
-                    <p class="dashboard-stat-desc">Tổng doanh thu từ đơn giao thành công.</p>
+                    <p class="dashboard-stat-desc">
+                        Chỉ tính đơn đã giao thành công và đã thanh toán.
+                    </p>
                 </div>
             </div>
 
@@ -52,7 +56,9 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                     </div>
-                    <p class="dashboard-stat-desc">Doanh thu trong tháng hiện tại.</p>
+                    <p class="dashboard-stat-desc">
+                        Doanh thu từ đơn hoàn tất trong tháng hiện tại.
+                    </p>
                 </div>
             </div>
 
@@ -69,7 +75,9 @@
                             <i class="fas fa-coins"></i>
                         </div>
                     </div>
-                    <p class="dashboard-stat-desc">Doanh thu trong ngày hôm nay.</p>
+                    <p class="dashboard-stat-desc">
+                        Doanh thu từ đơn hoàn tất trong ngày hôm nay.
+                    </p>
                 </div>
             </div>
         </div>
@@ -78,28 +86,92 @@
         <div class="row mt-2">
             <div class="col-lg-6">
                 <div class="dashboard-stat-card">
-                    <div class="dashboard-stat-label">Doanh thu COD</div>
-                    <div class="dashboard-stat-value">
-                        @string.Format("{0:N0}", Model.TotalRevenueCod)
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Doanh thu COD</div>
+                            <div class="dashboard-stat-value">
+                                @string.Format("{0:N0}", Model.TotalRevenueCod)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-orders">
+                            <i class="fas fa-truck"></i>
+                        </div>
                     </div>
                     <p class="dashboard-stat-desc">
-                        @Model.TotalOrderCod đơn hàng thanh toán khi nhận hàng
+                        @Model.TotalOrderCod đơn hàng thanh toán khi nhận hàng đã giao thành công.
                     </p>
                 </div>
             </div>
 
             <div class="col-lg-6">
                 <div class="dashboard-stat-card">
-                    <div class="dashboard-stat-label">Doanh thu VNPay</div>
-                    <div class="dashboard-stat-value">
-                        @string.Format("{0:N0}", Model.TotalRevenueVnpay)
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Doanh thu VNPay</div>
+                            <div class="dashboard-stat-value">
+                                @string.Format("{0:N0}", Model.TotalRevenueVnpay)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-revenue">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
                     </div>
                     <p class="dashboard-stat-desc">
-                        @Model.TotalOrderVnpay đơn hàng thanh toán online
+                        @Model.TotalOrderVnpay đơn hàng thanh toán online đã giao thành công.
                     </p>
                 </div>
             </div>
         </div>
+
+        <!-- ===== REFUND WARNING ===== -->
+        <div class="row mt-2">
+            <div class="col-lg-6">
+                <div class="dashboard-stat-card revenue-refund-card">
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Đơn cần xử lý hoàn tiền</div>
+                            <div class="dashboard-stat-value text-warning">
+                                @Model.TotalManualRefundRequired
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-refund">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <p class="dashboard-stat-desc">
+                        Đơn VNPay đã thanh toán nhưng bị hủy hoặc giao thất bại. Không tính là đã hoàn tiền.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="dashboard-stat-card revenue-refund-card">
+                    <div class="dashboard-stat-top">
+                        <div>
+                            <div class="dashboard-stat-label">Số tiền cần kiểm tra hoàn</div>
+                            <div class="dashboard-stat-value text-warning">
+                                @string.Format("{0:N0}", Model.TotalManualRefundAmount)
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-icon icon-refund">
+                            <i class="fas fa-undo-alt"></i>
+                        </div>
+                    </div>
+                    <p class="dashboard-stat-desc">
+                        Tổng giá trị các đơn VNPay đang cần cửa hàng kiểm tra và xử lý hoàn tiền thủ công.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.TotalManualRefundRequired > 0)
+        {
+            <div class="revenue-refund-note">
+                <strong>Lưu ý hoàn tiền:</strong>
+                Các đơn VNPay đã thanh toán nhưng bị hủy/giao thất bại vẫn giữ trạng thái thanh toán là
+                <b>Đã thanh toán</b>. Cửa hàng cần kiểm tra giao dịch và xử lý hoàn tiền trong 3–5 ngày làm việc.
+            </div>
+        }
 
         <!-- ===== DETAIL ===== -->
         <div class="card admin-form-card revenue-detail-card mt-2">
@@ -147,9 +219,47 @@
                         </div>
                     </div>
 
+                    <div class="revenue-metric-item">
+                        <div class="revenue-metric-label text-warning">Đơn VNPay cần hoàn tiền</div>
+                        <div class="revenue-metric-value text-warning">
+                            @Model.TotalManualRefundRequired
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
 
     </div>
 </section>
+
+<style>
+    .revenue-refund-card {
+        border: 1px solid #fed7aa;
+        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 72%);
+    }
+
+    .icon-refund {
+        background: #ffedd5;
+        color: #c2410c;
+    }
+
+    .revenue-refund-note {
+        margin: 14px 0 18px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+        .revenue-refund-note strong {
+            color: #7c2d12;
+        }
+
+    .text-warning {
+        color: #c2410c !important;
+    }
+</style>

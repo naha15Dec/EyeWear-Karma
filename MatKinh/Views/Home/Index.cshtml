@@ -291,24 +291,31 @@
                                             </div>
                                         }
 
-                                        <div class="product-actions">
-                                            @if (conHang)
+                                    <div class="product-actions">
+                                        @if (conHang)
+                                        {
+                                            using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form home-add-cart-form" }))
                                             {
-                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })"
-                                                   class="btn-cart">
-                                                    <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <span class="btn-cart disabled">Hết hàng</span>
-                                            }
+                                                @Html.AntiForgeryToken()
 
-                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
-                                               class="btn-detail">
-                                                Chi tiết
-                                            </a>
-                                        </div>
+                                                <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                                <button type="submit" class="btn-cart">
+                                                    <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
+                                                </button>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn-cart disabled" disabled>Hết hàng</button>
+                                        }
+
+                                        <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
+                                           class="btn-detail">
+                                            Chi tiết
+                                        </a>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -371,14 +378,21 @@
                                         <div class="product-actions">
                                             @if (conHang)
                                             {
-                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })"
-                                                   class="btn-cart">
-                                                    <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
-                                                </a>
+                                                using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form home-add-cart-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
+
+                                                    <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                    <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                                    <button type="submit" class="btn-cart">
+                                                        <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
+                                                    </button>
+                                                }
                                             }
                                             else
                                             {
-                                                <span class="btn-cart disabled">Hết hàng</span>
+                                                <button type="button" class="btn-cart disabled" disabled>Hết hàng</button>
                                             }
 
                                             <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
@@ -501,26 +515,33 @@
                                                     </div>
                                                 }
 
-                                                <div class="promo-card-actions">
-                                                    @if (conHang)
+                                            <div class="promo-card-actions">
+                                                @if (conHang)
+                                                {
+                                                    using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form promo-add-cart-form" }))
                                                     {
-                                                        <a class="promo-add-cart"
-                                                           href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })">
-                                                            <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
-                                                        </a>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="promo-add-cart disabled">
-                                                            Hết hàng
-                                                        </span>
-                                                    }
+                                                        @Html.AntiForgeryToken()
 
-                                                    <a class="promo-detail-link"
-                                                       href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
-                                                        Chi tiết
-                                                    </a>
-                                                </div>
+                                                        <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                        <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                                        <button type="submit" class="promo-add-cart">
+                                                            <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
+                                                        </button>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="promo-add-cart disabled" disabled>
+                                                        Hết hàng
+                                                    </button>
+                                                }
+
+                                                <a class="promo-detail-link"
+                                                   href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
+                                                    Chi tiết
+                                                </a>
+                                            </div>
                                             </div>
                                         </div>
                                     }

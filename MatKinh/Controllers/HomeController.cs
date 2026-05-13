@@ -11,15 +11,17 @@ namespace MatKinh.Controllers
         private readonly BanMatKinhEntities db = new BanMatKinhEntities();
 
         private const int ProductStatusActive = 1;
+        private const int BlogStatusPublished = 2;
 
         public ActionResult Index()
         {
-            UpdateInterface();
+            LoadHomeData();
             return View();
         }
 
         /// <summary>
-        /// Tìm sản phẩm theo mã sản phẩm hoặc id sản phẩm.
+        /// Tìm sản phẩm theo mã sản phẩm hoặc ID sản phẩm.
+        /// Chỉ cho tìm sản phẩm đang bán, còn hàng, thuộc loại và thương hiệu còn hoạt động.
         /// </summary>
         public ActionResult FindProductByID(string idProduct)
         {
@@ -30,24 +32,28 @@ namespace MatKinh.Controllers
 
             idProduct = idProduct.Trim();
 
-            SanPham product = null;
-
-            // Ưu tiên tìm theo mã sản phẩm nghiệp vụ
-            product = db.SanPhams
+            var productQuery = db.SanPhams
                 .AsNoTracking()
-                .FirstOrDefault(x => x.MaSanPham == idProduct && x.TrangThai == ProductStatusActive);
+                .Include(x => x.LoaiSanPham)
+                .Include(x => x.ThuongHieu)
+                .Where(x =>
+                    x.TrangThai == ProductStatusActive &&
+                    x.SoLuongTon > 0 &&
+                    x.LoaiSanPham.IsActive &&
+                    x.ThuongHieu.IsActive);
 
-            // Nếu người dùng nhập id số thì tìm thêm theo khóa chính
+            var product = productQuery
+                .FirstOrDefault(x => x.MaSanPham == idProduct);
+
             if (product == null && int.TryParse(idProduct, out int sanPhamId))
             {
-                product = db.SanPhams
-                    .AsNoTracking()
-                    .FirstOrDefault(x => x.SanPhamId == sanPhamId && x.TrangThai == ProductStatusActive);
+                product = productQuery
+                    .FirstOrDefault(x => x.SanPhamId == sanPhamId);
             }
 
             if (product == null)
             {
-                TempData["HomeSearchError"] = "Không tìm thấy sản phẩm phù hợp.";
+                TempData["HomeSearchError"] = "Không tìm thấy sản phẩm phù hợp hoặc sản phẩm hiện đã ngừng bán.";
                 return RedirectToAction("Index");
             }
 
@@ -55,48 +61,47 @@ namespace MatKinh.Controllers
         }
 
         /// <summary>
-        /// Nạp dữ liệu trang chủ theo DB mới.
+        /// Nạp dữ liệu cần hiển thị cho trang chủ.
         /// </summary>
-        private void UpdateInterface()
+        private void LoadHomeData()
         {
             var baseQuery = db.SanPhams
                 .AsNoTracking()
                 .Include(x => x.LoaiSanPham)
                 .Include(x => x.ThuongHieu)
-                .Where(x => x.TrangThai == ProductStatusActive);
+                .Where(x =>
+                    x.TrangThai == ProductStatusActive &&
+                    x.SoLuongTon > 0 &&
+                    x.LoaiSanPham.IsActive &&
+                    x.ThuongHieu.IsActive);
 
-            // Sản phẩm đang giảm giá: GiaGoc > GiaBan
             ViewData["listDiscountProduct"] = baseQuery
                 .Where(x => x.GiaGoc > x.GiaBan)
-                .OrderByDescending(x => (x.GiaGoc - x.GiaBan))
+                .OrderByDescending(x => x.GiaGoc - x.GiaBan)
                 .ThenByDescending(x => x.CreatedAt)
                 .Take(4)
                 .ToList();
 
-            // Sản phẩm mới: ưu tiên sản phẩm active mới tạo gần đây
             ViewData["listNewProduct"] = baseQuery
                 .OrderByDescending(x => x.CreatedAt)
                 .ThenByDescending(x => x.SanPhamId)
                 .Take(4)
                 .ToList();
 
-            // Deal hot: sản phẩm giảm mạnh nhất
             ViewData["listDealHot"] = baseQuery
                 .Where(x => x.GiaGoc > x.GiaBan)
-                .OrderByDescending(x => (x.GiaGoc - x.GiaBan))
+                .OrderByDescending(x => x.GiaGoc - x.GiaBan)
                 .ThenByDescending(x => x.CreatedAt)
                 .Take(2)
                 .ToList();
 
-            // Blog mới nhất cho homepage nếu cần dùng luôn ở view
             ViewData["listLatestBlog"] = db.BaiViets
                 .AsNoTracking()
-                .Where(x => x.TrangThai == 2)
+                .Where(x => x.TrangThai == BlogStatusPublished)
                 .OrderByDescending(x => x.NgayDang ?? x.CreatedAt)
                 .Take(3)
                 .ToList();
 
-            // Thông tin cửa hàng nếu homepage đang dùng
             ViewData["storeInfo"] = db.ThongTinCuaHangs
                 .AsNoTracking()
                 .Where(x => x.IsActive)

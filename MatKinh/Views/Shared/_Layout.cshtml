@@ -246,8 +246,9 @@
                             </li>
                         </ul>
 
-                        <a href="@Url.Action("Cart", "ShoppingCart")" class="action-btn" title="Giỏ hàng">
+                        <a href="@Url.Action("Cart", "ShoppingCart")" class="action-btn header-cart-link" title="Giỏ hàng" aria-label="Giỏ hàng">
                             <span class="lnr lnr-cart"></span>
+                            @Html.Action("CartCount", "ShoppingCart")
                         </a>
 
                         <button type="button" class="action-btn" id="openSearchBtn" title="Tìm kiếm">
@@ -277,14 +278,18 @@
                         </button>
                     </div>
 
-                    @using (Html.BeginForm("CheckFilters", "Product", FormMethod.Post, new { id = "searchForm", @class = "search-form-wrap" }))
+                    @using (Html.BeginForm("Index", "Product", FormMethod.Get, new { id = "searchForm", @class = "search-form-wrap" }))
                     {
                         <div class="search-form-inner">
                             <input type="text"
                                    class="search-input-modern"
                                    id="search_input"
-                                   name="NameProduct"
+                                   name="Keyword"
+                                   autocomplete="off"
                                    placeholder="Ví dụ: RayBan, gọng vuông, kính râm..." />
+
+                            <input type="hidden" name="Page" value="1" />
+                            <input type="hidden" name="PageSize" value="9" />
 
                             <button type="submit" class="search-submit-btn">
                                 Tìm kiếm

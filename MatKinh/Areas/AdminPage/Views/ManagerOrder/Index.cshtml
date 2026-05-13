@@ -6,12 +6,67 @@
 
     int startPage = Math.Max(1, Model.CurrentPage - 2);
     int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+    Func<string, string> paymentMethodText = method =>
+    {
+        if (string.Equals(method, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+        {
+            return "VNPay";
+        }
+
+        if (string.Equals(method, PaymentConstants.COD, StringComparison.OrdinalIgnoreCase))
+        {
+            return "COD";
+        }
+
+        return "Không xác định";
+    };
+
+    Func<string, string> paymentStatusText = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thất bại";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã hoàn tiền";
+        }
+
+        return "Chờ thanh toán";
+    };
+
+    Func<string, string> paymentStatusClass = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "success";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "danger";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "warning";
+        }
+
+        return "processing";
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">@Model.HeaderTitle</h1>
-        <p class="admin-page-subtitle">Theo dõi trạng thái đơn hàng, xử lý vận hành và giao hàng.</p>
+        <p class="admin-page-subtitle">Theo dõi trạng thái đơn hàng, xử lý vận hành, giao hàng và thanh toán.</p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -45,13 +100,14 @@
                                    name="keyword"
                                    value="@Model.Keyword"
                                    class="form-control admin-input"
+                                   autocomplete="off"
                                    placeholder="Mã đơn / người nhận / số điện thoại" />
                         </div>
                     </div>
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Trạng thái</label>
+                            <label>Trạng thái đơn hàng</label>
                             <select name="status" class="form-control admin-input">
                                 <option value="">Tất cả trạng thái</option>
                                 @foreach (var item in Model.StatusOptions)
@@ -105,12 +161,20 @@
                             {
                                 foreach (var item in Model.Orders)
                                 {
-                                    <tr>
+                                    <tr class="@(item.CanRequireManualRefund ? "admin-order-row-refund" : "")">
                                         <td>
                                             <div class="admin-order-code">#@item.MaDonHang</div>
+
                                             <div class="admin-order-subtext">
                                                 @item.SoLuongSanPham sản phẩm
                                             </div>
+
+                                            @if (item.CanRequireManualRefund)
+                                            {
+                                                <div class="admin-refund-warning-mini">
+                                                    Cần hoàn tiền
+                                                </div>
+                                            }
                                         </td>
 
                                         <td>
@@ -144,6 +208,13 @@
                                                     XN: @item.NgayXacNhan.Value.ToString("dd/MM HH:mm")
                                                 </div>
                                             }
+
+                                            @if (item.NgayThanhToan.HasValue)
+                                            {
+                                                <div class="admin-order-subtext">
+                                                    TT: @item.NgayThanhToan.Value.ToString("dd/MM HH:mm")
+                                                </div>
+                                            }
                                         </td>
 
                                         <td class="text-right">
@@ -154,6 +225,38 @@
                                             <div class="admin-order-subtext">
                                                 Tiền hàng: @item.TongTienHang.ToString("N0") đ
                                             </div>
+
+                                            @if (item.GiamGia > 0)
+                                            {
+                                                <div class="admin-order-subtext">
+                                                    Giảm: -@item.GiamGia.ToString("N0") đ
+                                                </div>
+                                            }
+
+                                            <div class="admin-payment-meta">
+                                                <span class="admin-payment-method">
+                                                    @paymentMethodText(item.PhuongThucThanhToan)
+                                                </span>
+
+                                                <span class="admin-status-badge admin-payment-badge @paymentStatusClass(item.TrangThaiThanhToan)">
+                                                    @paymentStatusText(item.TrangThaiThanhToan)
+                                                </span>
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(item.MaGiaoDichThanhToan))
+                                            {
+                                                <div class="admin-order-subtext">
+                                                    GD: @item.MaGiaoDichThanhToan
+                                                </div>
+                                            }
+
+                                            @if (item.CanRequireManualRefund)
+                                            {
+                                                <div class="admin-refund-warning">
+                                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                                    VNPay đã thanh toán, cần xử lý hoàn tiền.
+                                                </div>
+                                            }
                                         </td>
 
                                         <td>
@@ -162,27 +265,35 @@
                                                 case OrderStatusConstants.PENDING:
                                                     <span class="admin-status-badge warning">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.CONFIRMED:
                                                     <span class="admin-status-badge info">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.PREPARING:
                                                     <span class="admin-status-badge processing">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
                                                     <span class="admin-status-badge assigned">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.DELIVERING:
                                                     <span class="admin-status-badge shipping">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.DELIVERED:
                                                     <span class="admin-status-badge success">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.DELIVERY_FAILED:
                                                     <span class="admin-status-badge danger">@item.TrangThaiText</span>
                                                     break;
+
                                                 case OrderStatusConstants.CANCELLED:
                                                     <span class="admin-status-badge muted">@item.TrangThaiText</span>
                                                     break;
+
                                                 default:
                                                     <span class="admin-status-badge">@item.TrangThaiText</span>
                                                     break;
@@ -312,44 +423,109 @@
         color: #2f3542;
     }
 
-    .admin-status-badge.info {
-        background: #eef6ff;
-        color: #1d4ed8;
+    .admin-status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
-    .admin-status-badge.warning {
-        background: #fff8e6;
-        color: #b7791f;
+        .admin-status-badge.info {
+            background: #eef6ff;
+            color: #1d4ed8;
+        }
+
+        .admin-status-badge.warning {
+            background: #fff8e6;
+            color: #b7791f;
+        }
+
+        .admin-status-badge.processing {
+            background: #fffdf3;
+            color: #a16207;
+        }
+
+        .admin-status-badge.assigned {
+            background: #f7f3ff;
+            color: #7c3aed;
+        }
+
+        .admin-status-badge.shipping {
+            background: #eefbf6;
+            color: #0f766e;
+        }
+
+        .admin-status-badge.success {
+            background: #edfdf3;
+            color: #15803d;
+        }
+
+        .admin-status-badge.danger {
+            background: #fff1f2;
+            color: #dc2626;
+        }
+
+        .admin-status-badge.muted {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+    .admin-payment-meta {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
-    .admin-status-badge.processing {
-        background: #fffdf3;
-        color: #a16207;
+    .admin-payment-method {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 9px;
+        background: #f8f4ed;
+        color: #7c5b24;
+        font-size: 12px;
+        font-weight: 800;
     }
 
-    .admin-status-badge.assigned {
-        background: #f7f3ff;
-        color: #7c3aed;
+    .admin-payment-badge {
+        padding: 5px 9px;
     }
 
-    .admin-status-badge.shipping {
-        background: #eefbf6;
-        color: #0f766e;
+    .admin-order-row-refund {
+        background: linear-gradient(90deg, rgba(255, 247, 237, .95), rgba(255, 255, 255, 1));
     }
 
-    .admin-status-badge.success {
-        background: #edfdf3;
-        color: #15803d;
+    .admin-refund-warning {
+        margin-top: 8px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #fed7aa;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.4;
+        text-align: left;
     }
 
-    .admin-status-badge.danger {
-        background: #fff1f2;
-        color: #dc2626;
-    }
-
-    .admin-status-badge.muted {
-        background: #f3f4f6;
-        color: #6b7280;
+    .admin-refund-warning-mini {
+        margin-top: 6px;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #fed7aa;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 800;
     }
 
     .admin-order-pagination {
@@ -419,6 +595,14 @@
         .admin-order-pagination {
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .admin-payment-meta {
+            justify-content: flex-start;
+        }
+
+        .admin-refund-warning {
+            text-align: left;
         }
     }
 </style>

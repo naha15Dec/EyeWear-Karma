@@ -104,17 +104,27 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
                     UpdatePaymentWhenOrderFinal(order, newStatus);
 
+                    string historyNote = BuildStatusHistoryNote(order, newStatus, model.GhiChu);
+
                     AddOrderHistory(
                         order.DonHangId,
                         oldStatus,
                         newStatus,
-                        model.GhiChu,
+                        historyNote,
                         currentUser.TaiKhoanId);
 
                     db.SaveChanges();
                     transaction.Commit();
 
-                    TempData["SuccessMessage"] = "Cập nhật trạng thái đơn hàng thành công.";
+                    if (NeedManualRefund(order, newStatus))
+                    {
+                        TempData["SuccessMessage"] = "Cập nhật trạng thái thành công. Đơn hàng đã thanh toán qua VNPay, vui lòng xử lý hoàn tiền trong 3–5 ngày làm việc.";
+                    }
+                    else
+                    {
+                        TempData["SuccessMessage"] = "Cập nhật trạng thái đơn hàng thành công.";
+                    }
+
                     return RedirectToAction("Detail", new { id = model.DonHangId });
                 }
                 catch (Exception ex)
@@ -283,6 +293,15 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     TongThanhToan = x.TongThanhToan,
                     TrangThai = x.TrangThai,
                     TrangThaiText = "",
+                    PhuongThucThanhToan = x.PhuongThucThanhToan,
+                    TrangThaiThanhToan = x.TrangThaiThanhToan,
+                    MaGiaoDichThanhToan = x.MaGiaoDichThanhToan,
+                    NgayThanhToan = x.NgayThanhToan,
+                    CanRequireManualRefund =
+                        (x.TrangThai == OrderStatusConstants.CANCELLED ||
+                         x.TrangThai == OrderStatusConstants.DELIVERY_FAILED) &&
+                        x.PhuongThucThanhToan == PaymentConstants.VNPAY &&
+                        x.TrangThaiThanhToan == PaymentConstants.PAID,
                     NguoiTao = x.TaiKhoan1 != null ? x.TaiKhoan1.HoTen : "",
                     NguoiXacNhan = x.TaiKhoan != null ? x.TaiKhoan.HoTen : "",
                     ShipperName = x.TaiKhoan2 != null ? x.TaiKhoan2.HoTen : "",
@@ -316,6 +335,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
             return model;
         }
+
         private AdminOrderDetailVm BuildDetailViewModel(DonHang order)
         {
             var model = new AdminOrderDetailVm
@@ -340,6 +360,11 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 TongThanhToan = order.TongThanhToan,
                 TrangThai = order.TrangThai,
                 TrangThaiText = OrderStatusConstants.GetName(order.TrangThai),
+                PhuongThucThanhToan = order.PhuongThucThanhToan,
+                TrangThaiThanhToan = order.TrangThaiThanhToan,
+                MaGiaoDichThanhToan = order.MaGiaoDichThanhToan,
+                NgayThanhToan = order.NgayThanhToan,
+                CanRequireManualRefund = NeedManualRefund(order, order.TrangThai),
                 NgayDat = order.NgayDat,
                 NgayXacNhan = order.NgayXacNhan,
                 NgayGiao = order.NgayGiao,
@@ -441,6 +466,20 @@ namespace MatKinh.Areas.AdminPage.Controllers
             db.LichSuTrangThaiDonHangs.Add(history);
         }
 
+        private string BuildStatusHistoryNote(DonHang order, int newStatus, string inputNote)
+        {
+            string note = string.IsNullOrWhiteSpace(inputNote)
+                ? "Cập nhật trạng thái đơn hàng."
+                : inputNote.Trim();
+
+            if (NeedManualRefund(order, newStatus))
+            {
+                note += " Đơn hàng đã thanh toán qua VNPay nhưng đã bị hủy/giao thất bại. Cửa hàng cần kiểm tra giao dịch và xử lý hoàn tiền trong 3–5 ngày làm việc.";
+            }
+
+            return note;
+        }
+
         private void ApplyOrderDateByStatus(DonHang order, TaiKhoan currentUser, int newStatus)
         {
             if (order == null)
@@ -529,12 +568,26 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     order.NgayThanhToan = null;
                 }
 
-                if (string.Equals(order.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(order.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
-                {
-                    order.TrangThaiThanhToan = PaymentConstants.REFUNDED;
-                }
+                // Lưu ý:
+                // Nếu VNPAY đã Paid mà bị hủy/giao thất bại thì KHÔNG tự set Refunded.
+                // Giữ Paid để admin biết đơn này cần xử lý hoàn tiền thủ công.
             }
+        }
+
+        private bool NeedManualRefund(DonHang order, int newStatus)
+        {
+            if (order == null)
+            {
+                return false;
+            }
+
+            bool isCancelledOrFailed =
+                newStatus == OrderStatusConstants.CANCELLED ||
+                newStatus == OrderStatusConstants.DELIVERY_FAILED;
+
+            return isCancelledOrFailed &&
+                   string.Equals(order.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(order.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase);
         }
 
         private TaiKhoan GetCurrentAccount()

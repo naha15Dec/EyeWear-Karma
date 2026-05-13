@@ -1,26 +1,77 @@
 ﻿@model MatKinh.Models.ThongTinCuaHang
+
 @{
     ViewBag.Title = "Liên hệ";
 
     string storeName = Model != null && !string.IsNullOrWhiteSpace(Model.TenCuaHang)
-        ? Model.TenCuaHang
+        ? Model.TenCuaHang.Trim()
         : "Karma Eyewear";
 
-    string hotline = Model != null ? Model.Hotline : "";
-    string email = Model != null ? Model.Email : "";
-    string address = Model != null ? Model.DiaChi : "";
-    string shortDesc = Model != null ? Model.MoTaNgan : "";
-    string intro = Model != null ? Model.GioiThieu : "";
-    string facebookUrl = Model != null ? Model.FacebookUrl : "";
-    string instagramUrl = Model != null ? Model.InstagramUrl : "";
-    string zaloUrl = Model != null ? Model.ZaloUrl : "";
+    string hotline = Model != null && !string.IsNullOrWhiteSpace(Model.Hotline)
+        ? Model.Hotline.Trim()
+        : "";
+
+    string hotlineHref = "";
+    if (!string.IsNullOrWhiteSpace(hotline))
+    {
+        hotlineHref = hotline
+            .Replace(" ", "")
+            .Replace(".", "")
+            .Replace("-", "")
+            .Replace("(", "")
+            .Replace(")", "");
+    }
+
+    string email = Model != null && !string.IsNullOrWhiteSpace(Model.Email)
+        ? Model.Email.Trim()
+        : "";
+
+    string emailHref = email;
+
+    string address = Model != null && !string.IsNullOrWhiteSpace(Model.DiaChi)
+        ? Model.DiaChi.Trim()
+        : "";
+
+    string shortDesc = Model != null && !string.IsNullOrWhiteSpace(Model.MoTaNgan)
+        ? Model.MoTaNgan.Trim()
+        : "";
+
+    string intro = Model != null && !string.IsNullOrWhiteSpace(Model.GioiThieu)
+        ? Model.GioiThieu.Trim()
+        : "";
+
+    string facebookUrl = Model != null && !string.IsNullOrWhiteSpace(Model.FacebookUrl)
+        ? Model.FacebookUrl.Trim()
+        : "";
+
+    string instagramUrl = Model != null && !string.IsNullOrWhiteSpace(Model.InstagramUrl)
+        ? Model.InstagramUrl.Trim()
+        : "";
+
+    string zaloUrl = Model != null && !string.IsNullOrWhiteSpace(Model.ZaloUrl)
+        ? Model.ZaloUrl.Trim()
+        : "";
+
+    bool hasContactInfo =
+        !string.IsNullOrWhiteSpace(address) ||
+        !string.IsNullOrWhiteSpace(hotline) ||
+        !string.IsNullOrWhiteSpace(email);
+
+    bool hasSocial =
+        !string.IsNullOrWhiteSpace(facebookUrl) ||
+        !string.IsNullOrWhiteSpace(instagramUrl) ||
+        !string.IsNullOrWhiteSpace(zaloUrl);
 }
+
 <section class="contact-page">
     <section class="optical-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">@storeName</span>
                 <h1>Liên hệ với chúng tôi</h1>
+                <p class="optical-breadcrumb__desc">
+                    Kết nối với Karma Eyewear để được tư vấn sản phẩm, hỗ trợ đơn hàng và giải đáp các thông tin cần thiết.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index","Home")">Trang chủ</a>
                     <span>/</span>
@@ -32,14 +83,13 @@
 
     <section class="contact-section">
         <div class="container">
-            <div class="contact-hero">
-                <h2>Chúng tôi luôn sẵn sàng hỗ trợ bạn</h2>
-                <p>
-                    @(!string.IsNullOrWhiteSpace(shortDesc)
-                        ? shortDesc
-                        : "Nếu bạn cần tư vấn về sản phẩm, đơn hàng hoặc bất kỳ thông tin nào, hãy liên hệ với chúng tôi – đội ngũ hỗ trợ sẽ phản hồi trong thời gian sớm nhất.")
-                </p>
-            </div>
+
+            @if (ViewBag.ContactNotice != null)
+            {
+                <div class="contact-notice">
+                    @ViewBag.ContactNotice
+                </div>
+            }
 
             <div class="contact-grid">
                 <div class="contact-info-card">
@@ -59,9 +109,9 @@
                         <div>
                             <strong>Số điện thoại</strong>
                             <p>
-                                @if (!string.IsNullOrWhiteSpace(hotline))
+                                @if (!string.IsNullOrWhiteSpace(hotlineHref))
                                 {
-                                    <a href="tel:@hotline">@hotline</a>
+                                    <a href="tel:@hotlineHref">@hotline</a>
                                 }
                                 else
                                 {
@@ -76,9 +126,9 @@
                         <div>
                             <strong>Email</strong>
                             <p>
-                                @if (!string.IsNullOrWhiteSpace(email))
+                                @if (!string.IsNullOrWhiteSpace(emailHref))
                                 {
-                                    <a href="mailto:@email">@email</a>
+                                    <a href="mailto:@emailHref">@email</a>
                                 }
                                 else
                                 {
@@ -90,36 +140,52 @@
 
                     <div class="contact-extra">
                         <p>
-                            Thời gian làm việc: <br />
-                            <strong>08:00 – 22:00 (T2 – CN)</strong>
+                            Thời gian hỗ trợ: <br />
+                            <strong>08:00 – 22:00, từ Thứ 2 đến Chủ nhật</strong>
                         </p>
 
                         @if (!string.IsNullOrWhiteSpace(intro))
                         {
                             <p class="mt-3">@intro</p>
                         }
+                        else
+                        {
+                            <p class="mt-3">
+                                Karma Eyewear hỗ trợ tư vấn lựa chọn mắt kính, xử lý đơn hàng, thanh toán,
+                                giao nhận và các chính sách sau mua một cách rõ ràng, tận tâm.
+                            </p>
+                        }
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(facebookUrl) || !string.IsNullOrWhiteSpace(instagramUrl) || !string.IsNullOrWhiteSpace(zaloUrl))
+                    @if (hasSocial)
                     {
                         <div class="contact-social-links mt-4">
                             @if (!string.IsNullOrWhiteSpace(facebookUrl))
                             {
-                                <a href="@facebookUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mr-2 mb-2">
+                                <a href="@facebookUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="optical-btn optical-btn--light mr-2 mb-2">
                                     Facebook
                                 </a>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(instagramUrl))
                             {
-                                <a href="@instagramUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mr-2 mb-2">
+                                <a href="@instagramUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="optical-btn optical-btn--light mr-2 mb-2">
                                     Instagram
                                 </a>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(zaloUrl))
                             {
-                                <a href="@zaloUrl" target="_blank" rel="noopener noreferrer" class="optical-btn optical-btn--light mb-2">
+                                <a href="@zaloUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="optical-btn optical-btn--light mb-2">
                                     Zalo
                                 </a>
                             }
@@ -133,29 +199,36 @@
                             height="100%"
                             style="border:0;"
                             allowfullscreen=""
-                            loading="lazy">
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
                     </iframe>
                 </div>
             </div>
 
             <div class="contact-cta">
                 <h3>Bạn cần hỗ trợ nhanh?</h3>
-                <p>Liên hệ trực tiếp với chúng tôi để được tư vấn ngay.</p>
+                <p>
+                    Liên hệ trực tiếp với chúng tôi để được tư vấn về sản phẩm, đơn hàng, giao hàng hoặc thanh toán.
+                </p>
 
                 <div class="contact-cta-actions">
-                    @if (!string.IsNullOrWhiteSpace(hotline))
+                    @if (!string.IsNullOrWhiteSpace(hotlineHref))
                     {
-                        <a href="tel:@hotline" class="optical-btn optical-btn--dark">
+                        <a href="tel:@hotlineHref" class="optical-btn optical-btn--dark">
                             Gọi ngay
                         </a>
                     }
 
-                    @if (!string.IsNullOrWhiteSpace(email))
+                    @if (!string.IsNullOrWhiteSpace(emailHref))
                     {
-                        <a href="mailto:@email" class="optical-btn optical-btn--light">
+                        <a href="mailto:@emailHref" class="optical-btn optical-btn--light">
                             Gửi email
                         </a>
                     }
+
+                    <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
+                        Tiếp tục mua sắm
+                    </a>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 ﻿@model MatKinh.ViewModel.Login
+
 @{
     ViewBag.Title = "Đăng nhập";
-    var hasModelErrors = !ViewData.ModelState.IsValid;
 }
 
 <section class="auth-page">
@@ -31,16 +31,13 @@
                                 <p>Tiếp tục mua sắm, theo dõi đơn hàng và lưu lại những mẫu kính bạn yêu thích.</p>
                             </div>
 
-                            @if (TempData["NotificationLogin"] != null)
-                            {
-                                <div class="auth-alert auth-alert--warning" role="alert">
-                                    @TempData["NotificationLogin"]
-                                </div>
-                            }
-
                             @using (Html.BeginForm("LoginAccount", "Account", FormMethod.Post, new { @class = "auth-form", autocomplete = "off" }))
                             {
                                 @Html.AntiForgeryToken()
+
+                                <div class="auth-summary-box">
+                                    @Html.ValidationSummary(true, "", new { @class = "auth-validation-summary" })
+                                </div>
 
                                 <div class="auth-form-group">
                                     <label class="auth-label" for="Username">Tên đăng nhập</label>
@@ -49,23 +46,21 @@
                                         @class = "auth-input",
                                         placeholder = "Nhập tên đăng nhập",
                                         autocomplete = "off",
-                                        id = "Username",
-                                        value = ""
+                                        id = "Username"
                                     })
                                     @Html.ValidationMessageFor(m => m.Username, "", new { @class = "auth-field-error" })
                                 </div>
-                                
+
                                 <div class="auth-form-group">
                                     <label class="auth-label" for="Password">Mật khẩu</label>
                                     @Html.PasswordFor(m => m.Password, new
                                     {
                                         @class = "auth-input",
                                         placeholder = "Nhập mật khẩu",
-                                        autocomplete = "new-password",
-                                        id = "Password",
-                                        value = ""
+                                        autocomplete = "current-password",
+                                        id = "Password"
                                     })
-                                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small d-block mt-2" })
+                                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "auth-field-error" })
                                 </div>
 
                                 <div class="auth-meta-row">
@@ -123,3 +118,35 @@
         </div>
     </section>
 </section>
+
+<div class="modal fade" id="customModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog custom-modal-dialog modal-dialog-centered">
+        <div class="modal-content auth-modal-content">
+            <div class="modal-header auth-modal-header">
+                <h5 class="modal-title">Hỗ trợ quên mật khẩu</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body auth-modal-body">
+                <p>
+                    Bạn hãy liên hệ qua thông tin bên dưới để được hỗ trợ cấp lại mật khẩu:
+                </p>
+
+                <div class="auth-support-list">
+                    <a href="tel:0389998889">
+                        <i class="fa fa-phone mr-2"></i>0389.998.889
+                    </a>
+                    <a href="mailto:contact@karmaeyewear.local">
+                        <i class="fa fa-envelope mr-2"></i>contact@karmaeyewear.local
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer auth-modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>

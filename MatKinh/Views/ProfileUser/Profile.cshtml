@@ -1,4 +1,6 @@
-﻿@using MatKinh.Models
+﻿@using System
+@using System.Linq
+@using MatKinh.Models
 @model MatKinh.Models.TaiKhoan
 
 @{
@@ -69,6 +71,56 @@
                 return "processing";
         }
     };
+
+    Func<string, string> paymentMethodText = method =>
+    {
+        if (string.Equals(method, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+        {
+            return "VNPay";
+        }
+
+        return "COD";
+    };
+
+    Func<string, string> paymentStatusText = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán thất bại";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã hoàn tiền";
+        }
+
+        return "Chờ thanh toán";
+    };
+
+    Func<string, string> paymentStatusClass = status =>
+    {
+        if (string.Equals(status, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "success";
+        }
+
+        if (string.Equals(status, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "danger";
+        }
+
+        if (string.Equals(status, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "warning";
+        }
+
+        return "processing";
+    };
 }
 
 <section class="profile-page">
@@ -89,26 +141,6 @@
     <section class="profile-section">
         <div class="container">
             <div class="profile-shell">
-                @if (TempData["ProfileSuccess"] != null)
-                {
-                    <div class="alert alert-success mb-4">@TempData["ProfileSuccess"]</div>
-                }
-
-                @if (TempData["ProfileError"] != null)
-                {
-                    <div class="alert alert-danger mb-4">@TempData["ProfileError"]</div>
-                }
-
-                @if (TempData["PasswordSuccess"] != null)
-                {
-                    <div class="alert alert-success mb-4">@TempData["PasswordSuccess"]</div>
-                }
-
-                @if (TempData["PasswordError"] != null)
-                {
-                    <div class="alert alert-danger mb-4">@TempData["PasswordError"]</div>
-                }
-
                 <div class="profile-top-card">
                     <div class="profile-top-card__avatar">
                         @avatarText
@@ -231,7 +263,8 @@
                                                         <th>Mã đơn hàng</th>
                                                         <th>Ngày đặt</th>
                                                         <th>Tổng thanh toán</th>
-                                                        <th>Trạng thái</th>
+                                                        <th>Đơn hàng</th>
+                                                        <th>Thanh toán</th>
                                                         <th></th>
                                                     </tr>
                                                 </thead>
@@ -246,6 +279,14 @@
                                                                 <span class="profile-status-badge @orderStatusClass(item.TrangThai)">
                                                                     @orderStatusText(item.TrangThai)
                                                                 </span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="profile-status-badge @paymentStatusClass(item.TrangThaiThanhToan)">
+                                                                    @paymentStatusText(item.TrangThaiThanhToan)
+                                                                </span>
+                                                                <div class="profile-payment-method">
+                                                                    @paymentMethodText(item.PhuongThucThanhToan)
+                                                                </div>
                                                             </td>
                                                             <td>
                                                                 <a href='@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = item.MaDonHang })'
@@ -272,6 +313,13 @@
 
                                                     <p><strong>Ngày đặt:</strong> @item.NgayDat.ToString("dd/MM/yyyy HH:mm")</p>
                                                     <p><strong>Tổng thanh toán:</strong> @string.Format("{0:N0}", item.TongThanhToan) ₫</p>
+                                                    <p><strong>Phương thức:</strong> @paymentMethodText(item.PhuongThucThanhToan)</p>
+                                                    <p>
+                                                        <strong>Thanh toán:</strong>
+                                                        <span class="profile-status-badge @paymentStatusClass(item.TrangThaiThanhToan)">
+                                                            @paymentStatusText(item.TrangThaiThanhToan)
+                                                        </span>
+                                                    </p>
 
                                                     <a href='@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = item.MaDonHang })'
                                                        class="optical-btn optical-btn--light profile-detail-btn">
@@ -282,7 +330,8 @@
                                         </div>
 
                                         <div class="catalog-pagination bottom">
-                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = prevPage })' class="page-arrow">
+                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = prevPage })'
+                                               class="page-arrow @(currentPage == 1 ? "disabled" : "")">
                                                 <span class="lnr lnr-chevron-left"></span>
                                             </a>
 
@@ -298,7 +347,8 @@
                                                 }
                                             }
 
-                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = nextPage })' class="page-arrow">
+                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = nextPage })'
+                                               class="page-arrow @(currentPage == totalPages ? "disabled" : "")">
                                                 <span class="lnr lnr-chevron-right"></span>
                                             </a>
                                         </div>

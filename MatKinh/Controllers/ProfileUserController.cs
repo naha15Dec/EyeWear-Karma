@@ -41,7 +41,7 @@ namespace MatKinh.Controllers
         }
 
         /// <summary>
-        /// Cập nhật thông tin tài khoản hiện tại
+        /// Cập nhật thông tin tài khoản hiện tại.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -59,7 +59,10 @@ namespace MatKinh.Controllers
                 return RedirectToAction("Profile");
             }
 
-            var account = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId);
+            var account = db.TaiKhoans.FirstOrDefault(x =>
+                x.TaiKhoanId == currentAccount.TaiKhoanId &&
+                x.IsActive);
+
             if (account == null)
             {
                 TempData["ProfileError"] = "Không tìm thấy tài khoản.";
@@ -67,12 +70,25 @@ namespace MatKinh.Controllers
             }
 
             string fullName = BuildFullName(uda.LastName, uda.FirstName);
+            string oldEmail = account.Email;
+            string oldPhone = account.SoDienThoai;
 
             account.HoTen = fullName;
-            account.DiaChi = string.IsNullOrWhiteSpace(uda.Address) ? account.DiaChi : uda.Address.Trim();
-            account.SoDienThoai = string.IsNullOrWhiteSpace(uda.Mobile) ? account.SoDienThoai : uda.Mobile.Trim();
+
+            if (!string.IsNullOrWhiteSpace(uda.Address))
+            {
+                account.DiaChi = uda.Address.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(uda.Mobile))
+            {
+                account.SoDienThoai = uda.Mobile.Trim();
+            }
+
             account.GioiTinh = ParseGender(uda.Sex);
             account.UpdatedAt = DateTime.Now;
+
+            SyncCustomerFromAccount(account, oldEmail, oldPhone);
 
             db.SaveChanges();
 
@@ -83,7 +99,7 @@ namespace MatKinh.Controllers
         }
 
         /// <summary>
-        /// Đổi mật khẩu tài khoản hiện tại
+        /// Đổi mật khẩu tài khoản hiện tại.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -95,7 +111,10 @@ namespace MatKinh.Controllers
                 return RedirectToAction("LoginAccount", "Account");
             }
 
-            var account = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId);
+            var account = db.TaiKhoans.FirstOrDefault(x =>
+                x.TaiKhoanId == currentAccount.TaiKhoanId &&
+                x.IsActive);
+
             if (account == null)
             {
                 TempData["ProfileError"] = "Không tìm thấy tài khoản.";
@@ -115,6 +134,19 @@ namespace MatKinh.Controllers
                 return RedirectToAction("Profile");
             }
 
+            if (!string.IsNullOrWhiteSpace(uda.ComfirmPassword) &&
+                !string.Equals(uda.PassWord.Trim(), uda.ComfirmPassword.Trim(), StringComparison.Ordinal))
+            {
+                TempData["PasswordError"] = "Mật khẩu xác nhận không khớp.";
+                return RedirectToAction("Profile");
+            }
+
+            if (uda.PassWord.Trim().Length < 6)
+            {
+                TempData["PasswordError"] = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+                return RedirectToAction("Profile");
+            }
+
             account.MatKhauHash = HashPassword.SHA512HashPass(uda.PassWord.Trim());
             account.UpdatedAt = DateTime.Now;
 
@@ -127,7 +159,7 @@ namespace MatKinh.Controllers
         }
 
         /// <summary>
-        /// Chi tiết đơn hàng của user hiện tại
+        /// Chi tiết đơn hàng của user hiện tại.
         /// </summary>
         public ActionResult DetailPurchaseOrder(string maDonHang)
         {
@@ -175,7 +207,7 @@ namespace MatKinh.Controllers
         }
 
         /// <summary>
-        /// Khách hàng hủy đơn hàng của chính mình
+        /// Khách hàng hủy đơn hàng của chính mình.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -209,7 +241,7 @@ namespace MatKinh.Controllers
 
             if (!CanCustomerCancelOrder(order))
             {
-                TempData["ProfileError"] = "Đơn hàng này không thể hủy ở trạng thái hiện tại.";
+                TempData["ProfileError"] = "Đơn hàng này không thể hủy ở trạng thái hiện tại. Nếu cần hỗ trợ, vui lòng liên hệ cửa hàng.";
                 return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
             }
 
@@ -219,17 +251,26 @@ namespace MatKinh.Controllers
                 {
                     int oldStatus = order.TrangThai;
 
+                    bool isPaidVnPayOrder =
+                        string.Equals(order.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(order.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase);
+
                     order.TrangThai = OrderStatusConstants.CANCELLED;
                     order.NgayHuy = DateTime.Now;
                     order.UpdatedAt = DateTime.Now;
 
-                    if (string.Equals(order.PhuongThucThanhToan, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase)
-                        && string.Equals(order.TrangThaiThanhToan, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
-                    {
-                        order.TrangThaiThanhToan = PaymentConstants.REFUNDED;
-                    }
-
+                    // Không tự động set Refunded vì hệ thống chưa xử lý hoàn tiền thật qua VNPAY.
+                    // Nếu là đơn VNPAY đã thanh toán, vẫn giữ trạng thái Paid và ghi chú để shop xử lý hoàn tiền.
                     RestoreStockForOrder(order);
+
+                    string cancelNote = string.IsNullOrWhiteSpace(lyDoHuy)
+                        ? "Khách hàng hủy đơn hàng."
+                        : "Khách hàng hủy đơn hàng. Lý do: " + lyDoHuy.Trim();
+
+                    if (isPaidVnPayOrder)
+                    {
+                        cancelNote += " Đơn hàng đã thanh toán qua VNPay, cửa hàng sẽ kiểm tra và xử lý hoàn tiền trong 3–5 ngày làm việc.";
+                    }
 
                     db.LichSuTrangThaiDonHangs.Add(new LichSuTrangThaiDonHang
                     {
@@ -237,16 +278,22 @@ namespace MatKinh.Controllers
                         TrangThaiCu = oldStatus,
                         TrangThaiMoi = OrderStatusConstants.CANCELLED,
                         ThayDoiBoiId = currentAccount.TaiKhoanId,
-                        GhiChu = string.IsNullOrWhiteSpace(lyDoHuy)
-                            ? "Khách hàng hủy đơn hàng."
-                            : "Khách hàng hủy đơn hàng. Lý do: " + lyDoHuy.Trim(),
+                        GhiChu = cancelNote,
                         CreatedAt = DateTime.Now
                     });
 
                     db.SaveChanges();
                     transaction.Commit();
 
-                    TempData["ProfileSuccess"] = "Đã hủy đơn hàng thành công.";
+                    if (isPaidVnPayOrder)
+                    {
+                        TempData["ProfileSuccess"] = "Đã hủy đơn hàng thành công. Đơn hàng đã thanh toán qua VNPay, cửa hàng sẽ xử lý hoàn tiền trong 3–5 ngày làm việc.";
+                    }
+                    else
+                    {
+                        TempData["ProfileSuccess"] = "Đã hủy đơn hàng thành công.";
+                    }
+
                     return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
                 }
                 catch (Exception ex)
@@ -265,9 +312,9 @@ namespace MatKinh.Controllers
                 return false;
             }
 
-            return order.TrangThai == OrderStatusConstants.PENDING
-                || order.TrangThai == OrderStatusConstants.CONFIRMED
-                || order.TrangThai == OrderStatusConstants.PREPARING;
+            // Khách chỉ được tự hủy khi đơn còn chờ xác nhận.
+            // Các trạng thái đã xác nhận/chuẩn bị/giao hàng nên để shop hỗ trợ.
+            return order.TrangThai == OrderStatusConstants.PENDING;
         }
 
         private void RestoreStockForOrder(DonHang order)
@@ -312,6 +359,7 @@ namespace MatKinh.Controllers
 
             ViewBag.Page = page;
             ViewBag.TotalPages = totalPages;
+
             ViewBag.NoOfPages = page >= 5
                 ? ((page + 4 > totalPages) ? totalPages : (page + 4))
                 : totalPages;
@@ -334,7 +382,66 @@ namespace MatKinh.Controllers
                 return null;
             }
 
-            return db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == account.TaiKhoanId);
+            return db.TaiKhoans.FirstOrDefault(x =>
+                x.TaiKhoanId == account.TaiKhoanId &&
+                x.IsActive);
+        }
+
+        private void SyncCustomerFromAccount(TaiKhoan account, string oldEmail, string oldPhone)
+        {
+            if (account == null)
+            {
+                return;
+            }
+
+            KhachHang customer = null;
+
+            if (!string.IsNullOrWhiteSpace(oldEmail))
+            {
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.Email == oldEmail);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(oldPhone))
+            {
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.SoDienThoai == oldPhone);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(account.Email))
+            {
+                string email = account.Email.Trim();
+
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.Email == email);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(account.SoDienThoai))
+            {
+                string phone = account.SoDienThoai.Trim();
+
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.SoDienThoai == phone);
+            }
+
+            if (customer == null)
+            {
+                return;
+            }
+
+            customer.HoTen = account.HoTen;
+            customer.Email = account.Email;
+            customer.SoDienThoai = account.SoDienThoai;
+            customer.GioiTinh = account.GioiTinh;
+            customer.NgaySinh = account.NgaySinh;
+            customer.DiaChi = account.DiaChi;
+            customer.UpdatedAt = DateTime.Now;
+
+            Session["KhachHangId"] = customer.KhachHangId;
         }
 
         private string BuildFullName(string lastName, string firstName)

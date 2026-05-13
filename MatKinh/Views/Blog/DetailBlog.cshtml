@@ -3,6 +3,7 @@
 
 @{
     ViewBag.Title = "Chi tiết bài viết";
+
     List<BaiViet> listPopular = ViewData["listPostPopular"] as List<BaiViet> ?? new List<BaiViet>();
 
     Func<string, string> normalizeImage = (path) =>
@@ -32,10 +33,29 @@
         return Url.Content("~/" + path);
     };
 
+    Func<string, int, string> shorten = (text, maxLength) =>
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        text = text.Trim();
+
+        return text.Length > maxLength
+            ? text.Substring(0, maxLength) + "..."
+            : text;
+    };
+
     string mainImage = normalizeImage(Model != null ? Model.AnhDaiDien : null);
+
     string authorName = Model != null && Model.TaiKhoan != null && !string.IsNullOrWhiteSpace(Model.TaiKhoan.HoTen)
         ? Model.TaiKhoan.HoTen
         : "Karma Eyewear";
+
+    string publishedDate = Model != null
+        ? string.Format("{0:dd/MM/yyyy}", Model.NgayDang ?? Model.CreatedAt)
+        : string.Empty;
 }
 
 <section class="blog-page">
@@ -72,10 +92,12 @@
                                     <i class="lnr lnr-user"></i>
                                     @authorName
                                 </span>
+
                                 <span>
                                     <i class="lnr lnr-calendar-full"></i>
-                                    @string.Format("{0:dd/MM/yyyy}", Model.NgayDang ?? Model.CreatedAt)
+                                    @publishedDate
                                 </span>
+
                                 <span>
                                     <i class="lnr lnr-book"></i>
                                     Bài viết đã xuất bản
@@ -92,7 +114,14 @@
                             }
 
                             <div class="blog-detail-body">
-                                @Html.Raw(Model.NoiDung)
+                                @if (!string.IsNullOrWhiteSpace(Model.NoiDung))
+                                {
+                                    @Html.Raw(Model.NoiDung)
+                                }
+                                else
+                                {
+                                    <p>Nội dung bài viết đang được cập nhật.</p>
+                                }
                             </div>
 
                             <div class="blog-detail-footer">
@@ -114,7 +143,8 @@
                                 <input type="text"
                                        class="blog-search-input"
                                        placeholder="Tìm kiếm bài viết..."
-                                       name="keyword" />
+                                       name="keyword"
+                                       autocomplete="off" />
 
                                 <button class="blog-search-btn" type="submit">
                                     <i class="lnr lnr-magnifier"></i>
@@ -133,18 +163,17 @@
                             {
                                 foreach (var postPopular in listPopular)
                                 {
-                                    var popularTitle = !string.IsNullOrWhiteSpace(postPopular.TieuDe) && postPopular.TieuDe.Length > 40
-                                        ? postPopular.TieuDe.Substring(0, 40) + "..."
-                                        : postPopular.TieuDe;
-
+                                    string popularTitle = shorten(postPopular.TieuDe, 44);
                                     string imageUrl = normalizeImage(postPopular.AnhDaiDien);
 
-                                    <a href="@Url.Action("DetailBlog","Blog", new { id = postPopular.BaiVietId })" class="popular-post-item">
+                                    <a href="@Url.Action("DetailBlog","Blog", new { id = postPopular.BaiVietId })"
+                                       class="popular-post-item">
                                         <div class="popular-post-item__thumb">
                                             <img src="@imageUrl"
                                                  alt="@postPopular.TieuDe"
                                                  onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
                                         </div>
+
                                         <div class="popular-post-item__body">
                                             <h4>@popularTitle</h4>
                                             <p>@string.Format("{0:dd/MM/yyyy}", postPopular.NgayDang ?? postPopular.CreatedAt)</p>

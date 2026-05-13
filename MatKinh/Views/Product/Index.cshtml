@@ -9,7 +9,7 @@
     List<SanPham> products = ViewData["listProduct"] as List<SanPham> ?? new List<SanPham>();
     List<LoaiSanPham> categories = ViewData["typeProductList"] as List<LoaiSanPham> ?? new List<LoaiSanPham>();
     List<ThuongHieu> brands = ViewData["brandList"] as List<ThuongHieu> ?? new List<ThuongHieu>();
-    ProductCatalogFilterVm filter = ViewBag.Filter as ProductCatalogFilterVm ?? new ProductCatalogFilterVm();
+    ProductCatalogFilterVm filter = ViewBag.Filter as ProductCatalogFilterVm ?? Model ?? new ProductCatalogFilterVm();
 
     var vi = CultureInfo.GetCultureInfo("vi-VN");
 
@@ -57,6 +57,10 @@
     }
     else if (filter.PriceRange == "10000000")
     {
+        currentPriceName = "5.000.000đ - 10.000.000đ";
+    }
+    else if (filter.PriceRange == "10000001")
+    {
         currentPriceName = "Trên 10.000.000đ";
     }
 
@@ -89,18 +93,15 @@
 
     Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
 
-    object BuildRoute(int pageNumber)
+    Func<int, object> buildRoute = pageNumber => new
     {
-        return new
-        {
-            CategoryId = filter.CategoryId,
-            BrandId = filter.BrandId,
-            Keyword = filter.Keyword,
-            PriceRange = filter.PriceRange,
-            Page = pageNumber,
-            PageSize = filter.PageSize
-        };
-    }
+        CategoryId = filter.CategoryId,
+        BrandId = filter.BrandId,
+        Keyword = filter.Keyword,
+        PriceRange = filter.PriceRange,
+        Page = pageNumber,
+        PageSize = filter.PageSize
+    };
 }
 
 <section class="product-page">
@@ -139,6 +140,7 @@
                                 @foreach (var category in categories)
                                 {
                                     bool isActive = filter.CategoryId == category.LoaiSanPhamId;
+
                                     <li>
                                         <a class="@(isActive ? "active" : "")"
                                            href="@Url.Action("Index", "Product", new
@@ -240,6 +242,15 @@
                                                    name="PriceRange"
                                                    value="10000000"
                                                    @(filter.PriceRange == "10000000" ? "checked" : "") />
+                                            <span>5.000.000đ - 10.000.000đ</span>
+                                        </label>
+
+                                        <label class="filter-option" for="price_5">
+                                            <input id="price_5"
+                                                   type="radio"
+                                                   name="PriceRange"
+                                                   value="10000001"
+                                                   @(filter.PriceRange == "10000001" ? "checked" : "") />
                                             <span>Trên 10.000.000đ</span>
                                         </label>
                                     </div>
@@ -290,7 +301,8 @@
                                        class="catalog-search-input"
                                        name="Keyword"
                                        value="@filter.Keyword"
-                                       placeholder="Tìm mẫu kính bạn muốn..." />
+                                       autocomplete="off"
+                                       placeholder="Tìm theo tên, mã kính, thương hiệu..." />
 
                                 <button type="submit" class="catalog-search-btn">Tìm kiếm</button>
                             }
@@ -359,7 +371,7 @@
                                     : "Mắt kính";
 
                                 <div class="col-xl-4 col-md-6 mb-4">
-                                    <div class="optical-product-card">
+                                    <div class="optical-product-card @(conHang ? "" : "is-soldout")">
                                         <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
                                            class="product-thumb-link">
                                             <div class="optical-product-card__thumb">
@@ -402,19 +414,51 @@
                                                 }
                                             </div>
 
-                                            <div class="product-actions">
+                                            <div class="product-stock-line">
                                                 @if (conHang)
                                                 {
-                                                    <a href="@Url.Action("AddItemToCart", "ShoppingCart", new { sanPhamId = item.SanPhamId })"
-                                                       class="optical-btn optical-btn--dark">
-                                                        <i class="ti-bag mr-2"></i>Thêm giỏ
-                                                    </a>
+                                                    if (item.SoLuongTon <= 3)
+                                                    {
+                                                        <span class="stock-status stock-status--low">
+                                                            Chỉ còn @item.SoLuongTon sản phẩm
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="stock-status stock-status--in">
+                                                            Còn hàng
+                                                        </span>
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    <span class="optical-btn optical-btn--disabled">
-                                                        <i class="ti-na mr-2"></i>Hết hàng
+                                                    <span class="stock-status stock-status--out">
+                                                        Hết hàng
                                                     </span>
+                                                }
+                                            </div>
+                                            <div class="product-actions">
+                                                @if (conHang)
+                                                {
+                                                    using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+
+                                                        <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                        <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                                        <button type="submit" class="optical-btn optical-btn--dark">
+                                                            <i class="ti-bag mr-2"></i>Thêm giỏ
+                                                        </button>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <button type="button"
+                                                            class="optical-btn optical-btn--disabled"
+                                                            disabled>
+                                                        <i class="ti-na mr-2"></i>Hết hàng
+                                                    </button>
                                                 }
 
                                                 <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
@@ -429,7 +473,7 @@
                         </div>
 
                         <div class="catalog-pagination bottom">
-                            <a href="@Url.Action("Index", "Product", BuildRoute(prevPage))"
+                            <a href="@Url.Action("Index", "Product", buildRoute(prevPage))"
                                class="page-arrow @(page == 1 ? "disabled" : "")">
                                 <span class="lnr lnr-chevron-left"></span>
                             </a>
@@ -437,13 +481,14 @@
                             @for (int i = displayFrom; i < noOfPages; i++)
                             {
                                 int pageNumber = i + 1;
-                                <a href="@Url.Action("Index", "Product", BuildRoute(pageNumber))"
+
+                                <a href="@Url.Action("Index", "Product", buildRoute(pageNumber))"
                                    class="@(pageNumber == page ? "active" : "")">
                                     @pageNumber
                                 </a>
                             }
 
-                            <a href="@Url.Action("Index", "Product", BuildRoute(nextPage))"
+                            <a href="@Url.Action("Index", "Product", buildRoute(nextPage))"
                                class="page-arrow @(page == totalPages ? "disabled" : "")">
                                 <span class="lnr lnr-chevron-right"></span>
                             </a>

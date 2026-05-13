@@ -4,7 +4,7 @@
 
     List<BaiViet> article = ViewData["listPost"] as List<BaiViet> ?? new List<BaiViet>();
     List<BaiViet> listPopular = ViewData["listPostPopular"] as List<BaiViet> ?? new List<BaiViet>();
-    string keyword = ViewData["Keyword"] as string;
+    string keyword = ViewData["Keyword"] as string ?? string.Empty;
 
     int currentPage = ViewBag.Page != null ? (int)ViewBag.Page : 1;
     int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
@@ -49,6 +49,28 @@
 
         return Url.Content("~/" + path);
     };
+
+    Func<string, int, string> shorten = (text, maxLength) =>
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        text = text.Trim();
+
+        return text.Length > maxLength
+            ? text.Substring(0, maxLength) + "..."
+            : text;
+    };
+
+    Func<int, object> buildRoute = pageNumber => new
+    {
+        keyword = keyword,
+        page = pageNumber
+    };
+
+    string currentAction = string.IsNullOrWhiteSpace(keyword) ? "Index" : "FindBlogByName";
 }
 
 <section class="blog-page">
@@ -74,40 +96,68 @@
                         <div class="section-heading section-heading--left">
                             <span class="eyebrow">Editorial</span>
                             <h2>Cảm hứng phong cách từ thế giới mắt kính</h2>
-                            <p>
-                                Khám phá các bài viết về xu hướng, cách chọn kính phù hợp khuôn mặt
-                                và những mẹo phối phụ kiện để hoàn thiện phong cách của bạn.
-                            </p>
+
+                            @if (!string.IsNullOrWhiteSpace(keyword))
+                            {
+                                <p>
+                                    Kết quả tìm kiếm cho từ khóa
+                                    <strong>"@keyword"</strong>. Bạn có thể thử từ khóa khác nếu chưa tìm thấy nội dung phù hợp.
+                                </p>
+                            }
+                            else
+                            {
+                                <p>
+                                    Khám phá các bài viết về xu hướng, cách chọn kính phù hợp khuôn mặt
+                                    và những mẹo phối phụ kiện để hoàn thiện phong cách của bạn.
+                                </p>
+                            }
                         </div>
 
                         @if (article.Count == 0)
                         {
                             <div class="catalog-empty">
-                                <h3>Chưa có bài viết nào</h3>
-                                <p>Hiện tại chưa có nội dung phù hợp. Vui lòng quay lại sau.</p>
+                                @if (!string.IsNullOrWhiteSpace(keyword))
+                                {
+                                    <h3>Không tìm thấy bài viết phù hợp</h3>
+                                    <p>
+                                        Không có bài viết nào khớp với từ khóa
+                                        <strong>"@keyword"</strong>. Hãy thử tìm bằng từ khóa ngắn hơn hoặc quay lại danh sách bài viết.
+                                    </p>
+
+                                    <a href="@Url.Action("Index", "Blog")" class="optical-btn optical-btn--dark">
+                                        Xem tất cả bài viết
+                                    </a>
+                                }
+                                else
+                                {
+                                    <h3>Chưa có bài viết nào</h3>
+                                    <p>Hiện tại chưa có nội dung phù hợp. Vui lòng quay lại sau.</p>
+                                }
                             </div>
                         }
                         else
                         {
                             foreach (var item in article)
                             {
-                                var shortContent = "";
+                                string shortContent = "Khám phá thêm những nội dung mới từ Karma Eyewear.";
                                 if (!string.IsNullOrWhiteSpace(item.TomTat))
                                 {
-                                    shortContent = item.TomTat.Length > 170
-                                        ? item.TomTat.Substring(0, 170) + "..."
-                                        : item.TomTat;
+                                    shortContent = shorten(item.TomTat, 170);
                                 }
 
                                 string imageUrl = normalizeImage(item.AnhDaiDien);
+
                                 string authorName = item.TaiKhoan != null && !string.IsNullOrWhiteSpace(item.TaiKhoan.HoTen)
                                     ? item.TaiKhoan.HoTen
                                     : "Karma Eyewear";
 
+                                string publishedDate = string.Format("{0:dd/MM/yyyy}", item.NgayDang ?? item.CreatedAt);
+
                                 <article class="blog-card-modern">
                                     <div class="row align-items-stretch">
                                         <div class="col-md-5">
-                                            <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })" class="blog-card-modern__image">
+                                            <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })"
+                                               class="blog-card-modern__image">
                                                 <img src="@imageUrl"
                                                      alt="@item.TieuDe"
                                                      onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
@@ -118,7 +168,7 @@
                                             <div class="blog-card-modern__content">
                                                 <div class="blog-card-modern__meta">
                                                     <span><i class="lnr lnr-user"></i> @authorName</span>
-                                                    <span><i class="lnr lnr-calendar-full"></i> @string.Format("{0:dd/MM/yyyy}", item.NgayDang ?? item.CreatedAt)</span>
+                                                    <span><i class="lnr lnr-calendar-full"></i> @publishedDate</span>
                                                 </div>
 
                                                 <h3 class="blog-card-modern__title">
@@ -131,7 +181,8 @@
                                                     @shortContent
                                                 </p>
 
-                                                <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })" class="optical-btn optical-btn--light">
+                                                <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })"
+                                                   class="optical-btn optical-btn--light">
                                                     Xem thêm
                                                 </a>
                                             </div>
@@ -140,28 +191,30 @@
                                 </article>
                             }
 
-                            <div class="catalog-pagination bottom">
-                                <a href="@Url.Action(string.IsNullOrWhiteSpace(keyword) ? "Index" : "FindBlogByName", "Blog", new { keyword = keyword, page = prevPage })" class="page-arrow">
-                                    <span class="lnr lnr-chevron-left"></span>
-                                </a>
+                            if (totalPages > 1)
+                            {
+                                <div class="catalog-pagination bottom">
+                                    <a href="@Url.Action(currentAction, "Blog", buildRoute(prevPage))"
+                                       class="page-arrow @(currentPage == 1 ? "disabled" : "")">
+                                        <span class="lnr lnr-chevron-left"></span>
+                                    </a>
 
-                                @for (int i = displayPage; i < noOfPages; i++)
-                                {
-                                    int pageNumber = i + 1;
-                                    if (pageNumber == currentPage)
+                                    @for (int i = displayPage; i < noOfPages; i++)
                                     {
-                                        <a href="@Url.Action(string.IsNullOrWhiteSpace(keyword) ? "Index" : "FindBlogByName", "Blog", new { keyword = keyword, page = pageNumber })" class="active">@pageNumber</a>
-                                    }
-                                    else
-                                    {
-                                        <a href="@Url.Action(string.IsNullOrWhiteSpace(keyword) ? "Index" : "FindBlogByName", "Blog", new { keyword = keyword, page = pageNumber })">@pageNumber</a>
-                                    }
-                                }
+                                        int pageNumber = i + 1;
 
-                                <a href="@Url.Action(string.IsNullOrWhiteSpace(keyword) ? "Index" : "FindBlogByName", "Blog", new { keyword = keyword, page = nextPage })" class="page-arrow">
-                                    <span class="lnr lnr-chevron-right"></span>
-                                </a>
-                            </div>
+                                        <a href="@Url.Action(currentAction, "Blog", buildRoute(pageNumber))"
+                                           class="@(pageNumber == currentPage ? "active" : "")">
+                                            @pageNumber
+                                        </a>
+                                    }
+
+                                    <a href="@Url.Action(currentAction, "Blog", buildRoute(nextPage))"
+                                       class="page-arrow @(currentPage == totalPages ? "disabled" : "")">
+                                        <span class="lnr lnr-chevron-right"></span>
+                                    </a>
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -177,11 +230,19 @@
                                        class="blog-search-input"
                                        placeholder="Tìm kiếm bài viết..."
                                        name="keyword"
-                                       value="@keyword" />
+                                       value="@keyword"
+                                       autocomplete="off" />
 
                                 <button class="blog-search-btn" type="submit">
                                     <i class="lnr lnr-magnifier"></i>
                                 </button>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(keyword))
+                            {
+                                <a href="@Url.Action("Index", "Blog")" class="blog-clear-search">
+                                    Xóa tìm kiếm
+                                </a>
                             }
                         </div>
 
@@ -196,18 +257,17 @@
                             {
                                 foreach (var postPopular in listPopular)
                                 {
-                                    var popularTitle = !string.IsNullOrWhiteSpace(postPopular.TieuDe) && postPopular.TieuDe.Length > 40
-                                        ? postPopular.TieuDe.Substring(0, 40) + "..."
-                                        : postPopular.TieuDe;
-
+                                    string popularTitle = shorten(postPopular.TieuDe, 44);
                                     string imageUrl = normalizeImage(postPopular.AnhDaiDien);
 
-                                    <a href="@Url.Action("DetailBlog","Blog", new { id = postPopular.BaiVietId })" class="popular-post-item">
+                                    <a href="@Url.Action("DetailBlog","Blog", new { id = postPopular.BaiVietId })"
+                                       class="popular-post-item">
                                         <div class="popular-post-item__thumb">
                                             <img src="@imageUrl"
                                                  alt="@postPopular.TieuDe"
                                                  onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
                                         </div>
+
                                         <div class="popular-post-item__body">
                                             <h4>@popularTitle</h4>
                                             <p>@string.Format("{0:dd/MM/yyyy}", postPopular.NgayDang ?? postPopular.CreatedAt)</p>
@@ -234,3 +294,25 @@
         </div>
     </section>
 </section>
+
+<style>
+    .blog-clear-search {
+        display: inline-flex;
+        margin-top: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #8f7044;
+        text-decoration: none;
+    }
+
+        .blog-clear-search:hover {
+            color: #b08d57;
+            text-decoration: none;
+        }
+
+    .catalog-pagination .disabled {
+        pointer-events: none;
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+</style>

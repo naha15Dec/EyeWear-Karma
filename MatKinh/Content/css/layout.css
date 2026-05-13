@@ -114,7 +114,7 @@ a {
 }
 
 .navbar.main_box {
-    min-height: 88px;
+    min-height: 76px;
     padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -123,8 +123,8 @@ a {
 }
 
 .brand-logo {
-    width: 250px;
-    flex: 0 0 250px;
+    width: 230px;
+    flex: 0 0 230px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -140,18 +140,20 @@ a {
 
     .brand-logo .brand-name {
         font-family: 'Playfair Display', serif;
-        font-size: 31px;
+        font-size: 25px;
         font-weight: 700;
-        letter-spacing: 0.2px;
+        line-height: 1.05;
+        letter-spacing: 0.1px;
         color: var(--dark);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: 230px;
     }
 
     .brand-logo .brand-sub {
-        margin-top: 6px;
-        font-size: 11px;
+        margin-top: 5px;
+        font-size: 9.5px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 4px;
@@ -191,7 +193,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 26px;
+    gap: 24px;
     margin: 0 auto !important;
     flex-wrap: nowrap !important;
 }
@@ -203,9 +205,9 @@ a {
     .menu_nav .nav-link {
         position: relative;
         padding: 0 !important;
-        line-height: 88px;
+        line-height: 76px;
         color: #252525 !important;
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 650;
         white-space: nowrap;
     }
@@ -214,7 +216,7 @@ a {
             content: "";
             position: absolute;
             left: 0;
-            bottom: 24px;
+            bottom: 19px;
             width: 0;
             height: 2px;
             border-radius: 999px;
@@ -232,14 +234,18 @@ a {
                 width: 100%;
             }
 
+/* =========================
+   HEADER ACTIONS
+   ========================= */
+
 .header-actions {
-    width: 300px;
-    flex: 0 0 300px;
+    width: 285px;
+    flex: 0 0 285px;
     margin-left: 0 !important;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 11px;
+    gap: 9px;
     min-width: 0;
 }
 
@@ -256,9 +262,9 @@ a {
 }
 
 .account-chip {
-    height: 48px;
-    max-width: 178px;
-    padding: 0 15px !important;
+    height: 44px;
+    max-width: 172px;
+    padding: 0 14px !important;
     border-radius: 999px;
     background: #f6f1eb !important;
     color: var(--dark) !important;
@@ -279,16 +285,16 @@ a {
     }
 
 .account-avatar {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
     border-radius: 50%;
     background: #fff;
     color: var(--dark);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .account-chip:hover .account-avatar {
@@ -297,7 +303,7 @@ a {
 }
 
 .account-chip-text {
-    max-width: 108px;
+    max-width: 96px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -305,9 +311,9 @@ a {
 
 .action-btn {
     position: relative;
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
     border-radius: 50%;
     border: 1px solid transparent;
     background: #f6f1eb !important;
@@ -320,7 +326,7 @@ a {
 }
 
     .action-btn span {
-        font-size: 18px;
+        font-size: 17px;
     }
 
     .action-btn:hover,
@@ -331,6 +337,55 @@ a {
         transform: translateY(-1px);
         outline: none;
     }
+
+/* Badge số lượng giỏ hàng */
+.header-cart-link {
+    position: relative;
+    overflow: visible !important;
+}
+
+.header-cart-count {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #c08a2b;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    z-index: 5;
+}
+
+    .header-cart-count:empty {
+        display: none;
+    }
+
+/* Nếu CartCount trả về class khác thì vẫn hỗ trợ */
+.header-cart-link .cart-count,
+.header-cart-link .cart-badge,
+.header-cart-link .badge {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #c08a2b;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    z-index: 5;
+}
 
 /* =========================
    ACCOUNT DROPDOWN
@@ -814,6 +869,42 @@ main.site-content {
 }
 
 /* =========================
+   FORM BUTTON FIX
+   ========================= */
+
+.add-cart-form {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
+}
+
+    .add-cart-form button {
+        border: none;
+        cursor: pointer;
+    }
+
+.product-actions .add-cart-form,
+.detail-actions .add-cart-form,
+.promo-card-actions .add-cart-form {
+    margin: 0;
+}
+
+.promo-add-cart-form {
+    display: inline-flex;
+}
+
+button.promo-add-cart {
+    border: none;
+}
+
+    button.promo-add-cart.disabled,
+    .promo-add-cart.disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+        pointer-events: none;
+    }
+
+/* =========================
    RESPONSIVE
    ========================= */
 
@@ -824,7 +915,8 @@ main.site-content {
     }
 
         .brand-logo .brand-name {
-            font-size: 28px;
+            font-size: 24px;
+            max-width: 220px;
         }
 
         .brand-logo .brand-sub {
@@ -854,6 +946,10 @@ main.site-content {
 }
 
 @media (max-width: 991.98px) {
+    .main-header {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
     .topbar-inner {
         min-height: auto;
         padding: 10px 0;
@@ -872,73 +968,171 @@ main.site-content {
     }
 
     .navbar.main_box {
+        position: relative;
         min-height: auto;
         padding: 14px 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         flex-wrap: wrap;
     }
 
     .brand-logo {
         width: auto;
-        max-width: calc(100% - 62px);
+        max-width: calc(100% - 58px);
         flex: 0 1 auto;
     }
 
         .brand-logo .brand-name {
-            font-size: 27px;
+            font-size: 20px;
+            max-width: 230px;
+            line-height: 1.05;
         }
 
         .brand-logo .brand-sub {
-            font-size: 10px;
-            letter-spacing: 3px;
+            font-size: 7.5px;
+            letter-spacing: 2.4px;
+            margin-top: 5px;
         }
+
+    .main-toggler {
+        position: static;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 50%;
+        background: #f6f1eb;
+        border: 1px solid #e7e4dd !important;
+        color: #111;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        z-index: 5;
+    }
 
     #navbarSupportedContent {
         width: 100%;
+        flex-basis: 100%;
         margin-top: 14px;
-        padding: 16px;
-        border: 1px solid var(--line);
-        border-radius: 22px;
+        padding: 14px;
+        border: 1px solid #e7e4dd;
+        border-radius: 20px;
         background: #fff;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
     }
+
+        #navbarSupportedContent.collapse:not(.show) {
+            display: none !important;
+        }
+
+        #navbarSupportedContent.collapse.show {
+            display: block !important;
+        }
 
     .menu_nav {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0;
         margin: 0 !important;
+        width: 100%;
+        flex-wrap: nowrap !important;
     }
 
+        .menu_nav .nav-item {
+            width: 100%;
+            border-bottom: 1px solid #f0ece5;
+        }
+
+            .menu_nav .nav-item:last-child {
+                border-bottom: none;
+            }
+
         .menu_nav .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
             line-height: 1.4;
-            padding: 12px 0 !important;
-            font-size: 15px;
+            padding: 13px 4px !important;
+            font-size: 14px;
+            font-weight: 700;
+            color: #161616 !important;
         }
 
             .menu_nav .nav-link::after {
-                bottom: 6px;
+                display: none;
             }
+
+        .menu_nav .nav-item.active > .nav-link {
+            color: #b08d57 !important;
+        }
 
     .header-actions {
         width: 100%;
-        flex: unset;
-        justify-content: flex-start;
+        flex: none;
+        display: grid;
+        grid-template-columns: 1fr 44px 44px;
+        gap: 10px;
         margin-top: 14px;
-        flex-wrap: wrap;
+        justify-content: stretch;
     }
 
+    .account-nav {
+        width: 100%;
+        min-width: 0;
+    }
+
+        .account-nav .nav-item {
+            width: 100%;
+        }
+
     .account-chip {
-        max-width: 230px;
+        width: 100%;
+        max-width: none;
+        height: 44px;
+        justify-content: flex-start;
+        padding: 0 14px !important;
+        background: #111 !important;
+        color: #fff !important;
+    }
+
+    .account-avatar {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
     }
 
     .account-chip-text {
-        max-width: 150px;
+        max-width: calc(100% - 42px);
     }
 
-    .dropdown-menu {
+    .action-btn {
+        width: 44px;
+        height: 44px;
+        flex: none;
+        background: #f6f1eb !important;
+    }
+
+    .account-dropdown .dropdown-menu {
         position: static !important;
         transform: none !important;
         width: 100%;
+        min-width: 100%;
         margin-top: 10px;
+        border-radius: 16px;
         box-shadow: none;
+        border: 1px solid #eee8df;
+        background: #fbfaf8;
+    }
+
+    .account-menu-header {
+        padding: 12px 14px;
+    }
+
+    .dropdown-menu .nav-link {
+        padding: 10px 14px !important;
+        font-size: 13px;
     }
 
     .search-panel .container {
@@ -1008,7 +1202,8 @@ main.site-content {
     }
 
     .brand-logo .brand-name {
-        font-size: 24px;
+        font-size: 20px;
+        max-width: 220px;
     }
 
     .brand-logo .brand-sub {
@@ -1027,17 +1222,29 @@ main.site-content {
 
     .account-chip {
         height: 44px;
-        max-width: 190px;
+        max-width: none;
     }
 
     .account-chip-text {
-        max-width: 112px;
+        max-width: calc(100% - 42px);
     }
 
     .action-btn {
         width: 44px;
         height: 44px;
         flex-basis: 44px;
+    }
+
+    .header-cart-count,
+    .header-cart-link .cart-count,
+    .header-cart-link .cart-badge,
+    .header-cart-link .badge {
+        top: -4px;
+        right: -5px;
+        min-width: 15px;
+        height: 15px;
+        font-size: 9px;
+        line-height: 15px;
     }
 
     .search-panel .container {

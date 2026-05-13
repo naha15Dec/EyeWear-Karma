@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using MatKinh.Models;
@@ -13,9 +14,8 @@ namespace MatKinh.Controllers
     {
         private readonly BanMatKinhEntities db = new BanMatKinhEntities();
 
-        private const int OrderStatusPending = 1;
-        private const int OrderStatusCancelled = 8;
         private const int ProductStatusActive = 1;
+        private const int MaxQuantityPerItem = 10;
 
         // GET: Checkout
         public ActionResult Index()
@@ -27,12 +27,29 @@ namespace MatKinh.Controllers
                 return RedirectToAction("LoginAccount", "Account");
             }
 
+            int? khachHangId = GetCurrentKhachHangId();
+            if (!khachHangId.HasValue)
+            {
+                TempData["CartError"] = "Không tìm thấy thông tin khách hàng để thanh toán.";
+                return RedirectToAction("Cart", "ShoppingCart");
+            }
+
+            List<Cart> cart = GetCartByCustomer(khachHangId.Value);
+            if (cart == null || !cart.Any())
+            {
+                TempData["CartError"] = "Giỏ hàng của bạn đang trống, không thể thanh toán.";
+                return RedirectToAction("Cart", "ShoppingCart");
+            }
+
+            SetCheckoutCartViewData(cart);
+
             var model = new PurchaseInformation
             {
                 HoTenNguoiNhan = currentAccount.HoTen,
                 SoDienThoaiNguoiNhan = currentAccount.SoDienThoai,
                 Email = currentAccount.Email,
-                DiaChiNhanHang = currentAccount.DiaChi
+                DiaChiNhanHang = currentAccount.DiaChi,
+                PhuongThucThanhToan = "Payment_Before"
             };
 
             return View(model);
@@ -49,7 +66,16 @@ namespace MatKinh.Controllers
                 return RedirectToAction("LoginAccount", "Account");
             }
 
-            var cart = Session["ShoppingCart"] as List<Cart>;
+            int? khachHangId = GetCurrentKhachHangId();
+            if (!khachHangId.HasValue)
+            {
+                TempData["CartError"] = "Không tìm thấy thông tin khách hàng để thanh toán.";
+                return RedirectToAction("Cart", "ShoppingCart");
+            }
+
+            List<Cart> cart = GetCartByCustomer(khachHangId.Value);
+            SetCheckoutCartViewData(cart);
+
             if (cart == null || !cart.Any())
             {
                 ModelState.AddModelError("", "Giỏ hàng của bạn đang trống, không thể thanh toán.");
@@ -63,6 +89,8 @@ namespace MatKinh.Controllers
             List<int> productIds = cart.Select(x => x.SanPhamId).Distinct().ToList();
 
             var products = db.SanPhams
+                .Include(x => x.LoaiSanPham)
+                .Include(x => x.ThuongHieu)
                 .Where(x => productIds.Contains(x.SanPhamId))
                 .ToList();
 
@@ -70,6 +98,7 @@ namespace MatKinh.Controllers
             if (!string.IsNullOrWhiteSpace(validateError))
             {
                 ModelState.AddModelError("", validateError);
+                SetCheckoutCartViewData(cart);
                 return View(model);
             }
 
@@ -87,11 +116,19 @@ namespace MatKinh.Controllers
                     decimal phiVanChuyen;
                     decimal tongThanhToan;
 
-                    CalculateOrderAmount(cart, products, model, out tongTienHang, out tongGiamGia, out phiVanChuyen, out tongThanhToan);
+                    CalculateOrderAmount(
+                        cart,
+                        products,
+                        model,
+                        out tongTienHang,
+                        out tongGiamGia,
+                        out phiVanChuyen,
+                        out tongThanhToan);
 
                     if (tongThanhToan <= 0)
                     {
                         ModelState.AddModelError("", "Tổng thanh toán không hợp lệ.");
+                        SetCheckoutCartViewData(cart);
                         return View(model);
                     }
 
@@ -101,6 +138,7 @@ namespace MatKinh.Controllers
                     Session["PendingVnPayPurchaseInformation"] = model;
                     Session["PendingVnPayCart"] = CloneCart(cart);
                     Session["PendingVnPayAmount"] = tongThanhToan;
+                    Session["PendingVnPayKhachHangId"] = khachHangId.Value;
 
                     string paymentUrl = BuildVnPayUrl(pendingOrderCode, tongThanhToan);
                     return Redirect(paymentUrl);
@@ -108,6 +146,7 @@ namespace MatKinh.Controllers
                 catch (Exception ex)
                 {
                     ModelState.AddModelError("", "Không thể khởi tạo thanh toán VNPAY: " + ex.Message);
+                    SetCheckoutCartViewData(cart);
                     return View(model);
                 }
             }
@@ -116,10 +155,11 @@ namespace MatKinh.Controllers
             {
                 try
                 {
-                    TaiKhoan accountInDb = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId);
+                    TaiKhoan accountInDb = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId && x.IsActive);
                     if (accountInDb == null)
                     {
                         ModelState.AddModelError("", "Không tìm thấy tài khoản trong hệ thống.");
+                        SetCheckoutCartViewData(cart);
                         return View(model);
                     }
 
@@ -134,12 +174,13 @@ namespace MatKinh.Controllers
                         null,
                         "Khởi tạo đơn hàng COD từ website.");
 
+                    ClearDbCart(khachHangId.Value);
+
                     db.SaveChanges();
                     transaction.Commit();
 
                     Session["LastCreatedOrderId"] = order.DonHangId;
                     Session["LastCreatedOrderCode"] = order.MaDonHang;
-                    Session["ShoppingCart"] = null;
 
                     return RedirectToAction("CheckoutSuccess", new { id = order.DonHangId });
                 }
@@ -147,29 +188,8 @@ namespace MatKinh.Controllers
                 {
                     transaction.Rollback();
                     ModelState.AddModelError("", "Tạo đơn hàng thất bại: " + ex.Message);
+                    SetCheckoutCartViewData(cart);
                     return View(model);
-                }
-            }
-        }
-
-        private void RestoreStockForOrder(DonHang order)
-        {
-            if (order == null)
-            {
-                return;
-            }
-
-            var details = db.ChiTietDonHangs
-                .Where(x => x.DonHangId == order.DonHangId)
-                .ToList();
-
-            foreach (var item in details)
-            {
-                var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == item.SanPhamId);
-                if (product != null)
-                {
-                    product.SoLuongTon += item.SoLuong;
-                    product.UpdatedAt = DateTime.Now;
                 }
             }
         }
@@ -193,7 +213,6 @@ namespace MatKinh.Controllers
                 .Where(x => x.DonHangId == order.DonHangId)
                 .ToList();
 
-            Session["ShoppingCart"] = null;
             ViewData["Order"] = order;
             ViewData["CustomerOrder"] = customer;
             ViewData["OrderDetails"] = orderDetails;
@@ -218,6 +237,19 @@ namespace MatKinh.Controllers
             string pendingOrderCode = Session["PendingVnPayOrderCode"] as string;
             PurchaseInformation model = Session["PendingVnPayPurchaseInformation"] as PurchaseInformation;
             List<Cart> cart = Session["PendingVnPayCart"] as List<Cart>;
+
+            int? pendingKhachHangId = null;
+            if (Session["PendingVnPayKhachHangId"] != null)
+            {
+                try
+                {
+                    pendingKhachHangId = Convert.ToInt32(Session["PendingVnPayKhachHangId"]);
+                }
+                catch
+                {
+                    pendingKhachHangId = null;
+                }
+            }
 
             if (!string.Equals(maDonHang, pendingOrderCode, StringComparison.OrdinalIgnoreCase))
             {
@@ -248,11 +280,16 @@ namespace MatKinh.Controllers
                 return RedirectToAction("LoginAccount", "Account");
             }
 
+            if (!pendingKhachHangId.HasValue)
+            {
+                pendingKhachHangId = GetCurrentKhachHangId();
+            }
+
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
-                    TaiKhoan accountInDb = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId);
+                    TaiKhoan accountInDb = db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == currentAccount.TaiKhoanId && x.IsActive);
                     if (accountInDb == null)
                     {
                         throw new InvalidOperationException("Không tìm thấy tài khoản trong hệ thống.");
@@ -261,6 +298,8 @@ namespace MatKinh.Controllers
                     List<int> productIds = cart.Select(x => x.SanPhamId).Distinct().ToList();
 
                     var products = db.SanPhams
+                        .Include(x => x.LoaiSanPham)
+                        .Include(x => x.ThuongHieu)
                         .Where(x => productIds.Contains(x.SanPhamId))
                         .ToList();
 
@@ -281,13 +320,17 @@ namespace MatKinh.Controllers
                         DateTime.Now,
                         "Khởi tạo đơn hàng sau khi thanh toán VNPAY thành công.");
 
+                    if (pendingKhachHangId.HasValue)
+                    {
+                        ClearDbCart(pendingKhachHangId.Value);
+                    }
+
                     db.SaveChanges();
                     transaction.Commit();
 
                     Session["LastCreatedOrderId"] = order.DonHangId;
                     Session["LastCreatedOrderCode"] = order.MaDonHang;
 
-                    Session["ShoppingCart"] = null;
                     ClearPendingVnPaySession();
 
                     return RedirectToAction("CheckoutSuccess", new { id = order.DonHangId });
@@ -304,6 +347,62 @@ namespace MatKinh.Controllers
             }
         }
 
+        private void SetCheckoutCartViewData(List<Cart> cart)
+        {
+            ViewData["CheckoutCart"] = cart ?? new List<Cart>();
+        }
+
+        private List<Cart> GetCartByCustomer(int khachHangId)
+        {
+            var rows = db.GioHangChiTiets
+                .AsNoTracking()
+                .Include(x => x.SanPham)
+                .Include(x => x.SanPham.LoaiSanPham)
+                .Include(x => x.SanPham.ThuongHieu)
+                .Where(x => x.KhachHangId == khachHangId)
+                .OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt)
+                .ToList();
+
+            List<Cart> cart = new List<Cart>();
+
+            foreach (var row in rows)
+            {
+                var product = row.SanPham;
+
+                if (product == null)
+                {
+                    continue;
+                }
+
+                decimal donGia = GetOriginalPrice(product);
+                decimal giamGia = GetDiscountAmount(product);
+
+                cart.Add(new Cart
+                {
+                    SanPhamId = product.SanPhamId,
+                    TenSanPham = product.TenSanPham,
+                    HinhAnh = product.HinhAnhChinh,
+                    DonGia = donGia,
+                    GiamGia = giamGia,
+                    SoLuong = row.SoLuong
+                });
+            }
+
+            return cart;
+        }
+
+        private void ClearDbCart(int khachHangId)
+        {
+            var cartItems = db.GioHangChiTiets
+                .Where(x => x.KhachHangId == khachHangId)
+                .ToList();
+
+            if (cartItems.Any())
+            {
+                db.GioHangChiTiets.RemoveRange(cartItems);
+            }
+        }
+
         private TaiKhoan GetCurrentAccount()
         {
             if (Session["LoginInformation"] == null)
@@ -317,19 +416,99 @@ namespace MatKinh.Controllers
                 return null;
             }
 
-            return db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == account.TaiKhoanId);
+            return db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == account.TaiKhoanId && x.IsActive);
+        }
+
+        private int? GetCurrentKhachHangId()
+        {
+            if (Session["KhachHangId"] != null)
+            {
+                try
+                {
+                    return Convert.ToInt32(Session["KhachHangId"]);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            var account = GetCurrentAccount();
+            if (account == null)
+            {
+                return null;
+            }
+
+            var customer = db.KhachHangs.FirstOrDefault(x =>
+                x.IsActive &&
+                (
+                    x.Email == account.Email ||
+                    x.SoDienThoai == account.SoDienThoai
+                ));
+
+            if (customer == null)
+            {
+                return null;
+            }
+
+            Session["KhachHangId"] = customer.KhachHangId;
+            return customer.KhachHangId;
         }
 
         private KhachHang GetOrCreateCustomer(TaiKhoan account, PurchaseInformation model)
         {
-            string email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim();
-            string soDienThoai = model.SoDienThoaiNguoiNhan.Trim();
+            string accountEmail = account != null && !string.IsNullOrWhiteSpace(account.Email)
+                ? account.Email.Trim()
+                : null;
 
-            var customer = db.KhachHangs.FirstOrDefault(x => x.SoDienThoai == soDienThoai);
+            string accountPhone = account != null && !string.IsNullOrWhiteSpace(account.SoDienThoai)
+                ? account.SoDienThoai.Trim()
+                : null;
 
-            if (customer == null && !string.IsNullOrWhiteSpace(email))
+            string receiverName = !string.IsNullOrWhiteSpace(model.HoTenNguoiNhan)
+                ? model.HoTenNguoiNhan.Trim()
+                : account.HoTen;
+
+            string receiverPhone = !string.IsNullOrWhiteSpace(model.SoDienThoaiNguoiNhan)
+                ? model.SoDienThoaiNguoiNhan.Trim()
+                : accountPhone;
+
+            string receiverEmail = !string.IsNullOrWhiteSpace(model.Email)
+                ? model.Email.Trim()
+                : accountEmail;
+
+            string receiverAddress = !string.IsNullOrWhiteSpace(model.DiaChiNhanHang)
+                ? model.DiaChiNhanHang.Trim()
+                : account.DiaChi;
+
+            KhachHang customer = null;
+
+            if (!string.IsNullOrWhiteSpace(accountEmail))
             {
-                customer = db.KhachHangs.FirstOrDefault(x => x.Email == email);
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.Email == accountEmail);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(accountPhone))
+            {
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.SoDienThoai == accountPhone);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(receiverPhone))
+            {
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.SoDienThoai == receiverPhone);
+            }
+
+            if (customer == null && !string.IsNullOrWhiteSpace(receiverEmail))
+            {
+                customer = db.KhachHangs.FirstOrDefault(x =>
+                    x.IsActive &&
+                    x.Email == receiverEmail);
             }
 
             if (customer == null)
@@ -337,13 +516,13 @@ namespace MatKinh.Controllers
                 customer = new KhachHang
                 {
                     MaKhachHang = GenerateCustomerCode(),
-                    HoTen = model.HoTenNguoiNhan.Trim(),
-                    Email = email,
-                    SoDienThoai = soDienThoai,
+                    HoTen = receiverName,
+                    Email = receiverEmail,
+                    SoDienThoai = receiverPhone,
                     GioiTinh = account.GioiTinh,
                     NgaySinh = account.NgaySinh,
-                    DiaChi = model.DiaChiNhanHang.Trim(),
-                    GhiChu = string.IsNullOrWhiteSpace(model.GhiChu) ? null : model.GhiChu.Trim(),
+                    DiaChi = receiverAddress,
+                    GhiChu = "Khách hàng được tạo khi thanh toán website.",
                     IsActive = true,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = null
@@ -354,21 +533,87 @@ namespace MatKinh.Controllers
             }
             else
             {
-                customer.HoTen = model.HoTenNguoiNhan.Trim();
-                customer.Email = email;
-                customer.SoDienThoai = soDienThoai;
-                customer.DiaChi = model.DiaChiNhanHang.Trim();
-                customer.GhiChu = string.IsNullOrWhiteSpace(model.GhiChu) ? customer.GhiChu : model.GhiChu.Trim();
+                if (!string.IsNullOrWhiteSpace(receiverName))
+                {
+                    customer.HoTen = receiverName;
+                }
+
+                if (!string.IsNullOrWhiteSpace(receiverEmail))
+                {
+                    customer.Email = receiverEmail;
+                }
+
+                if (!string.IsNullOrWhiteSpace(receiverPhone))
+                {
+                    customer.SoDienThoai = receiverPhone;
+                }
+
+                if (!string.IsNullOrWhiteSpace(receiverAddress))
+                {
+                    customer.DiaChi = receiverAddress;
+                }
+
+                if (!string.IsNullOrWhiteSpace(model.GhiChu))
+                {
+                    customer.GhiChu = model.GhiChu.Trim();
+                }
+
                 customer.UpdatedAt = DateTime.Now;
                 db.SaveChanges();
             }
 
+            Session["KhachHangId"] = customer.KhachHangId;
             return customer;
         }
 
         private decimal CalculateShippingFee(List<Cart> cart, PurchaseInformation model)
         {
             return 30000m;
+        }
+
+        private bool IsProductAvailable(SanPham product)
+        {
+            if (product == null)
+            {
+                return false;
+            }
+
+            if (product.TrangThai != ProductStatusActive)
+            {
+                return false;
+            }
+
+            if (product.LoaiSanPham == null || !product.LoaiSanPham.IsActive)
+            {
+                return false;
+            }
+
+            if (product.ThuongHieu == null || !product.ThuongHieu.IsActive)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private decimal GetOriginalPrice(SanPham product)
+        {
+            if (product.GiaGoc > 0)
+            {
+                return product.GiaGoc;
+            }
+
+            return product.GiaBan;
+        }
+
+        private decimal GetDiscountAmount(SanPham product)
+        {
+            if (product.GiaGoc > product.GiaBan)
+            {
+                return product.GiaGoc - product.GiaBan;
+            }
+
+            return 0m;
         }
 
         private string BuildVnPayUrl(string maDonHang, decimal tongThanhToan)
@@ -455,7 +700,6 @@ namespace MatKinh.Controllers
             return null;
         }
 
-
         private string ValidateCartBeforeCheckout(List<Cart> cart, List<SanPham> products, List<int> productIds)
         {
             if (cart == null || !cart.Any())
@@ -477,7 +721,7 @@ namespace MatKinh.Controllers
                     return "Một hoặc nhiều sản phẩm không còn tồn tại.";
                 }
 
-                if (product.TrangThai != ProductStatusActive)
+                if (!IsProductAvailable(product))
                 {
                     return $"Sản phẩm '{product.TenSanPham}' hiện không khả dụng.";
                 }
@@ -485,6 +729,11 @@ namespace MatKinh.Controllers
                 if (cartItem.SoLuong <= 0)
                 {
                     return $"Số lượng của sản phẩm '{product.TenSanPham}' không hợp lệ.";
+                }
+
+                if (cartItem.SoLuong > MaxQuantityPerItem)
+                {
+                    return $"Bạn chỉ có thể mua tối đa {MaxQuantityPerItem} sản phẩm cho mỗi mẫu kính.";
                 }
 
                 if (product.SoLuongTon < cartItem.SoLuong)
@@ -513,8 +762,8 @@ namespace MatKinh.Controllers
             {
                 var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
 
-                decimal donGia = product.GiaBan;
-                decimal giamGia = cartItem.GiamGia;
+                decimal donGia = GetOriginalPrice(product);
+                decimal giamGia = GetDiscountAmount(product);
                 int soLuong = cartItem.SoLuong;
 
                 tongTienHang += donGia * soLuong;
@@ -536,7 +785,6 @@ namespace MatKinh.Controllers
             string historyNote)
         {
             KhachHang customer = GetOrCreateCustomer(accountInDb, model);
-            Session["KhachHangId"] = customer.KhachHangId;
 
             decimal tongTienHang = 0m;
             decimal tongGiamGia = 0m;
@@ -580,8 +828,8 @@ namespace MatKinh.Controllers
             {
                 var product = products.First(x => x.SanPhamId == cartItem.SanPhamId);
 
-                decimal donGia = product.GiaBan;
-                decimal giamGia = cartItem.GiamGia;
+                decimal donGia = GetOriginalPrice(product);
+                decimal giamGia = GetDiscountAmount(product);
                 int soLuong = cartItem.SoLuong;
                 decimal thanhTien = (donGia - giamGia) * soLuong;
 
@@ -644,7 +892,7 @@ namespace MatKinh.Controllers
                 : model.HoTenNguoiNhan.Trim();
 
             accountInDb.SoDienThoai = model.SoDienThoaiNguoiNhan.Trim();
-            accountInDb.Email = model.Email.Trim();
+            accountInDb.Email = string.IsNullOrWhiteSpace(model.Email) ? accountInDb.Email : model.Email.Trim();
             accountInDb.DiaChi = model.DiaChiNhanHang.Trim();
             accountInDb.UpdatedAt = DateTime.Now;
 
@@ -675,7 +923,9 @@ namespace MatKinh.Controllers
             Session["PendingVnPayPurchaseInformation"] = null;
             Session["PendingVnPayCart"] = null;
             Session["PendingVnPayAmount"] = null;
+            Session["PendingVnPayKhachHangId"] = null;
         }
+
         private string GenerateOrderCode()
         {
             string code;

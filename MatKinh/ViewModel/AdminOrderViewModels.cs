@@ -47,6 +47,12 @@ namespace MatKinh.ViewModel
         public int TrangThai { get; set; }
         public string TrangThaiText { get; set; }
 
+        public string PhuongThucThanhToan { get; set; }
+        public string TrangThaiThanhToan { get; set; }
+        public string MaGiaoDichThanhToan { get; set; }
+        public DateTime? NgayThanhToan { get; set; }
+        public bool CanRequireManualRefund { get; set; }
+
         public string NguoiTao { get; set; }
         public string NguoiXacNhan { get; set; }
         public string ShipperName { get; set; }
@@ -89,6 +95,12 @@ namespace MatKinh.ViewModel
 
         public int TrangThai { get; set; }
         public string TrangThaiText { get; set; }
+
+        public string PhuongThucThanhToan { get; set; }
+        public string TrangThaiThanhToan { get; set; }
+        public string MaGiaoDichThanhToan { get; set; }
+        public DateTime? NgayThanhToan { get; set; }
+        public bool CanRequireManualRefund { get; set; }
 
         public DateTime NgayDat { get; set; }
         public DateTime? NgayXacNhan { get; set; }

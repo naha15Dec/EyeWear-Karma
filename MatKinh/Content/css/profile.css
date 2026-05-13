@@ -883,3 +883,38 @@
     cursor: not-allowed;
     pointer-events: none;
 }
+
+.profile-payment-method {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #7a746d;
+    font-weight: 600;
+}
+
+.order-refund-note {
+    margin: 18px 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 1px solid #fed7aa;
+}
+
+    .order-refund-note strong {
+        color: #7c2d12;
+    }
+
+.order-cancel-refund-hint {
+    margin-top: 8px;
+    color: #9a3412;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.catalog-pagination .disabled {
+    pointer-events: none;
+    opacity: 0.45;
+    cursor: not-allowed;
+}

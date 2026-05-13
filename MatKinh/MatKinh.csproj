@@ -790,6 +790,9 @@
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DTO\ProductResponse.cs" />
+    <Compile Include="Models\GioHangChiTiet.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\HanhViNguoiDung.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
@@ -811,6 +814,9 @@
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\TaiKhoan.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TaiKhoanRememberToken.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\ThongTinCuaHang.cs">
@@ -947,6 +953,7 @@
     <Content Include="Scripts\bootstrap.min.js.map" />
     <Content Include="Views\FaceAI\Index.cshtml" />
     <Content Include="Views\Shared\_FlashMessage.cshtml" />
+    <Content Include="Views\ShoppingCart\_CartCount.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

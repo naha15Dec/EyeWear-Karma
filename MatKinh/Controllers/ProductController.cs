@@ -15,6 +15,7 @@ namespace MatKinh.Controllers
 
         private const int ProductStatusActive = 1;
         private const int DefaultPageSize = 9;
+        private const int MaxPageSize = 24;
 
         // ========================= DANH SÁCH SẢN PHẨM =========================
 
@@ -27,6 +28,7 @@ namespace MatKinh.Controllers
 
             if (filter.Page <= 0) filter.Page = 1;
             if (filter.PageSize <= 0) filter.PageSize = DefaultPageSize;
+            if (filter.PageSize > MaxPageSize) filter.PageSize = MaxPageSize;
 
             db.Database.CommandTimeout = 30;
 
@@ -42,20 +44,28 @@ namespace MatKinh.Controllers
 
             int totalCount = query.Count();
 
+            int totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
+            if (totalPages <= 0) totalPages = 1;
+
+            if (filter.Page > totalPages)
+            {
+                filter.Page = totalPages;
+            }
+
             List<SanPham> products = query
                 .OrderByDescending(x => x.CreatedAt)
-                .ThenBy(x => x.SanPhamId)
+                .ThenByDescending(x => x.SanPhamId)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .ToList();
 
             SetPagination(filter.Page, filter.PageSize, totalCount);
-            UpdateInterface();
+            LoadFilterData();
 
             ViewData["listProduct"] = products;
             ViewBag.Filter = filter;
 
-            return View();
+            return View(filter);
         }
 
         // ========================= CHI TIẾT SẢN PHẨM =========================
@@ -75,7 +85,9 @@ namespace MatKinh.Controllers
                 .Include(x => x.ThuongHieu)
                 .FirstOrDefault(x =>
                     x.SanPhamId == sanPhamId.Value &&
-                    x.TrangThai == ProductStatusActive
+                    x.TrangThai == ProductStatusActive &&
+                    x.LoaiSanPham.IsActive &&
+                    x.ThuongHieu.IsActive
                 );
 
             if (product == null)
@@ -83,7 +95,8 @@ namespace MatKinh.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Ghi nhận hành vi xem sản phẩm
+            // Ghi nhận hành vi xem sản phẩm.
+            // Nếu log lỗi thì không làm hỏng trải nghiệm xem chi tiết sản phẩm.
             try
             {
                 UserBehaviorLogger.Log(
@@ -103,7 +116,6 @@ namespace MatKinh.Controllers
                 System.Diagnostics.Debug.WriteLine(ex.Message);
             }
 
-            // Gợi ý sản phẩm bằng Rule-Based Scoring
             List<SanPham> recommendedProducts = GetRuleBasedRecommendedProducts(product, 8);
 
             ViewBag.RecommendedProducts = recommendedProducts;
@@ -111,6 +123,7 @@ namespace MatKinh.Controllers
 
             return View(product);
         }
+
         public ActionResult Detail(int? id)
         {
             return RedirectToAction("DetailProduct", new { sanPhamId = id });
@@ -143,7 +156,6 @@ namespace MatKinh.Controllers
                 ? Session["BehaviorSessionId"].ToString()
                 : Session.SessionID;
 
-            // Lấy lịch sử hành vi gần nhất của người dùng
             var behaviorQuery = db.HanhViNguoiDungs
                 .AsNoTracking()
                 .Where(x =>
@@ -167,9 +179,14 @@ namespace MatKinh.Controllers
             {
                 behaviorProducts = db.SanPhams
                     .AsNoTracking()
+                    .Include(x => x.LoaiSanPham)
+                    .Include(x => x.ThuongHieu)
                     .Where(x =>
                         behaviorProductIds.Contains(x.SanPhamId) &&
-                        x.TrangThai == ProductStatusActive
+                        x.TrangThai == ProductStatusActive &&
+                        x.SoLuongTon > 0 &&
+                        x.LoaiSanPham.IsActive &&
+                        x.ThuongHieu.IsActive
                     )
                     .ToList();
             }
@@ -201,32 +218,22 @@ namespace MatKinh.Controllers
                 .Include(x => x.ThuongHieu)
                 .Where(x =>
                     x.SanPhamId != currentProduct.SanPhamId &&
-                    x.TrangThai == ProductStatusActive
+                    x.TrangThai == ProductStatusActive &&
+                    x.SoLuongTon > 0 &&
+                    x.LoaiSanPham.IsActive &&
+                    x.ThuongHieu.IsActive
                 )
                 .Select(x => new
                 {
                     Product = x,
 
                     Score =
-                        // Ưu tiên sản phẩm cùng loại với sản phẩm đang xem
                         (x.LoaiSanPhamId == currentProduct.LoaiSanPhamId ? 40 : 0)
-
-                        // Ưu tiên sản phẩm cùng thương hiệu với sản phẩm đang xem
                         + (x.ThuongHieuId == currentProduct.ThuongHieuId ? 30 : 0)
-
-                        // Ưu tiên sản phẩm có giá gần với sản phẩm đang xem
                         + (x.GiaBan >= minPrice && x.GiaBan <= maxPrice ? 20 : 0)
-
-                        // Ưu tiên sản phẩm thuộc loại người dùng từng quan tâm
                         + (interestedCategoryIds.Contains(x.LoaiSanPhamId) ? 35 : 0)
-
-                        // Ưu tiên thương hiệu người dùng từng quan tâm
                         + (interestedBrandIds.Contains(x.ThuongHieuId) ? 25 : 0)
-
-                        // Ưu tiên khoảng giá người dùng từng quan tâm
                         + (x.GiaBan >= minBehaviorPrice && x.GiaBan <= maxBehaviorPrice ? 15 : 0)
-
-                        // Ưu tiên sản phẩm nổi bật
                         + (x.IsFeatured ? 10 : 0)
                 })
                 .Where(x => x.Score > 0)
@@ -258,22 +265,37 @@ namespace MatKinh.Controllers
 
         // ========================= PRIVATE METHODS =========================
 
+        /// <summary>
+        /// Query nền cho catalog.
+        /// Không lọc SoLuongTon > 0 vì sản phẩm hết hàng vẫn cần hiển thị,
+        /// nhưng view sẽ hiện "Hết hàng" và không cho thêm vào giỏ.
+        /// </summary>
         private IQueryable<SanPham> BuildBaseProductQuery()
         {
             return db.SanPhams
                 .AsNoTracking()
                 .Include(x => x.LoaiSanPham)
                 .Include(x => x.ThuongHieu)
-                .Where(x => x.TrangThai == ProductStatusActive);
+                .Where(x =>
+                    x.TrangThai == ProductStatusActive &&
+                    x.LoaiSanPham.IsActive &&
+                    x.ThuongHieu.IsActive);
         }
 
         private void ApplyFilters(ref IQueryable<SanPham> query, ProductCatalogFilterVm filter)
         {
             decimal minPrice;
-            decimal maxPrice;
+            decimal? maxPrice;
+
             ResolvePriceRange(filter.PriceRange, out minPrice, out maxPrice);
 
-            query = query.Where(x => x.GiaBan >= minPrice && x.GiaBan <= maxPrice);
+            query = query.Where(x => x.GiaBan >= minPrice);
+
+            if (maxPrice.HasValue)
+            {
+                decimal max = maxPrice.Value;
+                query = query.Where(x => x.GiaBan <= max);
+            }
 
             if (filter.BrandId.HasValue && filter.BrandId.Value > 0)
             {
@@ -284,14 +306,20 @@ namespace MatKinh.Controllers
             if (!string.IsNullOrWhiteSpace(filter.Keyword))
             {
                 string keyword = filter.Keyword.Trim();
-                query = query.Where(x => x.TenSanPham.Contains(keyword));
+
+                query = query.Where(x =>
+                    x.TenSanPham.Contains(keyword) ||
+                    x.MaSanPham.Contains(keyword) ||
+                    x.ThuongHieu.TenThuongHieu.Contains(keyword) ||
+                    x.LoaiSanPham.TenLoaiSanPham.Contains(keyword)
+                );
             }
         }
 
-        private void ResolvePriceRange(string selectedPrice, out decimal minPrice, out decimal maxPrice)
+        private void ResolvePriceRange(string selectedPrice, out decimal minPrice, out decimal? maxPrice)
         {
             minPrice = 0m;
-            maxPrice = decimal.MaxValue;
+            maxPrice = null;
 
             if (string.IsNullOrWhiteSpace(selectedPrice))
             {
@@ -326,7 +354,7 @@ namespace MatKinh.Controllers
             else if (price > 10000000)
             {
                 minPrice = 10000000m;
-                maxPrice = decimal.MaxValue;
+                maxPrice = null;
             }
         }
 
@@ -355,7 +383,7 @@ namespace MatKinh.Controllers
             ViewBag.DisplayPage = displayStart;
         }
 
-        private void UpdateInterface()
+        private void LoadFilterData()
         {
             ViewData["brandList"] = db.ThuongHieux
                 .AsNoTracking()
