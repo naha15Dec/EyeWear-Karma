@@ -219,6 +219,12 @@
                                 </a>
                             </div>
 
+                            <div class="detail-trust-note">
+                                <span><i class="fa fa-shield"></i> Thanh toán an toàn</span>
+                                <span><i class="fa fa-refresh"></i> Hỗ trợ đổi trả</span>
+                                <span><i class="fa fa-comments-o"></i> Tư vấn chọn kính</span>
+                            </div>
+
                             @if (!conHang)
                             {
                                 <div class="detail-stock-note">
@@ -431,8 +437,13 @@
             else
             {
                 <div class="catalog-empty">
+                    <div class="catalog-empty-icon">
+                        <i class="fa fa-lightbulb-o"></i>
+                    </div>
+
                     <h3>Chưa có dữ liệu gợi ý</h3>
                     <p>Hệ thống sẽ sớm cập nhật thêm các sản phẩm phù hợp dành cho bạn.</p>
+
                     <a href="@Url.Action("Index", "Product")"
                        class="optical-btn optical-btn--dark catalog-empty-btn">
                         Xem tất cả sản phẩm

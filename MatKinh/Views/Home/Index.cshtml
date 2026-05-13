@@ -42,6 +42,20 @@
 
     Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
 
+    Func<string, int, string> shorten = (text, maxLength) =>
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        text = text.Trim();
+
+        return text.Length > maxLength
+            ? text.Substring(0, maxLength) + "..."
+            : text;
+    };
+
     string defaultImg = Url.Content("~/Asset/img/no-image.png");
     string dealFallbackImg = Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png");
     string heroFallbackImg = Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png");
@@ -75,6 +89,7 @@
                             <a href="@Url.Action("Index", "Product")" class="btn-luxury primary">
                                 Khám phá sản phẩm
                             </a>
+
                             <a href="@Url.Action("Index", "Blog")" class="btn-luxury secondary">
                                 Xem xu hướng
                             </a>
@@ -181,7 +196,9 @@
                         <img src="~/Asset/img/category/xuhuongmatkinh20191.jpg"
                              alt="Kính thời trang hiện đại"
                              onerror="this.onerror=null;this.src='@defaultImg';" />
+
                         <div class="overlay"></div>
+
                         <div class="category-content">
                             <span>Bộ sưu tập chủ đạo</span>
                             <h4>Kính thời trang hiện đại</h4>
@@ -200,7 +217,9 @@
                                 <img src="~/Asset/img/category/s-l1600.jpg"
                                      alt="Gọng kính thanh lịch"
                                      onerror="this.onerror=null;this.src='@defaultImg';" />
+
                                 <div class="overlay"></div>
+
                                 <div class="category-content">
                                     <span>Elegant Look</span>
                                     <h4>Gọng kính thanh lịch</h4>
@@ -214,7 +233,9 @@
                                 <img src="~/Asset/img/category/1.1200.1647589845-8ec.png"
                                      alt="Kính chống ánh sáng xanh"
                                      onerror="this.onerror=null;this.src='@defaultImg';" />
+
                                 <div class="overlay"></div>
+
                                 <div class="category-content">
                                     <span>Daily Comfort</span>
                                     <h4>Kính chống ánh sáng xanh</h4>
@@ -260,11 +281,22 @@
                             string imageUrl = normalizeImage(item.HinhAnhChinh);
                             decimal saveAmount = item.GiaGoc - item.GiaBan;
 
+                            string brandName = item.ThuongHieu != null
+                                ? item.ThuongHieu.TenThuongHieu
+                                : "Karma Eyewear";
+
                             <div class="col-lg-3 col-md-6 mb-4">
-                                <div class="product-card-modern">
-                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="product-thumb-link">
+                                <div class="product-card-modern @(conHang ? "" : "is-soldout")">
+                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="home-product-thumb-link">
                                         <div class="product-thumb">
-                                            <span class="product-badge">Sale</span>
+                                            @if (!conHang)
+                                            {
+                                                <span class="product-badge product-badge--soldout">Hết hàng</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="product-badge">Sale</span>
+                                            }
 
                                             <img src="@imageUrl"
                                                  alt="@item.TenSanPham"
@@ -273,11 +305,15 @@
                                     </a>
 
                                     <div class="product-body">
-                                        <div class="product-name">
+                                        <div class="product-card-mini-meta">
+                                            <span>@brandName</span>
+                                        </div>
+
+                                        <h3 class="product-name">
                                             <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
                                                 @item.TenSanPham
                                             </a>
-                                        </div>
+                                        </h3>
 
                                         <div class="product-price">
                                             <span class="sale">@money(item.GiaBan)đ</span>
@@ -291,31 +327,51 @@
                                             </div>
                                         }
 
-                                    <div class="product-actions">
-                                        @if (conHang)
-                                        {
-                                            using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form home-add-cart-form" }))
+                                        <div class="home-product-stock">
+                                            @if (conHang)
                                             {
-                                                @Html.AntiForgeryToken()
+                                                if (item.SoLuongTon <= 3)
+                                                {
+                                                    <span class="home-stock-badge low">Chỉ còn @item.SoLuongTon sản phẩm</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="home-stock-badge in">Còn hàng</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="home-stock-badge out">Hết hàng</span>
+                                            }
+                                        </div>
 
-                                                <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
-                                                <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+                                        <div class="product-actions">
+                                            @if (conHang)
+                                            {
+                                                using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form home-add-cart-form" }))
+                                                {
+                                                    @Html.AntiForgeryToken()
 
-                                                <button type="submit" class="btn-cart">
-                                                    <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
+                                                    <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                    <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+
+                                                    <button type="submit" class="btn-cart">
+                                                        <i class="fa fa-shopping-bag mr-2"></i>Thêm giỏ
+                                                    </button>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn-cart disabled" disabled>
+                                                    Hết hàng
                                                 </button>
                                             }
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn-cart disabled" disabled>Hết hàng</button>
-                                        }
 
-                                        <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
-                                           class="btn-detail">
-                                            Chi tiết
-                                        </a>
-                                    </div>
+                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
+                                               class="btn-detail">
+                                                Chi tiết
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -352,11 +408,22 @@
                             bool conHang = item.TrangThai == 1 && item.SoLuongTon > 0;
                             string imageUrl = normalizeImage(item.HinhAnhChinh);
 
+                            string brandName = item.ThuongHieu != null
+                                ? item.ThuongHieu.TenThuongHieu
+                                : "Karma Eyewear";
+
                             <div class="col-lg-3 col-md-6 mb-4">
-                                <div class="product-card-modern">
-                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="product-thumb-link">
+                                <div class="product-card-modern @(conHang ? "" : "is-soldout")">
+                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="home-product-thumb-link">
                                         <div class="product-thumb">
-                                            <span class="product-badge product-badge--gold">New</span>
+                                            @if (!conHang)
+                                            {
+                                                <span class="product-badge product-badge--soldout">Hết hàng</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="product-badge product-badge--gold">New</span>
+                                            }
 
                                             <img src="@imageUrl"
                                                  alt="@item.TenSanPham"
@@ -365,14 +432,36 @@
                                     </a>
 
                                     <div class="product-body">
-                                        <div class="product-name">
+                                        <div class="product-card-mini-meta">
+                                            <span>@brandName</span>
+                                        </div>
+
+                                        <h3 class="product-name">
                                             <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
                                                 @item.TenSanPham
                                             </a>
-                                        </div>
+                                        </h3>
 
                                         <div class="product-price">
                                             <span class="sale">@money(item.GiaBan)đ</span>
+                                        </div>
+
+                                        <div class="home-product-stock">
+                                            @if (conHang)
+                                            {
+                                                if (item.SoLuongTon <= 3)
+                                                {
+                                                    <span class="home-stock-badge low">Chỉ còn @item.SoLuongTon sản phẩm</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="home-stock-badge in">Còn hàng</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="home-stock-badge out">Hết hàng</span>
+                                            }
                                         </div>
 
                                         <div class="product-actions">
@@ -392,7 +481,9 @@
                                             }
                                             else
                                             {
-                                                <button type="button" class="btn-cart disabled" disabled>Hết hàng</button>
+                                                <button type="button" class="btn-cart disabled" disabled>
+                                                    Hết hàng
+                                                </button>
                                             }
 
                                             <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })"
@@ -478,7 +569,7 @@
                                         bool conHang = item.TrangThai == 1 && item.SoLuongTon > 0;
                                         decimal saveAmount = item.GiaGoc - item.GiaBan;
 
-                                        <div class="promo-product-card">
+                                        <div class="promo-product-card @(conHang ? "" : "is-soldout")">
                                             <div class="thumb">
                                                 @if (!conHang)
                                                 {
@@ -515,33 +606,33 @@
                                                     </div>
                                                 }
 
-                                            <div class="promo-card-actions">
-                                                @if (conHang)
-                                                {
-                                                    using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form promo-add-cart-form" }))
+                                                <div class="promo-card-actions">
+                                                    @if (conHang)
                                                     {
-                                                        @Html.AntiForgeryToken()
+                                                        using (Html.BeginForm("AddItemToCart", "ShoppingCart", FormMethod.Post, new { @class = "add-cart-form promo-add-cart-form" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
 
-                                                        <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
-                                                        <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
+                                                            <input type="hidden" name="sanPhamId" value="@item.SanPhamId" />
+                                                            <input type="hidden" name="returnUrl" value="@Request.RawUrl" />
 
-                                                        <button type="submit" class="promo-add-cart">
-                                                            <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
+                                                            <button type="submit" class="promo-add-cart">
+                                                                <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
+                                                            </button>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="promo-add-cart disabled" disabled>
+                                                            Hết hàng
                                                         </button>
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    <button type="button" class="promo-add-cart disabled" disabled>
-                                                        Hết hàng
-                                                    </button>
-                                                }
 
-                                                <a class="promo-detail-link"
-                                                   href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
-                                                    Chi tiết
-                                                </a>
-                                            </div>
+                                                    <a class="promo-detail-link"
+                                                       href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
+                                                        Chi tiết
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     }
@@ -589,7 +680,7 @@
 
     @if (latestBlogs.Any())
     {
-        <section class="section-space pt-0">
+        <section class="section-space pt-0 home-blog-section">
             <div class="container">
                 <div class="section-heading">
                     <span class="eyebrow">Bài viết mới</span>
@@ -601,38 +692,44 @@
                     @foreach (var item in latestBlogs.Take(3))
                     {
                         string imageUrl = normalizeImage(item.AnhDaiDien);
+                        string excerptText = string.IsNullOrWhiteSpace(item.TomTat)
+                            ? "Khám phá thêm những nội dung mới từ Karma Eyewear."
+                            : shorten(item.TomTat, 120);
 
                         <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="blog-card-modern h-100">
-                                <div class="blog-card-modern__image">
+                            <article class="home-blog-card h-100">
+                                <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })"
+                                   class="home-blog-card__image">
                                     <img src="@imageUrl"
                                          alt="@item.TieuDe"
                                          onerror="this.onerror=null;this.src='@defaultImg';" />
-                                </div>
+                                </a>
 
-                                <div class="blog-card-modern__content">
-                                    <div class="blog-card-modern__meta">
+                                <div class="home-blog-card__content">
+                                    <div class="home-blog-card__meta">
                                         <span>
                                             <i class="lnr lnr-calendar-full"></i>
                                             @string.Format("{0:dd/MM/yyyy}", item.NgayDang ?? item.CreatedAt)
                                         </span>
                                     </div>
 
-                                    <h3 class="blog-card-modern__title">
-                                        @item.TieuDe
+                                    <h3 class="home-blog-card__title">
+                                        <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })">
+                                            @item.TieuDe
+                                        </a>
                                     </h3>
 
-                                    <p class="blog-card-modern__excerpt">
-                                        @(string.IsNullOrWhiteSpace(item.TomTat)
-                                            ? "Khám phá thêm những nội dung mới từ Karma Eyewear."
-                                            : (item.TomTat.Length > 120 ? item.TomTat.Substring(0, 120) + "..." : item.TomTat))
+                                    <p class="home-blog-card__excerpt">
+                                        @excerptText
                                     </p>
 
-                                    <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })" class="optical-btn optical-btn--light">
+                                    <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })"
+                                       class="home-blog-read-more">
                                         Đọc thêm
+                                        <i class="fa fa-long-arrow-right"></i>
                                     </a>
                                 </div>
-                            </div>
+                            </article>
                         </div>
                     }
                 </div>

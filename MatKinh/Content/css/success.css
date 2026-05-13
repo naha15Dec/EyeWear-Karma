@@ -1,10 +1,14 @@
 ﻿.success-page {
     background: #f8f8f6;
-    padding-bottom: 60px;
+    padding-bottom: 64px;
+}
+
+.success-breadcrumb {
+    padding: 40px 0 30px;
 }
 
 .success-section {
-    padding: 50px 0 20px;
+    padding: 46px 0 20px;
 }
 
 .success-hero-card,
@@ -13,18 +17,19 @@
     background: #fff;
     border: 1px solid #e7e4dd;
     border-radius: 28px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.045);
 }
 
 .success-hero-card {
-    padding: 40px 28px;
+    padding: 44px 28px;
     text-align: center;
     margin-bottom: 24px;
+    background: radial-gradient(circle at top left, rgba(47, 125, 50, 0.10), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
 }
 
 .success-icon {
-    width: 84px;
-    height: 84px;
+    width: 88px;
+    height: 88px;
     margin: 0 auto 18px;
     border-radius: 50%;
     background: #edf8f0;
@@ -32,7 +37,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 34px;
+    box-shadow: 0 14px 30px rgba(47, 125, 50, 0.12);
 }
 
 .success-eyebrow {
@@ -43,7 +49,7 @@
     background: #f4efe7;
     color: #b08d57;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1px;
     text-transform: uppercase;
 }
@@ -52,8 +58,9 @@
     font-size: 34px;
     line-height: 1.3;
     color: #161616;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 12px;
+    letter-spacing: -0.5px;
 }
 
 .success-hero-card p {
@@ -61,6 +68,49 @@
     margin: 0 auto;
     color: #777;
     line-height: 1.9;
+}
+
+.success-hero-badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+}
+
+.success-status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.status-paid,
+.status-confirmed {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.status-pending,
+.status-processing,
+.status-shipping {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-failed,
+.status-cancelled {
+    background: #fff1f0;
+    color: #b42318;
+}
+
+.status-refunded {
+    background: #eef4ff;
+    color: #3538cd;
 }
 
 .success-layout {
@@ -78,14 +128,19 @@
     .success-order-card h3 {
         font-size: 28px;
         color: #161616;
-        font-weight: 700;
+        font-weight: 800;
         margin-bottom: 22px;
+        letter-spacing: -0.4px;
     }
 
 .success-info-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+}
+
+.success-grid-full {
+    grid-column: 1 / -1;
 }
 
 .success-info-item {
@@ -105,8 +160,9 @@
     .success-info-item strong {
         color: #161616;
         font-size: 15px;
-        font-weight: 700;
+        font-weight: 750;
         line-height: 1.6;
+        word-break: break-word;
     }
 
 .success-order-card {
@@ -134,7 +190,8 @@
         text-transform: uppercase;
         letter-spacing: 0.8px;
         color: #8a8a8a;
-        font-weight: 700;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .success-order-table tbody td {
@@ -150,14 +207,16 @@
     }
 
     .success-order-table .summary-row td {
-        font-weight: 600;
+        font-weight: 700;
         color: #5f5f5f;
+        background: #fffdf9;
     }
 
     .success-order-table .grand-total td {
         font-size: 17px;
-        font-weight: 800;
-        color: #161616;
+        font-weight: 850;
+        color: #8a6a2f;
+        background: #faf8f5;
     }
 
 .success-actions {
@@ -185,20 +244,35 @@
     .success-order-mobile__item h4 {
         font-size: 16px;
         color: #161616;
-        font-weight: 700;
-        margin-bottom: 8px;
+        font-weight: 800;
+        line-height: 1.45;
+        margin-bottom: 12px;
     }
 
-    .success-order-mobile__item p {
-        margin-bottom: 8px;
-        color: #777;
-        font-size: 14px;
-    }
+.success-mobile-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    color: #777;
+    font-size: 14px;
+}
 
-    .success-order-mobile__item strong {
+    .success-mobile-row strong {
         color: #161616;
+        text-align: right;
+    }
+
+.success-mobile-row--total {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid #eee7dc;
+    font-weight: 800;
+}
+
+    .success-mobile-row--total strong {
+        color: #8a6a2f;
         font-size: 16px;
-        font-weight: 700;
     }
 
 .success-order-mobile__summary {
@@ -221,13 +295,16 @@
         margin-top: 6px;
         padding-top: 14px;
         border-top: 1px solid #e7ded2;
-        font-weight: 700;
+        font-weight: 800;
         color: #161616;
     }
 
         .success-order-mobile__summary .grand strong {
             font-size: 20px;
+            color: #8a6a2f;
         }
+
+/* RESPONSIVE */
 
 @media (max-width: 991px) {
     .success-layout {
@@ -248,6 +325,10 @@
 }
 
 @media (max-width: 767px) {
+    .success-section {
+        padding: 36px 0 14px;
+    }
+
     .success-order-table-wrap {
         display: none;
     }
@@ -258,6 +339,10 @@
 
     .success-info-grid {
         grid-template-columns: 1fr;
+    }
+
+    .success-grid-full {
+        grid-column: auto;
     }
 
     .success-hero-card,
@@ -275,7 +360,7 @@
 
 @media (max-width: 575px) {
     .success-section {
-        padding-top: 34px;
+        padding-top: 32px;
     }
 
     .success-hero-card,
@@ -285,6 +370,12 @@
     .success-order-mobile__item,
     .success-order-mobile__summary {
         border-radius: 18px;
+    }
+
+    .success-icon {
+        width: 74px;
+        height: 74px;
+        font-size: 28px;
     }
 
     .success-actions {
@@ -298,4 +389,14 @@
     .success-hero-card h2 {
         font-size: 22px;
     }
+
+    .success-mobile-row,
+    .success-order-mobile__summary > div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+        .success-mobile-row strong {
+            text-align: left;
+        }
 }

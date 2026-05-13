@@ -619,16 +619,15 @@
     <Content Include="Content\css\cart.css" />
     <Content Include="Content\css\checkout.css" />
     <Content Include="Content\css\contact.css" />
-    <Content Include="Content\css\detail.css" />
     <Content Include="Content\css\error.css" />
     <Content Include="Content\css\face-ai.css" />
     <Content Include="Content\css\home.css" />
     <Content Include="Content\css\layout.css" />
     <Content Include="Content\css\order-detail.css" />
+    <Content Include="Content\css\premium-confirm.css" />
     <Content Include="Content\css\premium-toast.css" />
     <Content Include="Content\css\product.css" />
     <Content Include="Content\css\profile.css" />
-    <Content Include="Content\css\responsive.css" />
     <Content Include="Content\css\success.css" />
     <Content Include="Content\dataTables.bootstrap4.min.css" />
     <Content Include="Content\daterangepicker.css" />
@@ -656,6 +655,7 @@
     <Content Include="Content\ion.rangeSlider.skinFlat.css" />
     <Content Include="Content\jquerysctipttop.css" />
     <Content Include="Content\jqvmap.min.css" />
+    <Content Include="Content\js\premium-confirm.js" />
     <Content Include="Content\linearicons.css" />
     <Content Include="Content\magnific-popup.css" />
     <Content Include="Content\main.css" />
@@ -954,6 +954,7 @@
     <Content Include="Views\FaceAI\Index.cshtml" />
     <Content Include="Views\Shared\_FlashMessage.cshtml" />
     <Content Include="Views\ShoppingCart\_CartCount.cshtml" />
+    <Content Include="Views\Shared\_PremiumConfirmModal.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

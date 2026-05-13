@@ -9,16 +9,21 @@
     decimal totalBeforeDiscount = listProductOrder.Sum(x => x.DonGia * x.SoLuong);
     decimal totalDiscount = listProductOrder.Sum(x => x.GiamGia * x.SoLuong);
     decimal total = listProductOrder.Sum(x => x.ThanhTien);
-    decimal shippingFee = 30000m;
+    decimal shippingFee = listProductOrder.Any() ? 30000m : 0m;
     decimal grandTotal = total + shippingFee;
+
+    int totalQuantity = listProductOrder.Sum(x => x.SoLuong);
 }
 
 <section class="checkout-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb checkout-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Checkout</span>
                 <h1>Hoàn tất đơn hàng</h1>
+                <p class="optical-breadcrumb__desc">
+                    Kiểm tra thông tin giao hàng, phương thức thanh toán và xác nhận đơn hàng của bạn.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index","Home")">Trang chủ</a>
                     <span>/</span>
@@ -32,7 +37,7 @@
 
     <section class="checkout-section">
         <div class="container">
-            @using (Html.BeginForm("Index", "Checkout", FormMethod.Post, new { @class = "checkout-form" }))
+            @using (Html.BeginForm("Index", "Checkout", FormMethod.Post, new { @class = "checkout-form", id = "checkoutForm" }))
             {
                 @Html.AntiForgeryToken()
 
@@ -49,45 +54,65 @@
                         <div class="checkout-form-grid">
                             <div class="checkout-form-group checkout-grid-full">
                                 <label class="checkout-label">Họ và tên</label>
-                                @Html.TextBoxFor(m => m.HoTenNguoiNhan, new
-                                {
-                                    @class = "checkout-input",
-                                    placeholder = "Nhập họ và tên người nhận",
-                                    autocomplete = "name"
-                                })
+                                <div class="checkout-input-wrap">
+                                    <span class="checkout-input-icon">
+                                        <i class="fa fa-user"></i>
+                                    </span>
+                                    @Html.TextBoxFor(m => m.HoTenNguoiNhan, new
+                                    {
+                                        @class = "checkout-input checkout-input--with-icon",
+                                        placeholder = "Nhập họ và tên người nhận",
+                                        autocomplete = "name"
+                                    })
+                                </div>
                                 @Html.ValidationMessageFor(m => m.HoTenNguoiNhan, "", new { @class = "checkout-field-error" })
                             </div>
 
                             <div class="checkout-form-group">
                                 <label class="checkout-label">Số điện thoại</label>
-                                @Html.TextBoxFor(m => m.SoDienThoaiNguoiNhan, new
-                                {
-                                    @class = "checkout-input",
-                                    placeholder = "Nhập số điện thoại",
-                                    autocomplete = "tel"
-                                })
+                                <div class="checkout-input-wrap">
+                                    <span class="checkout-input-icon">
+                                        <i class="fa fa-phone"></i>
+                                    </span>
+                                    @Html.TextBoxFor(m => m.SoDienThoaiNguoiNhan, new
+                                    {
+                                        @class = "checkout-input checkout-input--with-icon",
+                                        placeholder = "Nhập số điện thoại",
+                                        autocomplete = "tel"
+                                    })
+                                </div>
                                 @Html.ValidationMessageFor(m => m.SoDienThoaiNguoiNhan, "", new { @class = "checkout-field-error" })
                             </div>
 
                             <div class="checkout-form-group">
                                 <label class="checkout-label">Email</label>
-                                @Html.TextBoxFor(m => m.Email, new
-                                {
-                                    @class = "checkout-input",
-                                    placeholder = "Nhập email",
-                                    autocomplete = "email"
-                                })
+                                <div class="checkout-input-wrap">
+                                    <span class="checkout-input-icon">
+                                        <i class="fa fa-envelope"></i>
+                                    </span>
+                                    @Html.TextBoxFor(m => m.Email, new
+                                    {
+                                        @class = "checkout-input checkout-input--with-icon",
+                                        placeholder = "Nhập email",
+                                        autocomplete = "email"
+                                    })
+                                </div>
                                 @Html.ValidationMessageFor(m => m.Email, "", new { @class = "checkout-field-error" })
                             </div>
 
                             <div class="checkout-form-group checkout-grid-full">
                                 <label class="checkout-label">Địa chỉ giao hàng</label>
-                                @Html.TextBoxFor(m => m.DiaChiNhanHang, new
-                                {
-                                    @class = "checkout-input",
-                                    placeholder = "Nhập địa chỉ giao hàng",
-                                    autocomplete = "street-address"
-                                })
+                                <div class="checkout-input-wrap">
+                                    <span class="checkout-input-icon">
+                                        <i class="fa fa-map-marker"></i>
+                                    </span>
+                                    @Html.TextBoxFor(m => m.DiaChiNhanHang, new
+                                    {
+                                        @class = "checkout-input checkout-input--with-icon",
+                                        placeholder = "Nhập địa chỉ giao hàng",
+                                        autocomplete = "street-address"
+                                    })
+                                </div>
                                 @Html.ValidationMessageFor(m => m.DiaChiNhanHang, "", new { @class = "checkout-field-error" })
                             </div>
 
@@ -102,9 +127,15 @@
                                 @Html.ValidationMessageFor(m => m.GhiChu, "", new { @class = "checkout-field-error" })
                             </div>
                         </div>
+
+                        <div class="checkout-trust-strip">
+                            <span><i class="fa fa-shield"></i> Thanh toán an toàn</span>
+                            <span><i class="fa fa-truck"></i> Giao hàng toàn quốc</span>
+                            <span><i class="fa fa-refresh"></i> Hỗ trợ sau mua</span>
+                        </div>
                     </div>
 
-                    <div class="checkout-summary-card">
+                    <aside class="checkout-summary-card">
                         <span class="checkout-section-head__eyebrow">Order summary</span>
                         <h3>Đơn hàng của bạn</h3>
 
@@ -127,7 +158,7 @@
                                             {
                                                 <small>
                                                     Giá gốc: @string.Format("{0:N0}", item.DonGia) ₫
-                                                    - Giảm: @string.Format("{0:N0}", item.GiamGia) ₫
+                                                    · Giảm: @string.Format("{0:N0}", item.GiamGia) ₫
                                                 </small>
                                             }
                                         </div>
@@ -141,12 +172,24 @@
                             else
                             {
                                 <div class="checkout-order-empty">
-                                    Chưa có sản phẩm trong giỏ hàng.
+                                    <div class="checkout-order-empty__icon">
+                                        <i class="ti-bag"></i>
+                                    </div>
+                                    <h4>Chưa có sản phẩm trong giỏ hàng</h4>
+                                    <p>Vui lòng quay lại giỏ hàng hoặc tiếp tục mua sắm để chọn sản phẩm.</p>
+                                    <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--dark">
+                                        Mua sắm ngay
+                                    </a>
                                 </div>
                             }
                         </div>
 
                         <div class="checkout-total-box">
+                            <div class="checkout-total-line">
+                                <span>Tổng số lượng</span>
+                                <strong>@totalQuantity</strong>
+                            </div>
+
                             <div class="checkout-total-line">
                                 <span>Tổng tiền hàng</span>
                                 <strong>@string.Format("{0:N0}", totalBeforeDiscount) ₫</strong>
@@ -154,7 +197,7 @@
 
                             @if (totalDiscount > 0)
                             {
-                                <div class="checkout-total-line">
+                                <div class="checkout-total-line checkout-total-line--discount">
                                     <span>Giảm giá sản phẩm</span>
                                     <strong>-@string.Format("{0:N0}", totalDiscount) ₫</strong>
                                 </div>
@@ -205,7 +248,10 @@
                         <div class="checkout-submit-wrap">
                             <button class="optical-btn optical-btn--dark checkout-submit-btn"
                                     type="submit"
-                                    @(listProductOrder.Any() ? "" : "disabled")>
+                                    @(listProductOrder.Any() ? "" : "disabled")
+                                    data-confirm-title="Xác nhận đơn hàng"
+                                    data-confirm="Bạn xác nhận đặt đơn hàng này?"
+                                    data-confirm-ok="Đặt hàng">
                                 Đặt hàng
                             </button>
 
@@ -213,9 +259,28 @@
                                 Quay lại giỏ hàng
                             </a>
                         </div>
-                    </div>
+                    </aside>
                 </div>
             }
         </div>
     </section>
 </section>
+
+@section Scripts {
+    <script>
+        $(function () {
+            function syncPaymentCard() {
+                $(".checkout-radio-card").removeClass("is-selected");
+                $(".checkout-radio-card input[type='radio']:checked")
+                    .closest(".checkout-radio-card")
+                    .addClass("is-selected");
+            }
+
+            syncPaymentCard();
+
+            $(".checkout-radio-card input[type='radio']").on("change", function () {
+                syncPaymentCard();
+            });
+        });
+    </script>
+}

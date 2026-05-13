@@ -2,14 +2,20 @@
 
 @{
     ViewBag.Title = "Đăng nhập";
+
+    string authImage = Url.Content("~/Asset/img/login.jpg");
+    string fallbackImage = Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png");
 }
 
 <section class="auth-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb auth-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Account</span>
                 <h1>Đăng nhập tài khoản</h1>
+                <p class="auth-breadcrumb__desc">
+                    Truy cập tài khoản để theo dõi đơn hàng, lưu sản phẩm yêu thích và tiếp tục hành trình mua sắm.
+                </p>
                 <nav aria-label="breadcrumb">
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                     <span>/</span>
@@ -28,7 +34,9 @@
                             <div class="auth-form-head">
                                 <span class="auth-form-head__eyebrow">Member access</span>
                                 <h2>Đăng nhập</h2>
-                                <p>Tiếp tục mua sắm, theo dõi đơn hàng và lưu lại những mẫu kính bạn yêu thích.</p>
+                                <p>
+                                    Tiếp tục mua sắm, theo dõi đơn hàng và lưu lại những mẫu kính phù hợp với phong cách của bạn.
+                                </p>
                             </div>
 
                             @using (Html.BeginForm("LoginAccount", "Account", FormMethod.Post, new { @class = "auth-form", autocomplete = "off" }))
@@ -41,25 +49,35 @@
 
                                 <div class="auth-form-group">
                                     <label class="auth-label" for="Username">Tên đăng nhập</label>
-                                    @Html.TextBoxFor(m => m.Username, new
-                                    {
-                                        @class = "auth-input",
-                                        placeholder = "Nhập tên đăng nhập",
-                                        autocomplete = "off",
-                                        id = "Username"
-                                    })
+                                    <div class="auth-input-wrap">
+                                        <span class="auth-input-icon">
+                                            <i class="fa fa-user"></i>
+                                        </span>
+                                        @Html.TextBoxFor(m => m.Username, new
+                                        {
+                                            @class = "auth-input auth-input--with-icon",
+                                            placeholder = "Nhập tên đăng nhập",
+                                            autocomplete = "off",
+                                            id = "Username"
+                                        })
+                                    </div>
                                     @Html.ValidationMessageFor(m => m.Username, "", new { @class = "auth-field-error" })
                                 </div>
 
                                 <div class="auth-form-group">
                                     <label class="auth-label" for="Password">Mật khẩu</label>
-                                    @Html.PasswordFor(m => m.Password, new
-                                    {
-                                        @class = "auth-input",
-                                        placeholder = "Nhập mật khẩu",
-                                        autocomplete = "current-password",
-                                        id = "Password"
-                                    })
+                                    <div class="auth-input-wrap">
+                                        <span class="auth-input-icon">
+                                            <i class="fa fa-lock"></i>
+                                        </span>
+                                        @Html.PasswordFor(m => m.Password, new
+                                        {
+                                            @class = "auth-input auth-input--with-icon",
+                                            placeholder = "Nhập mật khẩu",
+                                            autocomplete = "current-password",
+                                            id = "Password"
+                                        })
+                                    </div>
                                     @Html.ValidationMessageFor(m => m.Password, "", new { @class = "auth-field-error" })
                                 </div>
 
@@ -94,7 +112,9 @@
                     <div class="col-lg-6 order-2 order-lg-1">
                         <div class="auth-showcase">
                             <div class="auth-showcase__image">
-                                <img src="@Url.Content("~/Asset/img/login.jpg")" alt="Karma Eyewear Login" />
+                                <img src="@authImage"
+                                     alt="Karma Eyewear Login"
+                                     onerror="this.onerror=null;this.src='@fallbackImage';" />
                             </div>
 
                             <div class="auth-showcase__overlay"></div>
@@ -106,6 +126,7 @@
                                     Tạo tài khoản để theo dõi đơn hàng, lưu mẫu kính yêu thích
                                     và nhận gợi ý phù hợp với phong cách của bạn.
                                 </p>
+
                                 <a class="optical-btn optical-btn--light auth-showcase__btn"
                                    href="@Url.Action("RegisterAccount", "Account")">
                                     Tạo tài khoản
@@ -123,29 +144,37 @@
     <div class="modal-dialog custom-modal-dialog modal-dialog-centered">
         <div class="modal-content auth-modal-content">
             <div class="modal-header auth-modal-header">
-                <h5 class="modal-title">Hỗ trợ quên mật khẩu</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                <div>
+                    <span class="auth-modal-eyebrow">Account support</span>
+                    <h5 class="modal-title">Hỗ trợ quên mật khẩu</h5>
+                </div>
+
+                <button type="button" class="close auth-modal-close" data-dismiss="modal" aria-label="Đóng">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
 
             <div class="modal-body auth-modal-body">
                 <p>
-                    Bạn hãy liên hệ qua thông tin bên dưới để được hỗ trợ cấp lại mật khẩu:
+                    Đội ngũ Karma Eyewear sẽ hỗ trợ xác minh tài khoản và cấp lại mật khẩu cho bạn trong thời gian sớm nhất.
+                    Vui lòng liên hệ qua thông tin bên dưới.
                 </p>
 
                 <div class="auth-support-list">
                     <a href="tel:0389998889">
-                        <i class="fa fa-phone mr-2"></i>0389.998.889
+                        <span><i class="fa fa-phone"></i></span>
+                        0389.998.889
                     </a>
+
                     <a href="mailto:contact@karmaeyewear.local">
-                        <i class="fa fa-envelope mr-2"></i>contact@karmaeyewear.local
+                        <span><i class="fa fa-envelope"></i></span>
+                        contact@karmaeyewear.local
                     </a>
                 </div>
             </div>
 
             <div class="modal-footer auth-modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn auth-modal-btn" data-dismiss="modal">Đã hiểu</button>
             </div>
         </div>
     </div>

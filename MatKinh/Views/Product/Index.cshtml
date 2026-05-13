@@ -1,6 +1,7 @@
 ﻿@using MatKinh.Models
 @using MatKinh.ViewModel
 @using System.Globalization
+@using System.Linq
 @model ProductCatalogFilterVm
 
 @{
@@ -18,6 +19,11 @@
     int totalPages = ViewBag.TotalPages ?? 1;
     int displayFrom = ViewBag.DisplayPage ?? 0;
     int noOfPages = ViewBag.NoOfPages ?? totalPages;
+
+    if (totalPages < 1)
+    {
+        totalPages = 1;
+    }
 
     int prevPage = page > 1 ? page - 1 : 1;
     int nextPage = page < totalPages ? page + 1 : totalPages;
@@ -64,11 +70,13 @@
         currentPriceName = "Trên 10.000.000đ";
     }
 
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
     Func<string, string> normalizeImage = (path) =>
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Url.Content("~/Asset/img/no-image.png");
+            return fallbackImg;
         }
 
         path = path.Trim();
@@ -111,7 +119,7 @@
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Collection</span>
                 <h1>Khám phá bộ sưu tập mắt kính</h1>
                 <p class="optical-breadcrumb__desc">
-                    Lựa chọn những mẫu kính phù hợp với phong cách, thương hiệu và ngân sách của bạn.
+                    Lọc theo danh mục, thương hiệu, mức giá hoặc tìm kiếm nhanh để chọn mẫu kính phù hợp với phong cách của bạn.
                 </p>
                 <nav>
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
@@ -129,6 +137,7 @@
                     <aside class="optical-sidebar">
                         <div class="sidebar-card">
                             <div class="sidebar-card__title">Danh mục mắt kính</div>
+
                             <ul class="optical-category-list">
                                 <li>
                                     <a class="@(filter.CategoryId == null ? "active" : "")"
@@ -170,6 +179,7 @@
 
                                 <div class="filter-group">
                                     <div class="filter-group__title">Thương hiệu</div>
+
                                     <div class="filter-options">
                                         <label class="filter-option" for="brand-all">
                                             <input id="brand-all"
@@ -199,6 +209,7 @@
 
                                 <div class="filter-group">
                                     <div class="filter-group__title">Khoảng giá</div>
+
                                     <div class="filter-options">
                                         <label class="filter-option" for="price-all">
                                             <input id="price-all"
@@ -302,9 +313,11 @@
                                        name="Keyword"
                                        value="@filter.Keyword"
                                        autocomplete="off"
-                                       placeholder="Tìm theo tên, mã kính, thương hiệu..." />
+                                       placeholder="Tìm mẫu kính bạn muốn..." />
 
-                                <button type="submit" class="catalog-search-btn">Tìm kiếm</button>
+                                <button type="submit" class="catalog-search-btn">
+                                    Tìm kiếm
+                                </button>
                             }
                         </div>
                     </div>
@@ -344,6 +357,10 @@
                     @if (!products.Any())
                     {
                         <div class="catalog-empty">
+                            <div class="catalog-empty-icon">
+                                <i class="fa fa-search"></i>
+                            </div>
+
                             <h3>Không có sản phẩm phù hợp</h3>
                             <p>Hãy thử đổi từ khóa tìm kiếm hoặc chọn lại bộ lọc để xem thêm nhiều mẫu kính khác.</p>
 
@@ -370,6 +387,23 @@
                                     ? item.LoaiSanPham.TenLoaiSanPham
                                     : "Mắt kính";
 
+                                string stockText = "Hết hàng";
+                                string stockClass = "stock-status--out";
+
+                                if (conHang)
+                                {
+                                    if (item.SoLuongTon <= 3)
+                                    {
+                                        stockText = "Chỉ còn " + item.SoLuongTon + " sản phẩm";
+                                        stockClass = "stock-status--low";
+                                    }
+                                    else
+                                    {
+                                        stockText = "Còn hàng";
+                                        stockClass = "stock-status--in";
+                                    }
+                                }
+
                                 <div class="col-xl-4 col-md-6 mb-4">
                                     <div class="optical-product-card @(conHang ? "" : "is-soldout")">
                                         <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
@@ -386,7 +420,7 @@
 
                                                 <img src="@imageUrl"
                                                      alt="Ảnh @item.TenSanPham"
-                                                     onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
+                                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
                                             </div>
                                         </a>
 
@@ -415,28 +449,11 @@
                                             </div>
 
                                             <div class="product-stock-line">
-                                                @if (conHang)
-                                                {
-                                                    if (item.SoLuongTon <= 3)
-                                                    {
-                                                        <span class="stock-status stock-status--low">
-                                                            Chỉ còn @item.SoLuongTon sản phẩm
-                                                        </span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="stock-status stock-status--in">
-                                                            Còn hàng
-                                                        </span>
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    <span class="stock-status stock-status--out">
-                                                        Hết hàng
-                                                    </span>
-                                                }
+                                                <span class="stock-status @stockClass">
+                                                    @stockText
+                                                </span>
                                             </div>
+
                                             <div class="product-actions">
                                                 @if (conHang)
                                                 {
@@ -472,27 +489,30 @@
                             }
                         </div>
 
-                        <div class="catalog-pagination bottom">
-                            <a href="@Url.Action("Index", "Product", buildRoute(prevPage))"
-                               class="page-arrow @(page == 1 ? "disabled" : "")">
-                                <span class="lnr lnr-chevron-left"></span>
-                            </a>
-
-                            @for (int i = displayFrom; i < noOfPages; i++)
-                            {
-                                int pageNumber = i + 1;
-
-                                <a href="@Url.Action("Index", "Product", buildRoute(pageNumber))"
-                                   class="@(pageNumber == page ? "active" : "")">
-                                    @pageNumber
+                        if (totalPages > 1)
+                        {
+                            <div class="catalog-pagination bottom">
+                                <a href="@Url.Action("Index", "Product", buildRoute(prevPage))"
+                                   class="page-arrow @(page == 1 ? "disabled" : "")">
+                                    <span class="lnr lnr-chevron-left"></span>
                                 </a>
-                            }
 
-                            <a href="@Url.Action("Index", "Product", buildRoute(nextPage))"
-                               class="page-arrow @(page == totalPages ? "disabled" : "")">
-                                <span class="lnr lnr-chevron-right"></span>
-                            </a>
-                        </div>
+                                @for (int i = displayFrom; i < noOfPages; i++)
+                                {
+                                    int pageNumber = i + 1;
+
+                                    <a href="@Url.Action("Index", "Product", buildRoute(pageNumber))"
+                                       class="@(pageNumber == page ? "active" : "")">
+                                        @pageNumber
+                                    </a>
+                                }
+
+                                <a href="@Url.Action("Index", "Product", buildRoute(nextPage))"
+                                   class="page-arrow @(page == totalPages ? "disabled" : "")">
+                                    <span class="lnr lnr-chevron-right"></span>
+                                </a>
+                            </div>
+                        }
                     }
                 </div>
             </div>

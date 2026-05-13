@@ -1,10 +1,14 @@
-﻿@using MatKinh.Models
-@model MatKinh.Models.BaiViet
+﻿@model MatKinh.Models.BaiViet
+@using MatKinh.Models
+@using System.Collections.Generic
+@using System.Linq
 
 @{
-    ViewBag.Title = "Chi tiết bài viết";
+    ViewBag.Title = Model != null ? Model.TieuDe : "Chi tiết bài viết";
 
-    List<BaiViet> listPopular = ViewData["listPostPopular"] as List<BaiViet> ?? new List<BaiViet>();
+    List<BaiViet> latestBlogs =
+    ViewData["listPostPopular"] as List<BaiViet>
+    ?? new List<BaiViet>();
 
     Func<string, string> normalizeImage = (path) =>
     {
@@ -33,43 +37,48 @@
         return Url.Content("~/" + path);
     };
 
-    Func<string, int, string> shorten = (text, maxLength) =>
+    Func<string, int, string> excerpt = (text, length) =>
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return string.Empty;
+            return "Khám phá thêm những nội dung mới từ Karma Eyewear.";
         }
 
-        text = text.Trim();
+        text = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty).Trim();
 
-        return text.Length > maxLength
-            ? text.Substring(0, maxLength) + "..."
-            : text;
+        if (text.Length <= length)
+        {
+            return text;
+        }
+
+        return text.Substring(0, length) + "...";
     };
 
-    string mainImage = normalizeImage(Model != null ? Model.AnhDaiDien : null);
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+    string coverImg = normalizeImage(Model != null ? Model.AnhDaiDien : null);
 
-    string authorName = Model != null && Model.TaiKhoan != null && !string.IsNullOrWhiteSpace(Model.TaiKhoan.HoTen)
-        ? Model.TaiKhoan.HoTen
-        : "Karma Eyewear";
-
-    string publishedDate = Model != null
-        ? string.Format("{0:dd/MM/yyyy}", Model.NgayDang ?? Model.CreatedAt)
-        : string.Empty;
+    DateTime? publishDate = null;
+    if (Model != null)
+    {
+        publishDate = Model.NgayDang ?? Model.CreatedAt;
+    }
 }
 
 <section class="blog-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb blog-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Journal</span>
                 <h1>Chi tiết bài viết</h1>
+                <p class="blog-breadcrumb__desc">
+                    Cập nhật cảm hứng thời trang, mẹo chọn kính và xu hướng eyewear dành cho phong cách sống hiện đại.
+                </p>
                 <nav>
-                    <a href="@Url.Action("Index","Home")">Trang chủ</a>
+                    <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                     <span>/</span>
-                    <a href="@Url.Action("Index","Blog")">Bài viết</a>
+                    <a href="@Url.Action("Index", "Blog")">Xu hướng & Blog</a>
                     <span>/</span>
-                    <span>Chi tiết bài viết</span>
+                    <span>Chi tiết</span>
                 </nav>
             </div>
         </div>
@@ -79,119 +88,136 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-8">
-                    <div class="blog-detail-card">
-                        <div class="blog-detail-cover">
-                            <img src="@mainImage"
-                                 alt="@Model.TieuDe"
-                                 onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
+                    @if (Model == null)
+                    {
+                        <div class="blog-empty-state">
+                            <div class="blog-empty-icon">
+                                <i class="fa fa-newspaper-o"></i>
+                            </div>
+                            <h3>Không tìm thấy bài viết</h3>
+                            <p>Bài viết có thể đã bị xóa hoặc chưa được xuất bản.</p>
+                            <a href="@Url.Action("Index", "Blog")" class="optical-btn optical-btn--dark">
+                                Quay lại Blog
+                            </a>
                         </div>
-
-                        <div class="blog-detail-content">
-                            <div class="blog-detail-meta">
-                                <span>
-                                    <i class="lnr lnr-user"></i>
-                                    @authorName
-                                </span>
-
-                                <span>
-                                    <i class="lnr lnr-calendar-full"></i>
-                                    @publishedDate
-                                </span>
-
-                                <span>
-                                    <i class="lnr lnr-book"></i>
-                                    Bài viết đã xuất bản
-                                </span>
+                    }
+                    else
+                    {
+                        <article class="blog-detail-card">
+                            <div class="blog-detail-cover">
+                                <img src="@coverImg"
+                                     alt="@Model.TieuDe"
+                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
                             </div>
 
-                            <h1 class="blog-detail-title">@Model.TieuDe</h1>
-
-                            @if (!string.IsNullOrWhiteSpace(Model.TomTat))
-                            {
-                                <div class="blog-detail-summary">
-                                    @Model.TomTat
+                            <div class="blog-detail-content">
+                                <div class="blog-detail-meta">
+                                    <span>
+                                        <i class="lnr lnr-calendar-full"></i>
+                                        @string.Format("{0:dd/MM/yyyy}", publishDate)
+                                    </span>
+                                    <span>
+                                        <i class="lnr lnr-user"></i>
+                                        Karma Eyewear
+                                    </span>
+                                    <span>
+                                        <i class="lnr lnr-book"></i>
+                                        Eyewear Journal
+                                    </span>
                                 </div>
-                            }
 
-                            <div class="blog-detail-body">
-                                @if (!string.IsNullOrWhiteSpace(Model.NoiDung))
-                                {
-                                    @Html.Raw(Model.NoiDung)
-                                }
-                                else
-                                {
-                                    <p>Nội dung bài viết đang được cập nhật.</p>
-                                }
-                            </div>
+                                <h1 class="blog-detail-title">@Model.TieuDe</h1>
 
-                            <div class="blog-detail-footer">
-                                <a href="@Url.Action("Index","Blog")" class="optical-btn optical-btn--light">
-                                    <i class="lnr lnr-arrow-left mr-2"></i>Quay về bài viết
-                                </a>
+                                @if (!string.IsNullOrWhiteSpace(Model.TomTat))
+                                {
+                                    <div class="blog-detail-summary">
+                                        @Model.TomTat
+                                    </div>
+                                }
+
+                                <div class="blog-detail-body">
+                                    @if (!string.IsNullOrWhiteSpace(Model.NoiDung))
+                                    {
+                                        @Html.Raw(Model.NoiDung)
+                                    }
+                                    else
+                                    {
+                                        <p>Chưa có nội dung chi tiết cho bài viết này.</p>
+                                    }
+                                </div>
+
+                                <div class="blog-detail-footer">
+                                    <a href="@Url.Action("Index", "Blog")" class="optical-btn optical-btn--light">
+                                        <i class="fa fa-long-arrow-left mr-2"></i>
+                                        Quay lại bài viết
+                                    </a>
+
+                                    <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--dark">
+                                        Khám phá sản phẩm
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </article>
+                    }
                 </div>
 
                 <div class="col-lg-4">
                     <aside class="blog-sidebar">
                         <div class="blog-sidebar-card">
-                            <h3 class="blog-sidebar-card__title">Tìm kiếm bài viết</h3>
+                            <div class="blog-sidebar-card__title">Tìm kiếm bài viết</div>
 
                             @using (Html.BeginForm("FindBlogByName", "Blog", FormMethod.Get, new { @class = "blog-search-form" }))
                             {
                                 <input type="text"
-                                       class="blog-search-input"
-                                       placeholder="Tìm kiếm bài viết..."
                                        name="keyword"
-                                       autocomplete="off" />
+                                       class="blog-search-input"
+                                       placeholder="Tìm xu hướng, gọng kính..." />
 
-                                <button class="blog-search-btn" type="submit">
-                                    <i class="lnr lnr-magnifier"></i>
+                                <button type="submit" class="blog-search-btn" aria-label="Tìm kiếm">
+                                    <i class="fa fa-search"></i>
                                 </button>
                             }
                         </div>
 
                         <div class="blog-sidebar-card">
-                            <h3 class="blog-sidebar-card__title">Bài viết mới nhất</h3>
+                            <div class="blog-sidebar-card__title">Bài viết mới nhất</div>
 
-                            @if (listPopular.Count == 0)
+                            @if (latestBlogs.Any())
                             {
-                                <p class="blog-sidebar-empty">Chưa có bài viết nào.</p>
+                                foreach (var item in latestBlogs.Take(4))
+                                {
+                                    string imageUrl = normalizeImage(item.AnhDaiDien);
+                                    DateTime? itemDate = item.NgayDang ?? item.CreatedAt;
+
+                                    <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })"
+                                       class="popular-post-item">
+                                        <span class="popular-post-item__thumb">
+                                            <img src="@imageUrl"
+                                                 alt="@item.TieuDe"
+                                                 onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                        </span>
+
+                                        <span class="popular-post-item__body">
+                                            <h4>@item.TieuDe</h4>
+                                            <p>@string.Format("{0:dd/MM/yyyy}", itemDate)</p>
+                                        </span>
+                                    </a>
+                                }
                             }
                             else
                             {
-                                foreach (var postPopular in listPopular)
-                                {
-                                    string popularTitle = shorten(postPopular.TieuDe, 44);
-                                    string imageUrl = normalizeImage(postPopular.AnhDaiDien);
-
-                                    <a href="@Url.Action("DetailBlog","Blog", new { id = postPopular.BaiVietId })"
-                                       class="popular-post-item">
-                                        <div class="popular-post-item__thumb">
-                                            <img src="@imageUrl"
-                                                 alt="@postPopular.TieuDe"
-                                                 onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
-                                        </div>
-
-                                        <div class="popular-post-item__body">
-                                            <h4>@popularTitle</h4>
-                                            <p>@string.Format("{0:dd/MM/yyyy}", postPopular.NgayDang ?? postPopular.CreatedAt)</p>
-                                        </div>
-                                    </a>
-                                }
+                                <p class="blog-sidebar-empty">Chưa có bài viết mới.</p>
                             }
                         </div>
 
                         <div class="blog-sidebar-card blog-sidebar-card--promo">
-                            <span class="blog-promo-eyebrow">Optical Stories</span>
-                            <h3>Khám phá thêm nhiều cảm hứng thời trang</h3>
+                            <span class="blog-promo-eyebrow">Karma Eyewear</span>
+                            <h3>Đọc xong bài viết, chọn ngay mẫu kính phù hợp</h3>
                             <p>
-                                Đọc thêm các bài viết về xu hướng mắt kính, phong cách sống và cách lựa chọn
-                                phụ kiện phù hợp với cá tính của bạn.
+                                Khám phá các mẫu kính được chọn lọc theo phong cách hiện đại, thanh lịch và dễ sử dụng hằng ngày.
                             </p>
-                            <a href="@Url.Action("Index","Product")" class="optical-btn optical-btn--dark">
-                                Xem sản phẩm
+                            <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
+                                Xem bộ sưu tập
                             </a>
                         </div>
                     </aside>

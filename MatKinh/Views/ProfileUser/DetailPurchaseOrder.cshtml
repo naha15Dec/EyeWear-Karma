@@ -124,11 +124,14 @@
 }
 
 <section class="order-detail-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb order-detail-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Order detail</span>
                 <h1>Chi tiết đơn hàng</h1>
+                <p class="optical-breadcrumb__desc">
+                    Theo dõi thông tin giao hàng, thanh toán, sản phẩm và lịch sử trạng thái của đơn hàng.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index","Home")">Trang chủ</a>
                     <span>/</span>
@@ -146,6 +149,7 @@
                 <div>
                     <span class="order-detail-eyebrow">Order #@Model.MaDonHang</span>
                     <h2>Đơn hàng của bạn</h2>
+                    <p>Kiểm tra trạng thái đơn hàng, thanh toán và lịch sử xử lý.</p>
                 </div>
 
                 <div class="order-detail-status">
@@ -158,125 +162,207 @@
             <div class="order-detail-grid">
                 <div class="order-info-card">
                     <h3>Thông tin giao hàng</h3>
-                    <ul>
-                        <li><strong>Người nhận:</strong> @Model.HoTenNguoiNhan</li>
-                        <li><strong>SĐT:</strong> @Model.SoDienThoaiNguoiNhan</li>
-                        <li><strong>Địa chỉ:</strong> @Model.DiaChiNhanHang</li>
-                        <li><strong>Email:</strong> @(Model.KhachHang != null && !string.IsNullOrWhiteSpace(Model.KhachHang.Email) ? Model.KhachHang.Email : "—")</li>
-                    </ul>
+
+                    <div class="order-info-list">
+                        <div class="order-info-item">
+                            <span>Người nhận</span>
+                            <strong>@Model.HoTenNguoiNhan</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Số điện thoại</span>
+                            <strong>@Model.SoDienThoaiNguoiNhan</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Địa chỉ</span>
+                            <strong>@Model.DiaChiNhanHang</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Email</span>
+                            <strong>@(Model.KhachHang != null && !string.IsNullOrWhiteSpace(Model.KhachHang.Email) ? Model.KhachHang.Email : "—")</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="order-info-card">
                     <h3>Thông tin đơn hàng</h3>
-                    <ul>
-                        <li><strong>Mã đơn:</strong> #@Model.MaDonHang</li>
-                        <li><strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</li>
-                        <li><strong>Trạng thái đơn:</strong> @OrderStatusConstants.GetName(Model.TrangThai)</li>
-                        <li><strong>Ghi chú:</strong> @(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</li>
-                    </ul>
+
+                    <div class="order-info-list">
+                        <div class="order-info-item">
+                            <span>Mã đơn</span>
+                            <strong>#@Model.MaDonHang</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Ngày đặt</span>
+                            <strong>@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Trạng thái đơn</span>
+                            <strong>
+                                <span class="status-badge @orderStatusClass(Model.TrangThai)">
+                                    @OrderStatusConstants.GetName(Model.TrangThai)
+                                </span>
+                            </strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Ghi chú</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="order-info-card">
                     <h3>Thông tin thanh toán</h3>
-                    <ul>
-                        <li><strong>Phương thức:</strong> @paymentMethodText(Model.PhuongThucThanhToan)</li>
-                        <li>
-                            <strong>Trạng thái:</strong>
-                            <span class="status-badge @paymentStatusClass(Model.TrangThaiThanhToan)">
-                                @paymentStatusText(Model.TrangThaiThanhToan)
-                            </span>
-                        </li>
-                        <li><strong>Mã giao dịch:</strong> @(string.IsNullOrWhiteSpace(Model.MaGiaoDichThanhToan) ? "—" : Model.MaGiaoDichThanhToan)</li>
-                        <li><strong>Ngày thanh toán:</strong> @(Model.NgayThanhToan.HasValue ? Model.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "—")</li>
-                    </ul>
+
+                    <div class="order-info-list">
+                        <div class="order-info-item">
+                            <span>Phương thức</span>
+                            <strong>@paymentMethodText(Model.PhuongThucThanhToan)</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Trạng thái</span>
+                            <strong>
+                                <span class="status-badge @paymentStatusClass(Model.TrangThaiThanhToan)">
+                                    @paymentStatusText(Model.TrangThaiThanhToan)
+                                </span>
+                            </strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Mã giao dịch</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model.MaGiaoDichThanhToan) ? "—" : Model.MaGiaoDichThanhToan)</strong>
+                        </div>
+
+                        <div class="order-info-item">
+                            <span>Ngày thanh toán</span>
+                            <strong>@(Model.NgayThanhToan.HasValue ? Model.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             @if (isCancelledPaidVnPayOrder)
             {
                 <div class="order-refund-note">
-                    <strong>Thông tin hoàn tiền:</strong>
-                    Đơn hàng đã được hủy sau khi thanh toán qua VNPay. Cửa hàng sẽ kiểm tra giao dịch và xử lý hoàn tiền trong vòng 3–5 ngày làm việc.
+                    <span class="order-refund-note__icon">
+                        <i class="fa fa-info"></i>
+                    </span>
+                    <div>
+                        <strong>Thông tin hoàn tiền:</strong>
+                        Đơn hàng đã được hủy sau khi thanh toán qua VNPay. Cửa hàng sẽ kiểm tra giao dịch và xử lý hoàn tiền trong vòng 3–5 ngày làm việc.
+                    </div>
                 </div>
             }
 
             <div class="order-products-card">
                 <div class="order-products-head">
+                    <span class="order-detail-eyebrow">Products</span>
                     <h3>Sản phẩm trong đơn</h3>
                 </div>
 
-                <div class="order-table-wrap">
-                    <table class="order-table-modern">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>Số lượng</th>
-                                <th>Đơn giá</th>
-                                <th>Giảm</th>
-                                <th>Thành tiền</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach (var item in details)
-                            {
-                                string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
-                                string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
-
+                @if (details.Any())
+                {
+                    <div class="order-table-wrap">
+                        <table class="order-table-modern">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <div class="order-product">
-                                            <div class="order-product__image">
-                                                <img src="@imageUrl"
-                                                     alt="@item.TenSanPhamSnapshot"
-                                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
-                                            </div>
-
-                                            <div class="order-product__info">
-                                                <h4>@item.TenSanPhamSnapshot</h4>
-                                                <span>Mã SP: @productCode</span>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td>x @item.SoLuong</td>
-                                    <td>@string.Format("{0:N0}", item.DonGiaSnapshot) ₫</td>
-                                    <td>@string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</td>
-
-                                    <td class="order-total-line">
-                                        @string.Format("{0:N0}", item.ThanhTien) ₫
-                                    </td>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Giảm</th>
+                                    <th>Thành tiền</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
 
-                <div class="order-mobile-list">
-                    @foreach (var item in details)
-                    {
-                        string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
-                        string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+                            <tbody>
+                                @foreach (var item in details)
+                                {
+                                    string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                                    string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
 
-                        <div class="order-mobile-item">
-                            <div class="order-mobile-product">
-                                <img src="@imageUrl"
-                                     alt="@item.TenSanPhamSnapshot"
-                                     onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                    <tr>
+                                        <td>
+                                            <div class="order-product">
+                                                <div class="order-product__image">
+                                                    <img src="@imageUrl"
+                                                         alt="@item.TenSanPhamSnapshot"
+                                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                </div>
 
-                                <div>
-                                    <h4>@item.TenSanPhamSnapshot</h4>
-                                    <p>Mã SP: @productCode</p>
+                                                <div class="order-product__info">
+                                                    <h4>@item.TenSanPhamSnapshot</h4>
+                                                    <span>Mã SP: @productCode</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>x @item.SoLuong</td>
+                                        <td>@string.Format("{0:N0}", item.DonGiaSnapshot) ₫</td>
+                                        <td>@string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</td>
+
+                                        <td class="order-total-line">
+                                            @string.Format("{0:N0}", item.ThanhTien) ₫
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="order-mobile-list">
+                        @foreach (var item in details)
+                        {
+                            string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                            string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
+                            <div class="order-mobile-item">
+                                <div class="order-mobile-product">
+                                    <img src="@imageUrl"
+                                         alt="@item.TenSanPhamSnapshot"
+                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+
+                                    <div>
+                                        <h4>@item.TenSanPhamSnapshot</h4>
+                                        <p>Mã SP: @productCode</p>
+                                    </div>
+                                </div>
+
+                                <div class="order-mobile-row">
+                                    <span>Số lượng</span>
+                                    <strong>x @item.SoLuong</strong>
+                                </div>
+
+                                <div class="order-mobile-row">
+                                    <span>Đơn giá</span>
+                                    <strong>@string.Format("{0:N0}", item.DonGiaSnapshot) ₫</strong>
+                                </div>
+
+                                <div class="order-mobile-row">
+                                    <span>Giảm</span>
+                                    <strong>@string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</strong>
+                                </div>
+
+                                <div class="order-mobile-row order-mobile-row--total">
+                                    <span>Thành tiền</span>
+                                    <strong>@string.Format("{0:N0}", item.ThanhTien) ₫</strong>
                                 </div>
                             </div>
-
-                            <p>Số lượng: x @item.SoLuong</p>
-                            <p>Giá: @string.Format("{0:N0}", item.DonGiaSnapshot) ₫</p>
-                            <p>Giảm: @string.Format("{0:N0}", item.GiamGiaSnapshot) ₫</p>
-                            <strong>@string.Format("{0:N0}", item.ThanhTien) ₫</strong>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="order-empty-card">
+                        <h3>Không có dữ liệu sản phẩm</h3>
+                        <p>Đơn hàng hiện chưa tải được danh sách sản phẩm.</p>
+                    </div>
+                }
             </div>
 
             <div class="order-summary-card">

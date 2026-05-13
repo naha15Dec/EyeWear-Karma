@@ -11,6 +11,7 @@
 
     string paymentMethodText = "Thanh toán khi nhận hàng";
     string paymentStatusText = "Chờ thanh toán";
+    string paymentStatusClass = "status-pending";
 
     if (order != null)
     {
@@ -29,54 +30,69 @@
         {
             case "paid":
                 paymentStatusText = "Đã thanh toán";
+                paymentStatusClass = "status-paid";
                 break;
 
             case "pending":
                 paymentStatusText = "Chờ thanh toán";
+                paymentStatusClass = "status-pending";
                 break;
 
             case "failed":
                 paymentStatusText = "Thanh toán thất bại";
+                paymentStatusClass = "status-failed";
                 break;
 
             case "refunded":
                 paymentStatusText = "Đã hoàn tiền";
+                paymentStatusClass = "status-refunded";
                 break;
 
             default:
                 paymentStatusText = "Chờ thanh toán";
+                paymentStatusClass = "status-pending";
                 break;
         }
     }
 
     string orderStatusText = "Chờ xác nhận";
+    string orderStatusClass = "status-pending";
+
     if (order != null)
     {
         switch (order.TrangThai)
         {
             case 1:
                 orderStatusText = "Chờ xác nhận";
+                orderStatusClass = "status-pending";
                 break;
             case 2:
                 orderStatusText = "Đã xác nhận";
+                orderStatusClass = "status-confirmed";
                 break;
             case 3:
                 orderStatusText = "Đang chuẩn bị hàng";
+                orderStatusClass = "status-processing";
                 break;
             case 4:
                 orderStatusText = "Đã bàn giao shipper";
+                orderStatusClass = "status-processing";
                 break;
             case 5:
                 orderStatusText = "Đang giao hàng";
+                orderStatusClass = "status-shipping";
                 break;
             case 6:
                 orderStatusText = "Đã giao hàng";
+                orderStatusClass = "status-paid";
                 break;
             case 7:
                 orderStatusText = "Giao hàng thất bại";
+                orderStatusClass = "status-failed";
                 break;
             case 8:
                 orderStatusText = "Đã hủy";
+                orderStatusClass = "status-cancelled";
                 break;
         }
     }
@@ -95,11 +111,14 @@
 }
 
 <section class="success-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb success-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Confirmation</span>
                 <h1>Xác nhận đơn hàng</h1>
+                <p class="optical-breadcrumb__desc">
+                    Cảm ơn bạn đã mua sắm tại Karma Eyewear. Dưới đây là thông tin đơn hàng của bạn.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                     <span>/</span>
@@ -119,6 +138,11 @@
                 <span class="success-eyebrow">Order completed</span>
                 <h2>@successTitle</h2>
                 <p>@successDesc</p>
+
+                <div class="success-hero-badges">
+                    <span class="success-status-badge @orderStatusClass">@orderStatusText</span>
+                    <span class="success-status-badge @paymentStatusClass">@paymentStatusText</span>
+                </div>
             </div>
 
             <div class="success-layout">
@@ -133,7 +157,9 @@
 
                         <div class="success-info-item">
                             <span class="label">Trạng thái đơn hàng</span>
-                            <strong>@orderStatusText</strong>
+                            <strong>
+                                <span class="success-status-badge @orderStatusClass">@orderStatusText</span>
+                            </strong>
                         </div>
 
                         <div class="success-info-item">
@@ -148,7 +174,9 @@
 
                         <div class="success-info-item">
                             <span class="label">Trạng thái thanh toán</span>
-                            <strong>@paymentStatusText</strong>
+                            <strong>
+                                <span class="success-status-badge @paymentStatusClass">@paymentStatusText</span>
+                            </strong>
                         </div>
 
                         @if (order != null && !string.IsNullOrWhiteSpace(order.MaGiaoDichThanhToan))
@@ -196,7 +224,7 @@
                             </strong>
                         </div>
 
-                        <div class="success-info-item">
+                        <div class="success-info-item success-grid-full">
                             <span class="label">Địa chỉ</span>
                             <strong>
                                 @(order != null && !string.IsNullOrWhiteSpace(order.DiaChiNhanHang)
@@ -207,7 +235,7 @@
 
                         @if (order != null && !string.IsNullOrWhiteSpace(order.GhiChu))
                         {
-                            <div class="success-info-item">
+                            <div class="success-info-item success-grid-full">
                                 <span class="label">Ghi chú</span>
                                 <strong>@order.GhiChu</strong>
                             </div>
@@ -280,10 +308,26 @@
                         {
                             <div class="success-order-mobile__item">
                                 <h4>@item.TenSanPhamSnapshot</h4>
-                                <p>Số lượng: x @item.SoLuong</p>
-                                <p>Đơn giá: @item.DonGiaSnapshot.ToString("N0", vi) ₫</p>
-                                <p>Giảm giá: @item.GiamGiaSnapshot.ToString("N0", vi) ₫</p>
-                                <strong>@item.ThanhTien.ToString("N0", vi) ₫</strong>
+
+                                <div class="success-mobile-row">
+                                    <span>Số lượng</span>
+                                    <strong>x @item.SoLuong</strong>
+                                </div>
+
+                                <div class="success-mobile-row">
+                                    <span>Đơn giá</span>
+                                    <strong>@item.DonGiaSnapshot.ToString("N0", vi) ₫</strong>
+                                </div>
+
+                                <div class="success-mobile-row">
+                                    <span>Giảm giá</span>
+                                    <strong>@item.GiamGiaSnapshot.ToString("N0", vi) ₫</strong>
+                                </div>
+
+                                <div class="success-mobile-row success-mobile-row--total">
+                                    <span>Thành tiền</span>
+                                    <strong>@item.ThanhTien.ToString("N0", vi) ₫</strong>
+                                </div>
                             </div>
                         }
 
@@ -325,6 +369,7 @@
                     <a href="@Url.Action("Index", "Home")" class="optical-btn optical-btn--dark">
                         Quay lại trang chủ
                     </a>
+
                     <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
                         Tiếp tục mua sắm
                     </a>

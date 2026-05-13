@@ -121,14 +121,20 @@
 
         return "processing";
     };
+
+    int totalOrderCount = orders.Count;
+    bool isActiveAccount = Model.IsActive;
 }
 
 <section class="profile-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb profile-breadcrumb">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Account</span>
                 <h1>Thông tin tài khoản</h1>
+                <p class="optical-breadcrumb__desc">
+                    Quản lý thông tin cá nhân, bảo mật tài khoản và theo dõi lịch sử mua hàng tại Karma Eyewear.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                     <span>/</span>
@@ -153,18 +159,29 @@
                             Quản lý thông tin cá nhân, cập nhật mật khẩu và theo dõi lịch sử đơn hàng của bạn tại Karma Eyewear.
                         </p>
                     </div>
+
+                    <div class="profile-top-card__stats">
+                        <div class="profile-stat-item">
+                            <span>Đơn hàng</span>
+                            <strong>@totalOrderCount</strong>
+                        </div>
+                        <div class="profile-stat-item">
+                            <span>Trạng thái</span>
+                            <strong>@(isActiveAccount ? "Hoạt động" : "Ngừng")</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="profile-main-card">
                     <ul class="nav nav-pills profile-tabs" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" href="#profileInformationAccount" data-toggle="tab">
-                                Thông tin tài khoản
+                                <i class="fa fa-user-o mr-2"></i>Thông tin tài khoản
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#changePassword" data-toggle="tab">
-                                Đổi mật khẩu
+                                <i class="fa fa-lock mr-2"></i>Đổi mật khẩu
                             </a>
                         </li>
                     </ul>
@@ -176,6 +193,7 @@
                                     <div class="profile-card-head">
                                         <span class="profile-card-head__eyebrow">Account settings</span>
                                         <h3>Thông tin cá nhân</h3>
+                                        <p>Cập nhật thông tin liên hệ và địa chỉ giao hàng mặc định của bạn.</p>
                                     </div>
 
                                     @using (Html.BeginForm("UpdateInformationAccount", "ProfileUser", FormMethod.Post, new { @class = "profile-form" }))
@@ -186,57 +204,84 @@
                                         <div class="profile-form-grid">
                                             <div class="profile-form-group profile-grid-full">
                                                 <label class="profile-label">Tên đăng nhập</label>
-                                                <input type="text" class="profile-input profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-user"></i></span>
+                                                    <input type="text" class="profile-input profile-input--with-icon profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group profile-grid-full">
                                                 <label class="profile-label">Email</label>
-                                                <input type="email" class="profile-input profile-input--disabled" value="@Model.Email" disabled />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-envelope"></i></span>
+                                                    <input type="email" class="profile-input profile-input--with-icon profile-input--disabled" value="@Model.Email" disabled />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Số điện thoại</label>
-                                                <input type="text" class="profile-input" id="Mobile" name="Mobile" value="@Model.SoDienThoai" />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-phone"></i></span>
+                                                    <input type="text" class="profile-input profile-input--with-icon" id="Mobile" name="Mobile" value="@Model.SoDienThoai" />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Trạng thái tài khoản</label>
-                                                <input type="text"
-                                                       class="profile-input profile-input--disabled"
-                                                       value="@(Model.IsActive ? "Hoạt động" : "Ngừng hoạt động")"
-                                                       disabled />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-check-circle"></i></span>
+                                                    <input type="text"
+                                                           class="profile-input profile-input--with-icon profile-input--disabled"
+                                                           value="@(Model.IsActive ? "Hoạt động" : "Ngừng hoạt động")"
+                                                           disabled />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Họ</label>
-                                                <input type="text" class="profile-input" id="LastName" name="LastName" value="@lastName" />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-id-card-o"></i></span>
+                                                    <input type="text" class="profile-input profile-input--with-icon" id="LastName" name="LastName" value="@lastName" />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Tên</label>
-                                                <input type="text" class="profile-input" id="FirstName" name="FirstName" value="@firstName" />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-id-card-o"></i></span>
+                                                    <input type="text" class="profile-input profile-input--with-icon" id="FirstName" name="FirstName" value="@firstName" />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Giới tính</label>
-                                                <select name="Sex" class="profile-input profile-select">
-                                                    <option value="">Chọn giới tính</option>
-                                                    <option value="Nam" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
-                                                    <option value="Nữ" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
-                                                </select>
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-venus-mars"></i></span>
+                                                    <select name="Sex" class="profile-input profile-input--with-icon profile-select">
+                                                        <option value="">Chọn giới tính</option>
+                                                        <option value="Nam" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
+                                                        <option value="Nữ" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
+                                                    </select>
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group">
                                                 <label class="profile-label">Ngày sinh</label>
-                                                <input type="text"
-                                                       class="profile-input profile-input--disabled"
-                                                       value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")"
-                                                       disabled />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-calendar"></i></span>
+                                                    <input type="text"
+                                                           class="profile-input profile-input--with-icon profile-input--disabled"
+                                                           value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")"
+                                                           disabled />
+                                                </div>
                                             </div>
 
                                             <div class="profile-form-group profile-grid-full">
                                                 <label class="profile-label">Địa chỉ</label>
-                                                <input type="text" class="profile-input" id="Address" name="Address" value="@Model.DiaChi" />
+                                                <div class="profile-input-wrap">
+                                                    <span class="profile-input-icon"><i class="fa fa-map-marker"></i></span>
+                                                    <input type="text" class="profile-input profile-input--with-icon" id="Address" name="Address" value="@Model.DiaChi" />
+                                                </div>
                                             </div>
                                         </div>
 
@@ -252,6 +297,7 @@
                                     <div class="profile-card-head">
                                         <span class="profile-card-head__eyebrow">Order history</span>
                                         <h3>Lịch sử đơn hàng</h3>
+                                        <p>Theo dõi các đơn hàng đã đặt, trạng thái giao hàng và tình trạng thanh toán.</p>
                                     </div>
 
                                     @if (orders.Any())
@@ -274,7 +320,7 @@
                                                         <tr>
                                                             <td>@item.MaDonHang</td>
                                                             <td>@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</td>
-                                                            <td>@string.Format("{0:N0}", item.TongThanhToan) ₫</td>
+                                                            <td class="profile-order-money">@string.Format("{0:N0}", item.TongThanhToan) ₫</td>
                                                             <td>
                                                                 <span class="profile-status-badge @orderStatusClass(item.TrangThai)">
                                                                     @orderStatusText(item.TrangThai)
@@ -311,15 +357,29 @@
                                                         </span>
                                                     </div>
 
-                                                    <p><strong>Ngày đặt:</strong> @item.NgayDat.ToString("dd/MM/yyyy HH:mm")</p>
-                                                    <p><strong>Tổng thanh toán:</strong> @string.Format("{0:N0}", item.TongThanhToan) ₫</p>
-                                                    <p><strong>Phương thức:</strong> @paymentMethodText(item.PhuongThucThanhToan)</p>
-                                                    <p>
-                                                        <strong>Thanh toán:</strong>
-                                                        <span class="profile-status-badge @paymentStatusClass(item.TrangThaiThanhToan)">
-                                                            @paymentStatusText(item.TrangThaiThanhToan)
-                                                        </span>
-                                                    </p>
+                                                    <div class="profile-mobile-row">
+                                                        <span>Ngày đặt</span>
+                                                        <strong>@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</strong>
+                                                    </div>
+
+                                                    <div class="profile-mobile-row">
+                                                        <span>Tổng thanh toán</span>
+                                                        <strong>@string.Format("{0:N0}", item.TongThanhToan) ₫</strong>
+                                                    </div>
+
+                                                    <div class="profile-mobile-row">
+                                                        <span>Phương thức</span>
+                                                        <strong>@paymentMethodText(item.PhuongThucThanhToan)</strong>
+                                                    </div>
+
+                                                    <div class="profile-mobile-row">
+                                                        <span>Thanh toán</span>
+                                                        <strong>
+                                                            <span class="profile-status-badge @paymentStatusClass(item.TrangThaiThanhToan)">
+                                                                @paymentStatusText(item.TrangThaiThanhToan)
+                                                            </span>
+                                                        </strong>
+                                                    </div>
 
                                                     <a href='@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = item.MaDonHang })'
                                                        class="optical-btn optical-btn--light profile-detail-btn">
@@ -329,35 +389,44 @@
                                             }
                                         </div>
 
-                                        <div class="catalog-pagination bottom">
-                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = prevPage })'
-                                               class="page-arrow @(currentPage == 1 ? "disabled" : "")">
-                                                <span class="lnr lnr-chevron-left"></span>
-                                            </a>
+                                        if (totalPages > 1)
+                                        {
+                                            <div class="catalog-pagination bottom">
+                                                <a href='@Url.Action("Profile", "ProfileUser", new { page = prevPage })'
+                                                   class="page-arrow @(currentPage == 1 ? "disabled" : "")">
+                                                    <span class="lnr lnr-chevron-left"></span>
+                                                </a>
 
-                                            @for (int i = displayPage; i < noOfPages; i++)
-                                            {
-                                                if (i + 1 == currentPage)
+                                                @for (int i = displayPage; i < noOfPages; i++)
                                                 {
-                                                    <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })' class="active">@(i + 1)</a>
+                                                    if (i + 1 == currentPage)
+                                                    {
+                                                        <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })' class="active">@(i + 1)</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })'>@(i + 1)</a>
+                                                    }
                                                 }
-                                                else
-                                                {
-                                                    <a href='@Url.Action("Profile", "ProfileUser", new { page = i + 1 })'>@(i + 1)</a>
-                                                }
-                                            }
 
-                                            <a href='@Url.Action("Profile", "ProfileUser", new { page = nextPage })'
-                                               class="page-arrow @(currentPage == totalPages ? "disabled" : "")">
-                                                <span class="lnr lnr-chevron-right"></span>
-                                            </a>
-                                        </div>
+                                                <a href='@Url.Action("Profile", "ProfileUser", new { page = nextPage })'
+                                                   class="page-arrow @(currentPage == totalPages ? "disabled" : "")">
+                                                    <span class="lnr lnr-chevron-right"></span>
+                                                </a>
+                                            </div>
+                                        }
                                     }
                                     else
                                     {
-                                        <div class="catalog-empty">
+                                        <div class="profile-empty-order">
+                                            <div class="profile-empty-order__icon">
+                                                <i class="ti-bag"></i>
+                                            </div>
                                             <h3>Chưa có đơn hàng nào</h3>
                                             <p>Bạn chưa phát sinh đơn hàng nào trong tài khoản này.</p>
+                                            <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--dark">
+                                                Mua sắm ngay
+                                            </a>
                                         </div>
                                     }
                                 </div>
@@ -369,9 +438,10 @@
                                 <div class="profile-card-head">
                                     <span class="profile-card-head__eyebrow">Security</span>
                                     <h3>Đổi mật khẩu</h3>
+                                    <p>Mật khẩu mới nên có tối thiểu 8 ký tự và nên kết hợp chữ, số để tăng độ an toàn.</p>
                                 </div>
 
-                                @using (Html.BeginForm("ChangePasswordAccount", "ProfileUser", FormMethod.Post, new { @class = "profile-form" }))
+                                @using (Html.BeginForm("ChangePasswordAccount", "ProfileUser", FormMethod.Post, new { @class = "profile-form", onsubmit = "return confirm('Bạn xác nhận đổi mật khẩu?');" }))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="idAccount" value="@Model.TaiKhoanId" />
@@ -379,22 +449,34 @@
                                     <div class="profile-form-grid">
                                         <div class="profile-form-group profile-grid-full">
                                             <label class="profile-label">Tên đăng nhập</label>
-                                            <input type="text" class="profile-input profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                            <div class="profile-input-wrap">
+                                                <span class="profile-input-icon"><i class="fa fa-user"></i></span>
+                                                <input type="text" class="profile-input profile-input--with-icon profile-input--disabled" value="@Model.TenDangNhap" disabled />
+                                            </div>
                                         </div>
 
                                         <div class="profile-form-group profile-grid-full">
                                             <label class="profile-label">Mật khẩu hiện tại</label>
-                                            <input type="password" class="profile-input" id="inputPassCurrent" name="passwdCurrent" />
+                                            <div class="profile-input-wrap">
+                                                <span class="profile-input-icon"><i class="fa fa-lock"></i></span>
+                                                <input type="password" class="profile-input profile-input--with-icon" id="inputPassCurrent" name="passwdCurrent" />
+                                            </div>
                                         </div>
 
                                         <div class="profile-form-group">
                                             <label class="profile-label">Mật khẩu mới</label>
-                                            <input type="password" class="profile-input" id="PassWord" name="PassWord" />
+                                            <div class="profile-input-wrap">
+                                                <span class="profile-input-icon"><i class="fa fa-shield"></i></span>
+                                                <input type="password" class="profile-input profile-input--with-icon" id="PassWord" name="PassWord" />
+                                            </div>
                                         </div>
 
                                         <div class="profile-form-group">
                                             <label class="profile-label">Nhập lại mật khẩu mới</label>
-                                            <input type="password" class="profile-input" id="ComfirmPassword" name="ComfirmPassword" />
+                                            <div class="profile-input-wrap">
+                                                <span class="profile-input-icon"><i class="fa fa-shield"></i></span>
+                                                <input type="password" class="profile-input profile-input--with-icon" id="ComfirmPassword" name="ComfirmPassword" />
+                                            </div>
                                         </div>
                                     </div>
 
