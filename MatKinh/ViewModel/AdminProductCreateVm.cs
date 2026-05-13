@@ -6,13 +6,17 @@ namespace MatKinh.ViewModel
 {
     public class AdminProductCreateVm
     {
+        public int? SanPhamId { get; set; }
+
         [Required(ErrorMessage = "Vui lòng nhập tên sản phẩm")]
         public string TenSanPham { get; set; }
 
         public string MoTaNgan { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập mô tả chi tiết")]
+        [AllowHtml]
         public string MoTaChiTiet { get; set; }
+
+        public string HinhAnhChinh { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Giá gốc không hợp lệ")]
         public decimal GiaGoc { get; set; }

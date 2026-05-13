@@ -25,20 +25,19 @@
     <div class="container-fluid p-0">
         <div class="row">
 
-            <!-- PROFILE -->
             <div class="col-lg-4 col-xl-3">
                 <div class="card admin-profile-card">
                     <div class="card-body text-center">
                         <div class="admin-profile-avatar-wrap">
                             <img class="admin-profile-avatar"
-                                 src="~/Asset/img/image_Account.jpg" />
+                                 src="@Url.Content("~/Asset/img/image_Account.jpg")"
+                                 alt="@Model.TenDangNhap" />
                         </div>
 
                         <h3 class="admin-profile-name">@Model.HoTen</h3>
                         <div class="admin-profile-username">@Model.TenDangNhap</div>
 
                         <div class="admin-profile-meta-list">
-
                             <div class="admin-profile-meta-item">
                                 <span class="admin-profile-meta-label">Vai trò</span>
                                 <span class="admin-profile-meta-value">@Model.TenVaiTro</span>
@@ -50,13 +49,11 @@
                                     @(Model.IsActive ? "Hoạt động" : "Đã khóa")
                                 </span>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- FORM -->
             <div class="col-lg-8 col-xl-9">
                 <div class="card admin-form-card admin-tab-card">
 
@@ -83,7 +80,6 @@
                     <div class="card-body">
                         <div class="tab-content">
 
-                            <!-- ================= INFO ================= -->
                             <div class="tab-pane active" id="profileInformationAccount">
                                 @using (Html.BeginForm("UpdateInformationAccount", "ManagerAccount", FormMethod.Post))
                                 {
@@ -95,7 +91,8 @@
                                             <div class="form-group">
                                                 <label>Tài khoản</label>
                                                 <input class="form-control admin-input"
-                                                       value="@Model.TenDangNhap" disabled />
+                                                       value="@Model.TenDangNhap"
+                                                       disabled />
                                             </div>
                                         </div>
 
@@ -103,6 +100,7 @@
                                             <div class="form-group">
                                                 <label>Email</label>
                                                 @Html.TextBox("Email", Model.Email, new { @class = "form-control admin-input" })
+                                                @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
                                             </div>
                                         </div>
                                     </div>
@@ -110,6 +108,7 @@
                                     <div class="form-group">
                                         <label>Họ tên</label>
                                         @Html.TextBox("HoTen", Model.HoTen, new { @class = "form-control admin-input" })
+                                        @Html.ValidationMessage("HoTen", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="row">
@@ -117,6 +116,7 @@
                                             <div class="form-group">
                                                 <label>Số điện thoại</label>
                                                 @Html.TextBox("SoDienThoai", Model.SoDienThoai, new { @class = "form-control admin-input" })
+                                                @Html.ValidationMessage("SoDienThoai", "", new { @class = "text-danger" })
                                             </div>
                                         </div>
 
@@ -133,6 +133,7 @@
                                     <div class="form-group">
                                         <label>Địa chỉ</label>
                                         @Html.TextBox("DiaChi", Model.DiaChi, new { @class = "form-control admin-input" })
+                                        @Html.ValidationMessage("DiaChi", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="admin-form-actions">
@@ -143,7 +144,6 @@
                                 }
                             </div>
 
-                            <!-- ================= PASSWORD ================= -->
                             <div class="tab-pane" id="changePassword">
                                 @using (Html.BeginForm("ChangePassword", "ManagerAccount", FormMethod.Post))
                                 {
@@ -153,7 +153,8 @@
                                     <div class="form-group">
                                         <label>Tài khoản</label>
                                         <input class="form-control admin-input"
-                                               value="@Model.TenDangNhap" disabled />
+                                               value="@Model.TenDangNhap"
+                                               disabled />
                                     </div>
 
                                     <div class="form-group">
@@ -161,6 +162,7 @@
                                         <input type="password"
                                                name="NewPassword"
                                                class="form-control admin-input" />
+                                        @Html.ValidationMessage("NewPassword", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="form-group">
@@ -168,6 +170,7 @@
                                         <input type="password"
                                                name="ConfirmPassword"
                                                class="form-control admin-input" />
+                                        @Html.ValidationMessage("ConfirmPassword", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="admin-form-actions">
@@ -178,7 +181,6 @@
                                 }
                             </div>
 
-                            <!-- ================= ROLE ================= -->
                             <div class="tab-pane" id="changePermisstion">
                                 @using (Html.BeginForm("UpdatePermisstionAccount", "ManagerAccount", FormMethod.Post))
                                 {
@@ -188,7 +190,8 @@
                                     <div class="form-group">
                                         <label>Tài khoản</label>
                                         <input class="form-control admin-input"
-                                               value="@Model.TenDangNhap" disabled />
+                                               value="@Model.TenDangNhap"
+                                               disabled />
                                     </div>
 
                                     <div class="form-group">
@@ -201,10 +204,13 @@
                                                 </option>
                                             }
                                         </select>
+                                        @Html.ValidationMessage("VaiTroId", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="admin-form-actions">
-                                        <button type="submit" class="btn admin-btn admin-btn-save">
+                                        <button type="submit"
+                                                class="btn admin-btn admin-btn-save"
+                                                onclick="return confirm('Bạn có chắc muốn cập nhật vai trò tài khoản này?')">
                                             <i class="fas fa-user-shield mr-1"></i> Cập nhật vai trò
                                         </button>
                                     </div>

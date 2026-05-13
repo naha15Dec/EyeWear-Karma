@@ -11,6 +11,21 @@ namespace MatKinh.ViewModel
         public string RoleFilter { get; set; }
         public string HeaderTitle { get; set; }
 
+        public int CurrentPage { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public int TotalPages { get; set; }
+
+        public bool HasPreviousPage
+        {
+            get { return CurrentPage > 1; }
+        }
+
+        public bool HasNextPage
+        {
+            get { return CurrentPage < TotalPages; }
+        }
+
         public List<AdminAccountListItemVm> Accounts { get; set; } = new List<AdminAccountListItemVm>();
         public List<SelectListItem> Roles { get; set; } = new List<SelectListItem>();
     }

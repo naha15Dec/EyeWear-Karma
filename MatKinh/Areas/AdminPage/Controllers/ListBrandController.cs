@@ -24,6 +24,14 @@ namespace MatKinh.Areas.AdminPage.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult AddBrand(AdminBrandEditVm model)
         {
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "Dữ liệu thương hiệu không hợp lệ.";
+                return RedirectToAction("Brand");
+            }
+
+            NormalizeBrandModel(model);
+
             if (!ModelState.IsValid)
             {
                 var invalidVm = BuildViewModel(model.ThuongHieuId);
@@ -35,72 +43,17 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
             if (isUpdate)
             {
-                var brand = db.ThuongHieux.FirstOrDefault(x => x.ThuongHieuId == model.ThuongHieuId.Value);
-                if (brand == null)
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy thương hiệu.";
-                    return RedirectToAction("Brand");
-                }
-
-                bool duplicatedCode = db.ThuongHieux.Any(x =>
-                    x.ThuongHieuId != brand.ThuongHieuId &&
-                    x.MaThuongHieu == model.MaThuongHieu);
-
-                if (duplicatedCode)
-                {
-                    ModelState.AddModelError("MaThuongHieu", "Mã thương hiệu đã tồn tại.");
-                    var invalidVm = BuildViewModel(model.ThuongHieuId);
-                    invalidVm.Form = model;
-                    return View("Brand", invalidVm);
-                }
-
-                brand.MaThuongHieu = (model.MaThuongHieu ?? string.Empty).Trim();
-                brand.TenThuongHieu = (model.TenThuongHieu ?? string.Empty).Trim();
-                brand.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
-                brand.IsActive = model.IsActive;
-                brand.UpdatedAt = DateTime.Now;
-
-                db.SaveChanges();
-
-                TempData["SuccessMessage"] = "Cập nhật thương hiệu thành công.";
-                return RedirectToAction("Brand");
+                return UpdateBrand(model);
             }
-            else
-            {
-                bool duplicatedCode = db.ThuongHieux.Any(x => x.MaThuongHieu == model.MaThuongHieu);
-                if (duplicatedCode)
-                {
-                    ModelState.AddModelError("MaThuongHieu", "Mã thương hiệu đã tồn tại.");
-                    var invalidVm = BuildViewModel(null);
-                    invalidVm.Form = model;
-                    return View("Brand", invalidVm);
-                }
 
-                var brand = new ThuongHieu
-                {
-                    MaThuongHieu = (model.MaThuongHieu ?? string.Empty).Trim(),
-                    TenThuongHieu = (model.TenThuongHieu ?? string.Empty).Trim(),
-                    MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim(),
-                    IsActive = model.IsActive,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = null
-                };
-
-                db.ThuongHieux.Add(brand);
-                db.SaveChanges();
-
-                TempData["SuccessMessage"] = "Thêm thương hiệu thành công.";
-                return RedirectToAction("Brand");
-            }
+            return CreateBrand(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
-            var brand = db.ThuongHieux
-                .Include(x => x.SanPhams)
-                .FirstOrDefault(x => x.ThuongHieuId == id);
+            var brand = db.ThuongHieux.FirstOrDefault(x => x.ThuongHieuId == id);
 
             if (brand == null)
             {
@@ -108,21 +61,15 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("Brand");
             }
 
-            // Không xóa cứng nếu đã gắn sản phẩm
-            if (brand.SanPhams != null && brand.SanPhams.Any())
-            {
-                brand.IsActive = false;
-                brand.UpdatedAt = DateTime.Now;
-                db.SaveChanges();
+            brand.IsActive = !brand.IsActive;
+            brand.UpdatedAt = DateTime.Now;
 
-                TempData["SuccessMessage"] = "Thương hiệu đã được ngừng sử dụng vì đang gắn với sản phẩm.";
-                return RedirectToAction("Brand");
-            }
-
-            db.ThuongHieux.Remove(brand);
             db.SaveChanges();
 
-            TempData["SuccessMessage"] = "Xóa thương hiệu thành công.";
+            TempData["SuccessMessage"] = brand.IsActive
+                ? "Đã kích hoạt lại thương hiệu."
+                : "Đã chuyển thương hiệu sang trạng thái ngừng sử dụng.";
+
             return RedirectToAction("Brand");
         }
 
@@ -131,6 +78,81 @@ namespace MatKinh.Areas.AdminPage.Controllers
         public ActionResult Update(int id)
         {
             return RedirectToAction("Brand", new { editId = id });
+        }
+
+        private ActionResult CreateBrand(AdminBrandEditVm model)
+        {
+            if (IsDuplicatedBrandCode(model.MaThuongHieu, null))
+            {
+                ModelState.AddModelError("MaThuongHieu", "Mã thương hiệu đã tồn tại.");
+            }
+
+            if (IsDuplicatedBrandName(model.TenThuongHieu, null))
+            {
+                ModelState.AddModelError("TenThuongHieu", "Tên thương hiệu đã tồn tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var invalidVm = BuildViewModel(null);
+                invalidVm.Form = model;
+                return View("Brand", invalidVm);
+            }
+
+            var brand = new ThuongHieu
+            {
+                MaThuongHieu = model.MaThuongHieu,
+                TenThuongHieu = model.TenThuongHieu,
+                MoTa = model.MoTa,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null
+            };
+
+            db.ThuongHieux.Add(brand);
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Thêm thương hiệu thành công.";
+            return RedirectToAction("Brand");
+        }
+
+        private ActionResult UpdateBrand(AdminBrandEditVm model)
+        {
+            var brand = db.ThuongHieux.FirstOrDefault(x => x.ThuongHieuId == model.ThuongHieuId.Value);
+
+            if (brand == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thương hiệu.";
+                return RedirectToAction("Brand");
+            }
+
+            if (IsDuplicatedBrandCode(model.MaThuongHieu, brand.ThuongHieuId))
+            {
+                ModelState.AddModelError("MaThuongHieu", "Mã thương hiệu đã tồn tại.");
+            }
+
+            if (IsDuplicatedBrandName(model.TenThuongHieu, brand.ThuongHieuId))
+            {
+                ModelState.AddModelError("TenThuongHieu", "Tên thương hiệu đã tồn tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var invalidVm = BuildViewModel(model.ThuongHieuId);
+                invalidVm.Form = model;
+                return View("Brand", invalidVm);
+            }
+
+            brand.MaThuongHieu = model.MaThuongHieu;
+            brand.TenThuongHieu = model.TenThuongHieu;
+            brand.MoTa = model.MoTa;
+            brand.IsActive = model.IsActive;
+            brand.UpdatedAt = DateTime.Now;
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Cập nhật thương hiệu thành công.";
+            return RedirectToAction("Brand");
         }
 
         private AdminBrandIndexVm BuildViewModel(int? editId)
@@ -172,6 +194,36 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             return vm;
+        }
+
+        private void NormalizeBrandModel(AdminBrandEditVm model)
+        {
+            model.MaThuongHieu = NormalizeText(model.MaThuongHieu).ToUpperInvariant();
+            model.TenThuongHieu = NormalizeText(model.TenThuongHieu);
+            model.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
+        }
+
+        private bool IsDuplicatedBrandCode(string code, int? currentId)
+        {
+            code = NormalizeText(code).ToUpperInvariant();
+
+            return db.ThuongHieux.Any(x =>
+                x.MaThuongHieu == code &&
+                (!currentId.HasValue || x.ThuongHieuId != currentId.Value));
+        }
+
+        private bool IsDuplicatedBrandName(string name, int? currentId)
+        {
+            name = NormalizeText(name);
+
+            return db.ThuongHieux.Any(x =>
+                x.TenThuongHieu == name &&
+                (!currentId.HasValue || x.ThuongHieuId != currentId.Value));
+        }
+
+        private string NormalizeText(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         }
 
         protected override void Dispose(bool disposing)

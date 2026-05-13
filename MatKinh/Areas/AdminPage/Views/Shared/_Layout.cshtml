@@ -95,6 +95,11 @@
     <link href="~/Content/css/admin-post.css" rel="stylesheet" />
     <link href="~/Content/css/admin-revenue.css" rel="stylesheet" />
     <link href="~/Content/css/admin-profile.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-product.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-blog.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-system-category.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-setting.css" rel="stylesheet" />
+    <link href="~/Content/css/premium-toast.css" rel="stylesheet" />
 </head>
 <body class="hold-transition sidebar-mini layout-fixed admin-modern">
     <div class="wrapper">
@@ -358,6 +363,11 @@
         <div class="content-wrapper admin-content-wrapper">
             <section class="content pt-3">
                 <div class="container-fluid">
+
+                    <div class="premium-toast-container">
+                        @Html.Partial("~/Views/Shared/_FlashMessage.cshtml")
+
+                    </div>
                     @RenderBody()
                 </div>
             </section>

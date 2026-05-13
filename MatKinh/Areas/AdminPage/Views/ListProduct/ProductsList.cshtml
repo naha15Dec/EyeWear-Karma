@@ -2,78 +2,83 @@
 @using MatKinh.Models
 
 @{
-    ViewBag.Title = "Sản phẩm";
+    ViewBag.Title = "Sản phẩm của tôi";
+
+    int currentPage = Model.CurrentPage <= 0 ? 1 : Model.CurrentPage;
+    int totalPages = Model.TotalPages <= 0 ? 1 : Model.TotalPages;
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, currentPage + 2);
 }
 
 <div class="admin-page-header">
     <div>
-        <h1 class="admin-page-title">Danh sách sản phẩm</h1>
-        <p class="admin-page-subtitle">Quản lý thông tin kính mắt, giá bán, ảnh đại diện và trạng thái kho.</p>
+        <h1 class="admin-page-title">Sản phẩm của tôi</h1>
+        <p class="admin-page-subtitle">Quản lý các sản phẩm do bạn tạo trong hệ thống.</p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
         <li class="breadcrumb-item">
             <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
         </li>
-        <li class="breadcrumb-item active">Danh sách sản phẩm</li>
+        <li class="breadcrumb-item active">Sản phẩm của tôi</li>
     </ol>
 </div>
 
 <section class="content">
     <div class="container-fluid p-0">
 
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-        }
-
-        <div class="card admin-card">
-            <div class="card-header admin-card-header border-0">
+        <div class="card admin-card my-product-card">
+            <div class="card-header admin-card-header border-0 my-product-header">
                 <div class="admin-card-title-wrap">
-                    <h3 class="admin-card-title">Sản phẩm trong hệ thống</h3>
-                    <span class="admin-card-count">@((Model.Products != null) ? Model.Products.Count : 0) sản phẩm</span>
+                    <h3 class="admin-card-title">Danh sách sản phẩm của tôi</h3>
+                    <span class="admin-card-count">
+                        Hiển thị @(Model.Products != null ? Model.Products.Count : 0) / @Model.TotalItems sản phẩm
+                    </span>
                 </div>
 
-                <div class="admin-card-tools d-flex">
-                    @using (Html.BeginForm("FindProductByName", "ListProduct", FormMethod.Get, new { @class = "admin-search-form" }))
+                <div class="my-product-header-actions">
+                    @using (Html.BeginForm("ProductsList", "ListProduct", FormMethod.Get, new { @class = "my-product-search-form" }))
                     {
-                        <div class="admin-search-box">
+                        <input type="hidden" name="page" value="1" />
+
+                        <div class="my-product-search">
                             <i class="fas fa-search"></i>
                             <input class="form-control"
                                    type="search"
                                    name="keyword"
                                    value="@Model.Keyword"
-                                   placeholder="Tìm theo tên hoặc mã sản phẩm..."
-                                   aria-label="Search">
-                            <button class="btn admin-search-btn" type="submit">Tìm</button>
+                                   placeholder="Tìm theo tên hoặc mã sản phẩm..." />
+                            <button class="btn my-product-search-btn" type="submit">Tìm</button>
                         </div>
                     }
                 </div>
             </div>
 
             <div class="card-body">
-                <div class="mb-3">
+                <div class="my-product-toolbar">
                     <a href="@Url.Action("AddProduct", "ListProduct")" class="btn admin-btn admin-btn-save">
                         <i class="fas fa-plus mr-1"></i> Thêm sản phẩm
                     </a>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Keyword))
+                    {
+                        <a href="@Url.Action("ProductsList", "ListProduct")" class="btn admin-btn admin-btn-light">
+                            <i class="fas fa-times mr-1"></i> Xóa bộ lọc
+                        </a>
+                    }
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table admin-table align-middle">
+                <div class="table-responsive my-product-table-wrap">
+                    <table class="table my-product-table align-middle">
                         <thead>
                             <tr>
-                                <th>Mã sản phẩm</th>
-                                <th>Tên sản phẩm</th>
+                                <th>Mã</th>
+                                <th>Sản phẩm</th>
                                 <th>Ngày tạo / cập nhật</th>
-                                <th>Giá</th>
-                                <th>Tồn kho</th>
+                                <th class="text-right">Giá</th>
+                                <th class="text-center">Tồn</th>
                                 <th>Trạng thái</th>
-                                <th class="text-center">Thao tác</th>
+                                <th class="text-right">Thao tác</th>
                             </tr>
                         </thead>
 
@@ -82,93 +87,103 @@
                             {
                                 foreach (var item in Model.Products)
                                 {
+                                    string imageUrl = string.IsNullOrWhiteSpace(item.HinhAnhChinh)
+                                        ? "/Asset/img/no-image.png"
+                                        : item.HinhAnhChinh;
+
                                     <tr>
                                         <td>
                                             @if (item.TrangThai == 1)
                                             {
                                                 <a target="_blank"
-                                                   class="admin-code-link"
+                                                   class="my-product-code"
                                                    href='@Url.Action("DetailProduct", "Product", new { area = "", idProduct = item.MaSanPham })'>
                                                     #@item.MaSanPham
                                                 </a>
                                             }
                                             else
                                             {
-                                                <span class="admin-code-text">#@item.MaSanPham</span>
+                                                <span class="my-product-code muted">#@item.MaSanPham</span>
                                             }
                                         </td>
 
                                         <td>
-                                            <div class="admin-product-cell">
-                                                <div class="admin-product-thumb">
-                                                    @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
-                                                    {
-                                                        <img src="@item.HinhAnhChinh" alt="@item.TenSanPham" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <img src="/Asset/img/no-image.png" alt="@item.TenSanPham" />
-                                                    }
+                                            <div class="my-product-info">
+                                                <div class="my-product-thumb">
+                                                    <img src="@imageUrl" alt="@item.TenSanPham" />
                                                 </div>
-                                                <div class="admin-product-info">
-                                                    <div class="admin-product-name">@item.TenSanPham</div>
-                                                    <div class="admin-product-meta">
-                                                        @(item.MoTaNgan != null && item.MoTaNgan.Length > 60
-                                                            ? item.MoTaNgan.Substring(0, 60) + "..."
-                                                            : item.MoTaNgan)
+
+                                                <div class="my-product-main">
+                                                    <div class="my-product-name">@item.TenSanPham</div>
+                                                    <div class="my-product-desc">
+                                                        @(string.IsNullOrWhiteSpace(item.MoTaNgan)
+                                                            ? "Chưa có mô tả ngắn"
+                                                            : (item.MoTaNgan.Length > 90 ? item.MoTaNgan.Substring(0, 90) + "..." : item.MoTaNgan))
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
 
                                         <td>
-                                            <div class="admin-date-text">
-                                                Tạo: @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                                            </div>
-                                            <div class="admin-post-summary">
-                                                @(item.UpdatedAt.HasValue
-                                                    ? "Cập nhật: " + item.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
-                                                    : "Chưa cập nhật")
+                                            <div class="my-product-date">
+                                                <strong>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+                                                <span>
+                                                    @(item.UpdatedAt.HasValue
+                                                        ? "Cập nhật: " + item.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                                        : "Chưa cập nhật")
+                                                </span>
                                             </div>
                                         </td>
 
                                         <td class="text-right">
-                                            <div class="admin-price-text">
-                                                @String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaBan)
-                                            </div>
-                                            <div class="admin-post-summary">
-                                                Giá gốc:
-                                                @String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaGoc)
+                                            <div class="my-product-price">
+                                                <strong>@String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaBan)</strong>
+                                                <span>Gốc: @String.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", item.GiaGoc)</span>
                                             </div>
                                         </td>
 
                                         <td class="text-center">
-                                            @item.SoLuongTon
+                                            <span class="my-product-stock">@item.SoLuongTon</span>
                                         </td>
 
                                         <td>
                                             @if (item.TrangThai == 1)
                                             {
-                                                <span class="admin-status-badge in-stock">Đang bán</span>
+                                                if (item.SoLuongTon > 0)
+                                                {
+                                                    <span class="my-product-badge success">Đang bán</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="my-product-badge warning">Hết hàng</span>
+                                                }
                                             }
                                             else
                                             {
-                                                <span class="admin-status-badge out-stock">Ngừng bán</span>
+                                                <span class="my-product-badge danger">Ngừng bán</span>
+                                            }
+
+                                            @if (item.IsFeatured)
+                                            {
+                                                <div class="mt-1">
+                                                    <span class="my-product-badge featured">Nổi bật</span>
+                                                </div>
                                             }
                                         </td>
 
-                                        <td class="text-center">
-                                            <div class="admin-action-group">
+                                        <td class="text-right">
+                                            <div class="my-product-actions">
                                                 @using (Html.BeginForm("Update", "ListProduct", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline" }))
                                                 {
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@item.SanPhamId" />
 
                                                     <button type="button"
-                                                            class="btn admin-btn admin-btn-edit"
+                                                            class="btn my-product-action edit"
                                                             data-toggle="modal"
                                                             data-target="#customModal@(item.SanPhamId)">
-                                                        <i class="fas fa-pen mr-1"></i> Sửa
+                                                        <i class="fas fa-pen"></i>
+                                                        <span>Sửa</span>
                                                     </button>
 
                                                     <div class="modal fade admin-modal" id="customModal@(item.SanPhamId)" tabindex="-1" role="dialog" aria-hidden="true">
@@ -179,6 +194,7 @@
                                                                         <h5 class="modal-title">Chỉnh sửa sản phẩm</h5>
                                                                         <p class="admin-modal-subtitle mb-0">@item.TenSanPham</p>
                                                                     </div>
+
                                                                     <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
                                                                         <span aria-hidden="true">&times;</span>
                                                                     </button>
@@ -191,15 +207,22 @@
                                                                                 <div class="card-header border-0">
                                                                                     <h3 class="card-title">Thông tin sản phẩm</h3>
                                                                                 </div>
+
                                                                                 <div class="card-body">
                                                                                     <div class="form-group">
                                                                                         <label>Tên sản phẩm</label>
-                                                                                        <input type="text" name="TenSanPham" class="form-control admin-input" value="@item.TenSanPham" />
+                                                                                        <input type="text"
+                                                                                               name="TenSanPham"
+                                                                                               class="form-control admin-input"
+                                                                                               value="@item.TenSanPham" />
                                                                                     </div>
 
                                                                                     <div class="form-group">
                                                                                         <label>Mô tả tóm tắt</label>
-                                                                                        <input type="text" name="MoTaNgan" class="form-control admin-input" value="@item.MoTaNgan" />
+                                                                                        <input type="text"
+                                                                                               name="MoTaNgan"
+                                                                                               class="form-control admin-input"
+                                                                                               value="@item.MoTaNgan" />
                                                                                     </div>
 
                                                                                     <div class="form-group">
@@ -263,7 +286,11 @@
                                                                                         <div class="col-md-3">
                                                                                             <div class="form-group">
                                                                                                 <label>Tồn kho</label>
-                                                                                                <input type="number" min="0" name="SoLuongTon" value="@item.SoLuongTon" class="form-control admin-input text-right" />
+                                                                                                <input type="number"
+                                                                                                       min="0"
+                                                                                                       name="SoLuongTon"
+                                                                                                       value="@item.SoLuongTon"
+                                                                                                       class="form-control admin-input text-right" />
                                                                                             </div>
                                                                                         </div>
 
@@ -306,16 +333,10 @@
                                                                                 <div class="card-header border-0">
                                                                                     <h3 class="card-title">Ảnh đại diện</h3>
                                                                                 </div>
+
                                                                                 <div class="card-body">
                                                                                     <div id="imagePreviewSingle-@item.SanPhamId" class="admin-image-preview-single">
-                                                                                        @if (!string.IsNullOrWhiteSpace(item.HinhAnhChinh))
-                                                                                        {
-                                                                                            <img src="@item.HinhAnhChinh" alt="@item.TenSanPham" />
-                                                                                        }
-                                                                                        else
-                                                                                        {
-                                                                                            <img src="/Asset/img/no-image.png" alt="@item.TenSanPham" />
-                                                                                        }
+                                                                                        <img src="@imageUrl" alt="@item.TenSanPham" />
                                                                                     </div>
 
                                                                                     <div class="input-group mt-3">
@@ -325,7 +346,7 @@
                                                                                                    id="inputSingleFile-@item.SanPhamId"
                                                                                                    data-productid="@item.SanPhamId"
                                                                                                    name="imageAvatar"
-                                                                                                   accept=".jpg,.jpeg,.png,.gif,.webp">
+                                                                                                   accept=".jpg,.jpeg,.png,.gif,.webp" />
                                                                                             <label class="custom-file-label" for="inputSingleFile-@item.SanPhamId">Chọn ảnh đại diện</label>
                                                                                         </div>
                                                                                     </div>
@@ -336,7 +357,10 @@
                                                                 </div>
 
                                                                 <div class="modal-footer admin-modal-footer">
-                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
+                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">
+                                                                        Đóng
+                                                                    </button>
+
                                                                     <button type="submit" class="btn admin-btn admin-btn-save">
                                                                         <i class="fas fa-save mr-1"></i> Lưu thay đổi
                                                                     </button>
@@ -350,8 +374,11 @@
                                                 {
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@item.SanPhamId" />
-                                                    <button class="btn admin-btn admin-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                                                        <i class="fas fa-trash-alt mr-1"></i> Xóa
+
+                                                    <button class="btn my-product-action delete"
+                                                            onclick="return confirm('Chuyển sản phẩm này sang trạng thái ngừng bán?')">
+                                                        <i class="fas fa-ban"></i>
+                                                        <span>Ngừng bán</span>
                                                     </button>
                                                 }
                                             </div>
@@ -369,17 +396,73 @@
 
                         <tfoot>
                             <tr>
-                                <th>Mã sản phẩm</th>
-                                <th>Tên sản phẩm</th>
+                                <th>Mã</th>
+                                <th>Sản phẩm</th>
                                 <th>Ngày tạo / cập nhật</th>
-                                <th>Giá</th>
-                                <th>Tồn kho</th>
+                                <th class="text-right">Giá</th>
+                                <th class="text-center">Tồn</th>
                                 <th>Trạng thái</th>
-                                <th class="text-center">Thao tác</th>
+                                <th class="text-right">Thao tác</th>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="admin-product-pagination">
+                        <div class="admin-product-pagination__info">
+                            Trang @Model.CurrentPage / @Model.TotalPages —
+                            hiển thị @Model.Products.Count trên tổng @Model.TotalItems sản phẩm
+                        </div>
+
+                        <div class="admin-product-pagination__links">
+                            <a class="admin-product-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                               href="@(Model.HasPreviousPage ? Url.Action("ProductsList", new { keyword = Model.Keyword, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+
+                            @if (startPage > 1)
+                            {
+                                <a class="admin-product-page-link"
+                                   href="@Url.Action("ProductsList", new { keyword = Model.Keyword, page = 1 })">
+                                    1
+                                </a>
+
+                                if (startPage > 2)
+                                {
+                                    <span class="admin-product-page-dots">...</span>
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <a class="admin-product-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                   href="@Url.Action("ProductsList", new { keyword = Model.Keyword, page = i })">
+                                    @i
+                                </a>
+                            }
+
+                            @if (endPage < Model.TotalPages)
+                            {
+                                if (endPage < Model.TotalPages - 1)
+                                {
+                                    <span class="admin-product-page-dots">...</span>
+                                }
+
+                                <a class="admin-product-page-link"
+                                   href="@Url.Action("ProductsList", new { keyword = Model.Keyword, page = Model.TotalPages })">
+                                    @Model.TotalPages
+                                </a>
+                            }
+
+                            <a class="admin-product-page-link @(Model.HasNextPage ? "" : "disabled")"
+                               href="@(Model.HasNextPage ? Url.Action("ProductsList", new { keyword = Model.Keyword, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -396,20 +479,24 @@
 
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
+
                 reader.onload = function (e) {
                     $("#imagePreviewSingle-" + productId).html('<img src="' + e.target.result + '" alt="Ảnh đại diện" />');
                 };
+
                 reader.readAsDataURL(input.files[0]);
             }
         });
     });
 
-    tinymce.init({
-        selector: '.admin-textarea',
-        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-        height: 380
-    });
+    if (typeof tinymce !== 'undefined') {
+        tinymce.init({
+            selector: '.admin-textarea',
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+            height: 380
+        });
+    }
 
     function formatVndValue(value) {
         var numeric = value.replace(/[^\d]/g, "");
@@ -438,9 +525,11 @@
         });
 
         var forms = document.querySelectorAll("form");
+
         forms.forEach(function (form) {
             form.addEventListener("submit", function () {
                 var inputs = form.querySelectorAll(".currency-input");
+
                 inputs.forEach(function (input) {
                     input.value = input.value.replace(/[^\d]/g, "");
                 });

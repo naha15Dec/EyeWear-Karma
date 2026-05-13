@@ -3,6 +3,10 @@
 
 @{
     ViewBag.Title = "Danh sách bài viết";
+
+    bool isAdmin = ViewBag.IsAdmin != null && (bool)ViewBag.IsAdmin;
+    string keyword = ViewBag.Keyword as string ?? "";
+    int? status = ViewBag.Status as int?;
 }
 
 <div class="admin-page-header">
@@ -36,6 +40,7 @@
                             <input class="form-control"
                                    type="search"
                                    name="keyword"
+                                   value="@keyword"
                                    placeholder="Nhập tiêu đề bài viết..."
                                    aria-label="Search" />
                             <button class="btn admin-search-btn" type="submit">Tìm</button>
@@ -68,6 +73,9 @@
                             {
                                 foreach (var item in Model)
                                 {
+                                    bool canEdit = isAdmin || item.TrangThai != BlogStatusConstants.PUBLISHED;
+                                    bool canDelete = isAdmin || item.TrangThai != BlogStatusConstants.PUBLISHED;
+
                                     <tr>
                                         <td>
                                             @if (item.TrangThai == BlogStatusConstants.PUBLISHED)
@@ -111,7 +119,7 @@
                                             }
                                             else if (item.TrangThai == BlogStatusConstants.DRAFT)
                                             {
-                                                <span class="admin-status-badge processing">Nháp</span>
+                                                <span class="admin-status-badge processing">Chờ duyệt</span>
                                             }
                                             else
                                             {
@@ -122,157 +130,191 @@
                                         <td class="text-center">
                                             <div class="admin-action-group">
 
-                                                @using (Html.BeginForm("Update", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline" }))
+                                                @if (canEdit)
                                                 {
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.BaiVietId" />
+                                                    using (Html.BeginForm("Update", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.BaiVietId" />
 
-                                                    <button type="button"
-                                                            class="btn admin-btn admin-btn-edit"
-                                                            data-toggle="modal"
-                                                            data-target="#postModal-@item.BaiVietId">
-                                                        <i class="fas fa-pen mr-1"></i> Sửa
-                                                    </button>
+                                                        <button type="button"
+                                                                class="btn admin-btn admin-btn-edit"
+                                                                data-toggle="modal"
+                                                                data-target="#postModal-@item.BaiVietId">
+                                                            <i class="fas fa-pen mr-1"></i> Sửa
+                                                        </button>
 
-                                                    <div class="modal fade admin-modal"
-                                                         id="postModal-@item.BaiVietId"
-                                                         tabindex="-1"
-                                                         role="dialog"
-                                                         aria-hidden="true">
-                                                        <div class="modal-dialog modal-dialog-centered modal-xl admin-modal-dialog" role="document">
-                                                            <div class="modal-content admin-modal-content">
+                                                        <div class="modal fade admin-modal"
+                                                             id="postModal-@item.BaiVietId"
+                                                             tabindex="-1"
+                                                             role="dialog"
+                                                             aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered modal-xl admin-modal-dialog" role="document">
+                                                                <div class="modal-content admin-modal-content">
 
-                                                                <div class="modal-header admin-modal-header">
-                                                                    <div>
-                                                                        <h5 class="modal-title">Chỉnh sửa bài viết</h5>
-                                                                        <p class="admin-modal-subtitle mb-0">Bài viết #@item.MaBaiViet</p>
-                                                                    </div>
-                                                                    <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
-                                                                        <span aria-hidden="true">&times;</span>
-                                                                    </button>
-                                                                </div>
-
-                                                                <div class="modal-body admin-modal-body">
-                                                                    <div class="row">
-                                                                        <div class="col-lg-7">
-                                                                            <div class="card admin-form-card mb-4">
-                                                                                <div class="card-header border-0">
-                                                                                    <h3 class="card-title">Thông tin chính</h3>
-                                                                                </div>
-                                                                                <div class="card-body">
-                                                                                    <div class="form-group">
-                                                                                        <label>Tên bài viết</label>
-                                                                                        <input type="text"
-                                                                                               class="form-control admin-input"
-                                                                                               value="@item.TieuDe"
-                                                                                               name="TieuDe" />
-                                                                                    </div>
-
-                                                                                    <div class="form-group">
-                                                                                        <label>Nội dung tóm tắt</label>
-                                                                                        <input type="text"
-                                                                                               class="form-control admin-input"
-                                                                                               value="@item.TomTat"
-                                                                                               name="TomTat" />
-                                                                                    </div>
-
-                                                                                    <div class="row">
-                                                                                        <div class="col-md-6">
-                                                                                            <div class="form-group">
-                                                                                                <label>Ngày tạo</label>
-                                                                                                <input type="text"
-                                                                                                       class="form-control admin-input"
-                                                                                                       value="@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")"
-                                                                                                       disabled="disabled" />
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        <div class="col-md-6">
-                                                                                            <div class="form-group">
-                                                                                                <label>Ngày đăng</label>
-                                                                                                <input type="text"
-                                                                                                       class="form-control admin-input"
-                                                                                                       value="@(item.NgayDang.HasValue ? item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa đăng")"
-                                                                                                       disabled="disabled" />
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    <div class="form-group">
-                                                                                        <label>Trạng thái</label>
-                                                                                        <input type="text"
-                                                                                               class="form-control admin-input"
-                                                                                               value="@BlogStatusConstants.GetName(item.TrangThai)"
-                                                                                               disabled="disabled" />
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div class="card admin-form-card">
-                                                                                <div class="card-header border-0">
-                                                                                    <h3 class="card-title">Nội dung chi tiết</h3>
-                                                                                </div>
-                                                                                <div class="card-body">
-                                                                                    <textarea class="admin-textarea tinymce-editor"
-                                                                                              name="NoiDung"
-                                                                                              rows="14">@item.NoiDung</textarea>
-                                                                                </div>
-                                                                            </div>
+                                                                    <div class="modal-header admin-modal-header">
+                                                                        <div>
+                                                                            <h5 class="modal-title">Chỉnh sửa bài viết</h5>
+                                                                            <p class="admin-modal-subtitle mb-0">Bài viết #@item.MaBaiViet</p>
                                                                         </div>
+                                                                        <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
+                                                                            <span aria-hidden="true">&times;</span>
+                                                                        </button>
+                                                                    </div>
 
-                                                                        <div class="col-lg-5">
-                                                                            <div class="card admin-form-card">
-                                                                                <div class="card-header border-0">
-                                                                                    <h3 class="card-title">Ảnh đại diện bài viết</h3>
-                                                                                </div>
-                                                                                <div class="card-body">
-                                                                                    <div id="imagePreviewSingle-@item.BaiVietId" class="admin-image-preview-single">
-                                                                                        @if (!string.IsNullOrEmpty(item.AnhDaiDien))
+                                                                    <div class="modal-body admin-modal-body">
+                                                                        <div class="row">
+                                                                            <div class="col-lg-7">
+                                                                                <div class="card admin-form-card mb-4">
+                                                                                    <div class="card-header border-0">
+                                                                                        <h3 class="card-title">Thông tin chính</h3>
+                                                                                    </div>
+                                                                                    <div class="card-body">
+                                                                                        <div class="form-group">
+                                                                                            <label>Tên bài viết</label>
+                                                                                            <input type="text"
+                                                                                                   class="form-control admin-input"
+                                                                                                   value="@item.TieuDe"
+                                                                                                   name="TieuDe" />
+                                                                                        </div>
+
+                                                                                        <div class="form-group">
+                                                                                            <label>Nội dung tóm tắt</label>
+                                                                                            <input type="text"
+                                                                                                   class="form-control admin-input"
+                                                                                                   value="@item.TomTat"
+                                                                                                   name="TomTat" />
+                                                                                        </div>
+
+                                                                                        <div class="row">
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="form-group">
+                                                                                                    <label>Ngày tạo</label>
+                                                                                                    <input type="text"
+                                                                                                           class="form-control admin-input"
+                                                                                                           value="@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")"
+                                                                                                           disabled="disabled" />
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="form-group">
+                                                                                                    <label>Ngày đăng</label>
+                                                                                                    <input type="text"
+                                                                                                           class="form-control admin-input"
+                                                                                                           value="@(item.NgayDang.HasValue ? item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa đăng")"
+                                                                                                           disabled="disabled" />
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        @if (isAdmin)
                                                                                         {
-                                                                                            <img src="@item.AnhDaiDien" alt="@item.TieuDe" />
+                                                                                            <div class="form-group">
+                                                                                                <label>Trạng thái</label>
+                                                                                                <select name="TrangThai" class="form-control admin-input">
+                                                                                                    <option value="@BlogStatusConstants.DRAFT" @(item.TrangThai == BlogStatusConstants.DRAFT ? "selected" : "")>
+                                                                                                        Chờ duyệt
+                                                                                                    </option>
+                                                                                                    <option value="@BlogStatusConstants.PUBLISHED" @(item.TrangThai == BlogStatusConstants.PUBLISHED ? "selected" : "")>
+                                                                                                        Đã đăng
+                                                                                                    </option>
+                                                                                                    <option value="@BlogStatusConstants.HIDDEN" @(item.TrangThai == BlogStatusConstants.HIDDEN ? "selected" : "")>
+                                                                                                        Ẩn
+                                                                                                    </option>
+                                                                                                </select>
+                                                                                            </div>
                                                                                         }
                                                                                         else
                                                                                         {
-                                                                                            <img src="/Asset/img/no-image.png" alt="No image" />
+                                                                                            <div class="form-group">
+                                                                                                <label>Trạng thái</label>
+                                                                                                <input type="text"
+                                                                                                       class="form-control admin-input"
+                                                                                                       value="@BlogStatusConstants.GetName(item.TrangThai)"
+                                                                                                       disabled="disabled" />
+                                                                                            </div>
+
+                                                                                            <input type="hidden" name="TrangThai" value="@item.TrangThai" />
                                                                                         }
                                                                                     </div>
+                                                                                </div>
 
-                                                                                    <div class="input-group mt-3">
-                                                                                        <div class="custom-file">
-                                                                                            <input type="file"
-                                                                                                   class="custom-file-input post-image-input"
-                                                                                                   id="inputSingleFile-@item.BaiVietId"
-                                                                                                   data-postid="@item.BaiVietId"
-                                                                                                   name="imageAvatar" />
-                                                                                            <label class="custom-file-label" for="inputSingleFile-@item.BaiVietId">Chọn ảnh đại diện</label>
+                                                                                <div class="card admin-form-card">
+                                                                                    <div class="card-header border-0">
+                                                                                        <h3 class="card-title">Nội dung chi tiết</h3>
+                                                                                    </div>
+                                                                                    <div class="card-body">
+                                                                                        <textarea class="admin-textarea tinymce-editor"
+                                                                                                  name="NoiDung"
+                                                                                                  rows="14">@item.NoiDung</textarea>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="col-lg-5">
+                                                                                <div class="card admin-form-card">
+                                                                                    <div class="card-header border-0">
+                                                                                        <h3 class="card-title">Ảnh đại diện bài viết</h3>
+                                                                                    </div>
+                                                                                    <div class="card-body">
+                                                                                        <div id="imagePreviewSingle-@item.BaiVietId" class="admin-image-preview-single">
+                                                                                            @if (!string.IsNullOrEmpty(item.AnhDaiDien))
+                                                                                            {
+                                                                                                <img src="@item.AnhDaiDien" alt="@item.TieuDe" />
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                <img src="/Asset/img/no-image.png" alt="No image" />
+                                                                                            }
+                                                                                        </div>
+
+                                                                                        <div class="input-group mt-3">
+                                                                                            <div class="custom-file">
+                                                                                                <input type="file"
+                                                                                                       class="custom-file-input post-image-input"
+                                                                                                       id="inputSingleFile-@item.BaiVietId"
+                                                                                                       data-postid="@item.BaiVietId"
+                                                                                                       name="imageAvatar"
+                                                                                                       accept=".jpg,.jpeg,.png,.webp" />
+                                                                                                <label class="custom-file-label" for="inputSingleFile-@item.BaiVietId">Chọn ảnh đại diện</label>
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
 
-                                                                <div class="modal-footer admin-modal-footer">
-                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
-                                                                    <button type="submit" class="btn admin-btn admin-btn-save">
-                                                                        <i class="fas fa-save mr-1"></i> Lưu
-                                                                    </button>
+                                                                    <div class="modal-footer admin-modal-footer">
+                                                                        <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
+                                                                        <button type="submit" class="btn admin-btn admin-btn-save">
+                                                                            <i class="fas fa-save mr-1"></i> Lưu
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="admin-order-subtext">Đã đăng, không thể sửa</span>
                                                 }
 
-                                                @using (Html.BeginForm("Delete", "ListBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                @if (canDelete)
                                                 {
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@item.BaiVietId" />
-                                                    <button type="submit"
-                                                            class="btn admin-btn admin-btn-delete"
-                                                            onclick="return confirm('Bạn có chắc muốn xóa bài viết này?')">
-                                                        <i class="fas fa-trash-alt mr-1"></i> Xóa
-                                                    </button>
+                                                    using (Html.BeginForm("Delete", "ListBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.BaiVietId" />
+
+                                                        <button type="submit"
+                                                                class="btn admin-btn admin-btn-delete"
+                                                                onclick="return confirm('Bạn có chắc muốn ẩn bài viết này?')">
+                                                            <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                                        </button>
+                                                    }
                                                 }
                                             </div>
                                         </td>

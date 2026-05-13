@@ -24,6 +24,14 @@ namespace MatKinh.Areas.AdminPage.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult AddTypeProduct(AdminCategoryEditVm model)
         {
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "Dữ liệu loại sản phẩm không hợp lệ.";
+                return RedirectToAction("ProductType");
+            }
+
+            NormalizeCategoryModel(model);
+
             if (!ModelState.IsValid)
             {
                 var invalidVm = BuildViewModel(model.LoaiSanPhamId);
@@ -35,72 +43,17 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
             if (isUpdate)
             {
-                var category = db.LoaiSanPhams.FirstOrDefault(x => x.LoaiSanPhamId == model.LoaiSanPhamId.Value);
-                if (category == null)
-                {
-                    TempData["ErrorMessage"] = "Không tìm thấy loại sản phẩm.";
-                    return RedirectToAction("ProductType");
-                }
-
-                bool duplicatedCode = db.LoaiSanPhams.Any(x =>
-                    x.LoaiSanPhamId != category.LoaiSanPhamId &&
-                    x.MaLoaiSanPham == model.MaLoaiSanPham);
-
-                if (duplicatedCode)
-                {
-                    ModelState.AddModelError("MaLoaiSanPham", "Mã loại sản phẩm đã tồn tại.");
-                    var invalidVm = BuildViewModel(model.LoaiSanPhamId);
-                    invalidVm.Form = model;
-                    return View("ProductType", invalidVm);
-                }
-
-                category.MaLoaiSanPham = (model.MaLoaiSanPham ?? string.Empty).Trim();
-                category.TenLoaiSanPham = (model.TenLoaiSanPham ?? string.Empty).Trim();
-                category.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
-                category.IsActive = model.IsActive;
-                category.UpdatedAt = DateTime.Now;
-
-                db.SaveChanges();
-
-                TempData["SuccessMessage"] = "Cập nhật loại sản phẩm thành công.";
-                return RedirectToAction("ProductType");
+                return UpdateCategory(model);
             }
-            else
-            {
-                bool duplicatedCode = db.LoaiSanPhams.Any(x => x.MaLoaiSanPham == model.MaLoaiSanPham);
-                if (duplicatedCode)
-                {
-                    ModelState.AddModelError("MaLoaiSanPham", "Mã loại sản phẩm đã tồn tại.");
-                    var invalidVm = BuildViewModel(null);
-                    invalidVm.Form = model;
-                    return View("ProductType", invalidVm);
-                }
 
-                var category = new LoaiSanPham
-                {
-                    MaLoaiSanPham = (model.MaLoaiSanPham ?? string.Empty).Trim(),
-                    TenLoaiSanPham = (model.TenLoaiSanPham ?? string.Empty).Trim(),
-                    MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim(),
-                    IsActive = model.IsActive,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = null
-                };
-
-                db.LoaiSanPhams.Add(category);
-                db.SaveChanges();
-
-                TempData["SuccessMessage"] = "Thêm loại sản phẩm thành công.";
-                return RedirectToAction("ProductType");
-            }
+            return CreateCategory(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
-            var category = db.LoaiSanPhams
-                .Include(x => x.SanPhams)
-                .FirstOrDefault(x => x.LoaiSanPhamId == id);
+            var category = db.LoaiSanPhams.FirstOrDefault(x => x.LoaiSanPhamId == id);
 
             if (category == null)
             {
@@ -108,20 +61,18 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("ProductType");
             }
 
-            if (category.SanPhams != null && category.SanPhams.Any())
+            if (!category.IsActive)
             {
-                category.IsActive = false;
-                category.UpdatedAt = DateTime.Now;
-                db.SaveChanges();
-
-                TempData["SuccessMessage"] = "Loại sản phẩm đã được ngừng sử dụng vì đang gắn với sản phẩm.";
+                TempData["ErrorMessage"] = "Loại sản phẩm này đã ngừng sử dụng trước đó.";
                 return RedirectToAction("ProductType");
             }
 
-            db.LoaiSanPhams.Remove(category);
+            category.IsActive = false;
+            category.UpdatedAt = DateTime.Now;
+
             db.SaveChanges();
 
-            TempData["SuccessMessage"] = "Xóa loại sản phẩm thành công.";
+            TempData["SuccessMessage"] = "Đã chuyển loại sản phẩm sang trạng thái ngừng sử dụng.";
             return RedirectToAction("ProductType");
         }
 
@@ -130,6 +81,81 @@ namespace MatKinh.Areas.AdminPage.Controllers
         public ActionResult Update(int id)
         {
             return RedirectToAction("ProductType", new { editId = id });
+        }
+
+        private ActionResult CreateCategory(AdminCategoryEditVm model)
+        {
+            if (IsDuplicatedCategoryCode(model.MaLoaiSanPham, null))
+            {
+                ModelState.AddModelError("MaLoaiSanPham", "Mã loại sản phẩm đã tồn tại.");
+            }
+
+            if (IsDuplicatedCategoryName(model.TenLoaiSanPham, null))
+            {
+                ModelState.AddModelError("TenLoaiSanPham", "Tên loại sản phẩm đã tồn tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var invalidVm = BuildViewModel(null);
+                invalidVm.Form = model;
+                return View("ProductType", invalidVm);
+            }
+
+            var category = new LoaiSanPham
+            {
+                MaLoaiSanPham = model.MaLoaiSanPham,
+                TenLoaiSanPham = model.TenLoaiSanPham,
+                MoTa = model.MoTa,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null
+            };
+
+            db.LoaiSanPhams.Add(category);
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Thêm loại sản phẩm thành công.";
+            return RedirectToAction("ProductType");
+        }
+
+        private ActionResult UpdateCategory(AdminCategoryEditVm model)
+        {
+            var category = db.LoaiSanPhams.FirstOrDefault(x => x.LoaiSanPhamId == model.LoaiSanPhamId.Value);
+
+            if (category == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy loại sản phẩm.";
+                return RedirectToAction("ProductType");
+            }
+
+            if (IsDuplicatedCategoryCode(model.MaLoaiSanPham, category.LoaiSanPhamId))
+            {
+                ModelState.AddModelError("MaLoaiSanPham", "Mã loại sản phẩm đã tồn tại.");
+            }
+
+            if (IsDuplicatedCategoryName(model.TenLoaiSanPham, category.LoaiSanPhamId))
+            {
+                ModelState.AddModelError("TenLoaiSanPham", "Tên loại sản phẩm đã tồn tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var invalidVm = BuildViewModel(model.LoaiSanPhamId);
+                invalidVm.Form = model;
+                return View("ProductType", invalidVm);
+            }
+
+            category.MaLoaiSanPham = model.MaLoaiSanPham;
+            category.TenLoaiSanPham = model.TenLoaiSanPham;
+            category.MoTa = model.MoTa;
+            category.IsActive = model.IsActive;
+            category.UpdatedAt = DateTime.Now;
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Cập nhật loại sản phẩm thành công.";
+            return RedirectToAction("ProductType");
         }
 
         private AdminCategoryIndexVm BuildViewModel(int? editId)
@@ -171,6 +197,36 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             return vm;
+        }
+
+        private void NormalizeCategoryModel(AdminCategoryEditVm model)
+        {
+            model.MaLoaiSanPham = NormalizeText(model.MaLoaiSanPham).ToUpperInvariant();
+            model.TenLoaiSanPham = NormalizeText(model.TenLoaiSanPham);
+            model.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
+        }
+
+        private bool IsDuplicatedCategoryCode(string code, int? currentId)
+        {
+            code = NormalizeText(code).ToUpperInvariant();
+
+            return db.LoaiSanPhams.Any(x =>
+                x.MaLoaiSanPham == code &&
+                (!currentId.HasValue || x.LoaiSanPhamId != currentId.Value));
+        }
+
+        private bool IsDuplicatedCategoryName(string name, int? currentId)
+        {
+            name = NormalizeText(name);
+
+            return db.LoaiSanPhams.Any(x =>
+                x.TenLoaiSanPham == name &&
+                (!currentId.HasValue || x.LoaiSanPhamId != currentId.Value));
+        }
+
+        private string NormalizeText(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
         }
 
         protected override void Dispose(bool disposing)

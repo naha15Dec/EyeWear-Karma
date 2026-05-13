@@ -9,41 +9,43 @@ using MatKinh.ViewModel;
 namespace MatKinh.Areas.AdminPage.Controllers
 {
     [CustomAuthentication]
-    [CustomAuthorize(Roles = RoleConstants.ADMIN + "," + RoleConstants.STAFF)]
+    [CustomAuthorize(Roles = RoleConstants.ADMIN)]
     public class ManagerBlogController : Controller
     {
         private readonly BanMatKinhEntities db = new BanMatKinhEntities();
 
+        private const int PAGE_SIZE = 10;
+
         [HttpGet]
-        public ActionResult ManagerBlog(string status = "published", string keyword = "")
+        public ActionResult ManagerBlog(string status = "draft", string keyword = "", int page = 1)
         {
-            var model = BuildIndexViewModel(status, keyword);
+            var model = BuildIndexViewModel(status, keyword, page);
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ActivateBlog(int id, string status = "published", string keyword = "")
+        public ActionResult ActivateBlog(int id, string status = "draft", string keyword = "", int page = 1)
         {
             var post = db.BaiViets.FirstOrDefault(x => x.BaiVietId == id);
             if (post == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy bài viết.";
-                return RedirectToAction("ManagerBlog", new { status, keyword });
+                return RedirectToAction("ManagerBlog", new { status, keyword, page });
             }
 
-            switch ((status ?? string.Empty).Trim().ToLower())
+            switch (post.TrangThai)
             {
-                case "draft":
+                case BlogStatusConstants.DRAFT:
                     post.TrangThai = BlogStatusConstants.PUBLISHED;
                     post.NgayDang = DateTime.Now;
                     break;
 
-                case "published":
+                case BlogStatusConstants.PUBLISHED:
                     post.TrangThai = BlogStatusConstants.HIDDEN;
                     break;
 
-                case "hidden":
+                case BlogStatusConstants.HIDDEN:
                     post.TrangThai = BlogStatusConstants.PUBLISHED;
                     if (!post.NgayDang.HasValue)
                     {
@@ -53,10 +55,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
                 default:
                     post.TrangThai = BlogStatusConstants.PUBLISHED;
-                    if (!post.NgayDang.HasValue)
-                    {
-                        post.NgayDang = DateTime.Now;
-                    }
+                    post.NgayDang = DateTime.Now;
                     break;
             }
 
@@ -64,38 +63,44 @@ namespace MatKinh.Areas.AdminPage.Controllers
             db.SaveChanges();
 
             TempData["SuccessMessage"] = "Cập nhật trạng thái bài viết thành công.";
-            return RedirectToAction("ManagerBlog", new { status, keyword });
+            return RedirectToAction("ManagerBlog", new { status, keyword, page });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, string status = "published", string keyword = "")
+        public ActionResult Delete(int id, string status = "draft", string keyword = "", int page = 1)
         {
             var post = db.BaiViets.FirstOrDefault(x => x.BaiVietId == id);
             if (post == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy bài viết.";
-                return RedirectToAction("ManagerBlog", new { status, keyword });
+                return RedirectToAction("ManagerBlog", new { status, keyword, page });
             }
 
-            db.BaiViets.Remove(post);
+            post.TrangThai = BlogStatusConstants.HIDDEN;
+            post.UpdatedAt = DateTime.Now;
+
             db.SaveChanges();
 
-            TempData["SuccessMessage"] = "Xóa bài viết thành công.";
-            return RedirectToAction("ManagerBlog", new { status, keyword });
+            TempData["SuccessMessage"] = "Đã chuyển bài viết sang trạng thái ẩn.";
+            return RedirectToAction("ManagerBlog", new { status, keyword, page });
         }
 
         [HttpGet]
-        public ActionResult FindPostByID(string idPost, string status = "published")
+        public ActionResult FindPostByID(string idPost, string status = "draft")
         {
-            var model = BuildIndexViewModel(status, idPost);
-            return View("ManagerBlog", model);
+            return RedirectToAction("ManagerBlog", new { status, keyword = idPost });
         }
 
-        private AdminBlogIndexVm BuildIndexViewModel(string status, string keyword)
+        private AdminBlogIndexVm BuildIndexViewModel(string status, string keyword, int page)
         {
-            status = (status ?? "published").Trim().ToLower();
+            status = (status ?? "draft").Trim().ToLower();
             keyword = (keyword ?? string.Empty).Trim();
+
+            if (page <= 0)
+            {
+                page = 1;
+            }
 
             int selectedStatus = GetStatusValue(status);
 
@@ -110,49 +115,71 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     x.TieuDe.Contains(keyword));
             }
 
-            var model = new AdminBlogIndexVm
-            {
-                HeaderTitle = GetHeaderTitle(selectedStatus),
-                StatusFilter = status,
-                Keyword = keyword,
-                Posts = query
-                    .OrderByDescending(x => x.UpdatedAt.HasValue ? x.UpdatedAt.Value : x.CreatedAt)
-                    .Select(x => new AdminBlogListItemVm
-                    {
-                        BaiVietId = x.BaiVietId,
-                        MaBaiViet = x.MaBaiViet,
-                        TieuDe = x.TieuDe,
-                        TomTat = x.TomTat,
-                        AnhDaiDien = x.AnhDaiDien,
-                        TrangThai = x.TrangThai,
-                        TrangThaiText = "",
-                        NguoiTao = x.TaiKhoan != null ? x.TaiKhoan.HoTen : "",
-                        NgayDang = x.NgayDang,
-                        CreatedAt = x.CreatedAt,
-                        UpdatedAt = x.UpdatedAt
-                    })
-                    .ToList(),
-                StatusOptions = BuildStatusOptions(selectedStatus)
-            };
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
 
-            foreach (var item in model.Posts)
+            if (totalPages <= 0)
+            {
+                totalPages = 1;
+            }
+
+            if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var posts = query
+                .OrderByDescending(x => x.UpdatedAt.HasValue ? x.UpdatedAt.Value : x.CreatedAt)
+                .Skip((page - 1) * PAGE_SIZE)
+                .Take(PAGE_SIZE)
+                .Select(x => new AdminBlogListItemVm
+                {
+                    BaiVietId = x.BaiVietId,
+                    MaBaiViet = x.MaBaiViet,
+                    TieuDe = x.TieuDe,
+                    TomTat = x.TomTat,
+                    NoiDung = x.NoiDung,
+                    AnhDaiDien = x.AnhDaiDien,
+                    TrangThai = x.TrangThai,
+                    TrangThaiText = "",
+                    NguoiTao = x.TaiKhoan != null ? x.TaiKhoan.HoTen : "",
+                    NgayDang = x.NgayDang,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
+                })
+                .ToList();
+
+            foreach (var item in posts)
             {
                 item.TrangThaiText = BlogStatusConstants.GetName(item.TrangThai);
             }
 
-            return model;
+            return new AdminBlogIndexVm
+            {
+                HeaderTitle = GetHeaderTitle(selectedStatus),
+                StatusFilter = status,
+                Keyword = keyword,
+                Posts = posts,
+                StatusOptions = BuildStatusOptions(selectedStatus),
+                CurrentPage = page,
+                PageSize = PAGE_SIZE,
+                TotalItems = totalItems,
+                TotalPages = totalPages
+            };
         }
 
         private int GetStatusValue(string status)
         {
             switch ((status ?? string.Empty).Trim().ToLower())
             {
-                case "draft":
-                    return BlogStatusConstants.DRAFT;
+                case "published":
+                    return BlogStatusConstants.PUBLISHED;
+
                 case "hidden":
                     return BlogStatusConstants.HIDDEN;
+
                 default:
-                    return BlogStatusConstants.PUBLISHED;
+                    return BlogStatusConstants.DRAFT;
             }
         }
 
@@ -160,12 +187,14 @@ namespace MatKinh.Areas.AdminPage.Controllers
         {
             switch (status)
             {
-                case BlogStatusConstants.DRAFT:
-                    return "Bài viết nháp";
+                case BlogStatusConstants.PUBLISHED:
+                    return "Bài viết đã đăng";
+
                 case BlogStatusConstants.HIDDEN:
                     return "Bài viết đã ẩn";
+
                 default:
-                    return "Bài viết đã đăng";
+                    return "Bài viết chờ duyệt";
             }
         }
 
@@ -176,7 +205,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 new SelectListItem
                 {
                     Value = "draft",
-                    Text = "Nháp",
+                    Text = "Chờ duyệt",
                     Selected = selectedStatus == BlogStatusConstants.DRAFT
                 },
                 new SelectListItem

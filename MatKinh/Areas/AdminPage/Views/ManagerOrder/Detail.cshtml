@@ -10,8 +10,47 @@
     bool isStaff = string.Equals(roleCode, RoleConstants.STAFF, StringComparison.OrdinalIgnoreCase);
     bool isShipper = string.Equals(roleCode, RoleConstants.SHIPPER, StringComparison.OrdinalIgnoreCase);
 
-    bool canAssignShipper = isAdmin || isStaff;
-    bool canUpdateStatus = isAdmin || isStaff || isShipper;
+    bool isFinalStatus =
+        Model.TrangThai == OrderStatusConstants.DELIVERED ||
+        Model.TrangThai == OrderStatusConstants.DELIVERY_FAILED ||
+        Model.TrangThai == OrderStatusConstants.CANCELLED;
+
+    bool canAssignShipper =
+        (isAdmin || isStaff) &&
+        !isFinalStatus &&
+        (Model.TrangThai == OrderStatusConstants.PREPARING ||
+         Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER);
+
+    bool canUpdateStatus =
+        (isAdmin || isStaff || isShipper) &&
+        !isFinalStatus;
+
+    bool hasStatusAction = false;
+
+    if (canUpdateStatus)
+    {
+        if (isAdmin)
+        {
+            hasStatusAction =
+                Model.TrangThai == OrderStatusConstants.PENDING ||
+                Model.TrangThai == OrderStatusConstants.CONFIRMED ||
+                Model.TrangThai == OrderStatusConstants.PREPARING ||
+                Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ||
+                Model.TrangThai == OrderStatusConstants.DELIVERING;
+        }
+        else if (isStaff)
+        {
+            hasStatusAction =
+                Model.TrangThai == OrderStatusConstants.PENDING ||
+                Model.TrangThai == OrderStatusConstants.CONFIRMED;
+        }
+        else if (isShipper)
+        {
+            hasStatusAction =
+                Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ||
+                Model.TrangThai == OrderStatusConstants.DELIVERING;
+        }
+    }
 }
 
 <div class="admin-page-header">
@@ -34,25 +73,9 @@
 <section class="content">
     <div class="container-fluid p-0">
 
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
         <div class="row">
-            <!-- LEFT -->
             <div class="col-lg-8">
 
-                <!-- ORDER SUMMARY -->
                 <div class="card admin-card mb-3">
                     <div class="card-header admin-card-header border-0">
                         <div class="admin-card-title-wrap">
@@ -153,7 +176,6 @@
                     </div>
                 </div>
 
-                <!-- RECEIVER INFO -->
                 <div class="card admin-card mb-3">
                     <div class="card-header admin-card-header border-0">
                         <div class="admin-card-title-wrap">
@@ -187,7 +209,6 @@
                     </div>
                 </div>
 
-                <!-- ORDER ITEMS -->
                 <div class="card admin-card mb-3">
                     <div class="card-header admin-card-header border-0">
                         <div class="admin-card-title-wrap">
@@ -253,7 +274,6 @@
                     </div>
                 </div>
 
-                <!-- HISTORY -->
                 <div class="card admin-card">
                     <div class="card-header admin-card-header border-0">
                         <div class="admin-card-title-wrap">
@@ -299,10 +319,8 @@
 
             </div>
 
-            <!-- RIGHT -->
             <div class="col-lg-4">
 
-                <!-- PAYMENT SUMMARY -->
                 <div class="card admin-card mb-3">
                     <div class="card-header admin-card-header border-0">
                         <h3 class="admin-card-title">Thanh toán</h3>
@@ -313,7 +331,7 @@
                             <strong>@Model.TongTienHang.ToString("N0") đ</strong>
                         </div>
                         <div class="admin-summary-row">
-                            <span>Phí vận chuyển (COD)</span>
+                            <span>Phí vận chuyển</span>
                             <strong>@Model.PhiVanChuyen.ToString("N0") đ</strong>
                         </div>
                         <div class="admin-summary-row">
@@ -328,102 +346,124 @@
                     </div>
                 </div>
 
-                <!-- UPDATE STATUS -->
                 @if (canUpdateStatus)
                 {
                     <div class="card admin-card mb-3">
                         <div class="card-header admin-card-header border-0">
                             <h3 class="admin-card-title">Cập nhật trạng thái</h3>
                         </div>
+
                         <div class="card-body">
-                            @using (Html.BeginForm("UpdateStatus", "ManagerOrder", FormMethod.Post))
+                            @if (hasStatusAction)
                             {
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="DonHangId" value="@Model.DonHangId" />
+                                using (Html.BeginForm("UpdateStatus", "ManagerOrder", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="DonHangId" value="@Model.DonHangId" />
 
-                                <div class="form-group">
-                                    <label>Trạng thái mới</label>
-                                    <select name="TrangThaiMoi" class="form-control admin-input">
-                                        @if (isAdmin)
-                                        {
-                                            if (Model.TrangThai == OrderStatusConstants.PENDING)
+                                    <div class="form-group">
+                                        <label>Trạng thái mới</label>
+                                        <select name="TrangThaiMoi" class="form-control admin-input" required>
+                                            @if (isAdmin)
                                             {
-                                                <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
-                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                                if (Model.TrangThai == OrderStatusConstants.PENDING)
+                                                {
+                                                    <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
+                                                    <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
+                                                {
+                                                    <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
+                                                    <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.PREPARING)
+                                                {
+                                                    <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
+                                                {
+                                                    <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
+                                                {
+                                                    <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
+                                                    <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
+                                                }
                                             }
-                                            else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
+                                            else if (isStaff)
                                             {
-                                                <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
+                                                if (Model.TrangThai == OrderStatusConstants.PENDING)
+                                                {
+                                                    <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
+                                                {
+                                                    <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
+                                                }
                                             }
-                                            else if (Model.TrangThai == OrderStatusConstants.PREPARING)
+                                            else if (isShipper)
                                             {
-                                                <option value="@OrderStatusConstants.ASSIGNED_TO_SHIPPER">Đã giao shipper</option>
-                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
+                                                if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
+                                                {
+                                                    <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
+                                                }
+                                                else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
+                                                {
+                                                    <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
+                                                    <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
+                                                }
                                             }
-                                            else if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
-                                            {
-                                                <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
-                                            }
-                                            else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
-                                            {
-                                                <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
-                                                <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
-                                                <option value="@OrderStatusConstants.CANCELLED">Đã hủy</option>
-                                            }
-                                        }
-                                        else if (isStaff)
-                                        {
-                                            if (Model.TrangThai == OrderStatusConstants.PENDING)
-                                            {
-                                                <option value="@OrderStatusConstants.CONFIRMED">Đã xác nhận</option>
-                                            }
-                                            else if (Model.TrangThai == OrderStatusConstants.CONFIRMED)
-                                            {
-                                                <option value="@OrderStatusConstants.PREPARING">Đang chuẩn bị</option>
-                                            }
-                                            else if (Model.TrangThai == OrderStatusConstants.PREPARING)
-                                            {
-                                                <option value="@OrderStatusConstants.ASSIGNED_TO_SHIPPER">Đã giao shipper</option>
-                                            }
-                                        }
-                                        else if (isShipper)
-                                        {
-                                            if (Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
-                                            {
-                                                <option value="@OrderStatusConstants.DELIVERING">Đang giao</option>
-                                            }
-                                            else if (Model.TrangThai == OrderStatusConstants.DELIVERING)
-                                            {
-                                                <option value="@OrderStatusConstants.DELIVERED">Giao thành công</option>
-                                                <option value="@OrderStatusConstants.DELIVERY_FAILED">Giao thất bại</option>
-                                            }
-                                        }
-                                    </select>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea name="GhiChu"
+                                                  rows="3"
+                                                  class="form-control admin-input"
+                                                  placeholder="Nhập ghi chú khi cập nhật trạng thái..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn admin-btn admin-btn-save w-100">
+                                        <i class="fas fa-sync-alt mr-1"></i> Cập nhật trạng thái
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <div class="admin-order-note-box">
+                                    <strong>Không có thao tác trạng thái phù hợp</strong>
+                                    <p>
+                                        Đơn hàng hiện đang ở trạng thái
+                                        <b>@Model.TrangThaiText</b>.
+                                        Vui lòng kiểm tra luồng xử lý hoặc sử dụng chức năng phù hợp bên dưới nếu có.
+                                    </p>
                                 </div>
+                            }
 
-                                <div class="form-group">
-                                    <label>Ghi chú</label>
-                                    <textarea name="GhiChu"
-                                              rows="3"
-                                              class="form-control admin-input"
-                                              placeholder="Nhập ghi chú khi cập nhật trạng thái..."></textarea>
+                            @if (Model.TrangThai == OrderStatusConstants.PREPARING && (isAdmin || isStaff))
+                            {
+                                <div class="admin-order-note-box mt-3">
+                                    <strong>Cần chọn shipper giao hàng</strong>
+                                    <p>
+                                        Để chuyển đơn sang trạng thái <b>Đã giao shipper</b>,
+                                        vui lòng chọn shipper ở khung <b>Chọn shipper giao hàng</b>.
+                                    </p>
                                 </div>
-
-                                <button type="submit" class="btn admin-btn admin-btn-save w-100">
-                                    <i class="fas fa-sync-alt mr-1"></i> Cập nhật trạng thái
-                                </button>
                             }
                         </div>
                     </div>
                 }
 
-                <!-- ASSIGN SHIPPER -->
                 @if (canAssignShipper)
                 {
                     <div class="card admin-card mb-3">
                         <div class="card-header admin-card-header border-0">
-                            <h3 class="admin-card-title">Gán shipper</h3>
+                            <h3 class="admin-card-title">
+                                @(Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ? "Đổi shipper" : "Chọn shipper giao hàng")
+                            </h3>
                         </div>
+
                         <div class="card-body">
                             @using (Html.BeginForm("AssignShipper", "ManagerOrder", FormMethod.Post))
                             {
@@ -431,8 +471,8 @@
                                 <input type="hidden" name="DonHangId" value="@Model.DonHangId" />
 
                                 <div class="form-group">
-                                    <label>Chọn shipper</label>
-                                    <select name="ShipperId" class="form-control admin-input">
+                                    <label>Shipper phụ trách</label>
+                                    <select name="ShipperId" class="form-control admin-input" required>
                                         <option value="">-- Chọn shipper --</option>
                                         @foreach (var shipper in Model.Shippers)
                                         {
@@ -452,14 +492,32 @@
                                 </div>
 
                                 <button type="submit" class="btn admin-btn admin-btn-detail w-100">
-                                    <i class="fas fa-truck mr-1"></i> Gán shipper
+                                    <i class="fas fa-truck mr-1"></i>
+                                    @(Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ? "Cập nhật shipper" : "Gán shipper và chuyển trạng thái")
                                 </button>
                             }
                         </div>
                     </div>
                 }
+                else if ((isAdmin || isStaff) && Model.TrangThai == OrderStatusConstants.PREPARING && Model.Shippers.Count == 0)
+                {
+                    <div class="card admin-card mb-3">
+                        <div class="card-header admin-card-header border-0">
+                            <h3 class="admin-card-title">Chọn shipper giao hàng</h3>
+                        </div>
 
-                <!-- TIME LOG -->
+                        <div class="card-body">
+                            <div class="admin-order-note-box">
+                                <strong>Chưa có shipper khả dụng</strong>
+                                <p>
+                                    Hiện chưa có tài khoản shipper đang hoạt động.
+                                    Vui lòng tạo hoặc kích hoạt tài khoản shipper trước khi giao đơn.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                }
+
                 <div class="card admin-card">
                     <div class="card-header admin-card-header border-0">
                         <h3 class="admin-card-title">Mốc thời gian</h3>
@@ -672,4 +730,24 @@
         background: #f3f4f6;
         color: #6b7280;
     }
+
+    .admin-order-note-box {
+        background: #fbf9f6;
+        border: 1px solid #efe7dc;
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: #6f6b65;
+    }
+
+        .admin-order-note-box strong {
+            display: block;
+            color: #1f1f1f;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .admin-order-note-box p {
+            margin: 0;
+            line-height: 1.6;
+        }
 </style>

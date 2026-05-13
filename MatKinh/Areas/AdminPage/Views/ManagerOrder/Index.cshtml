@@ -3,6 +3,9 @@
 
 @{
     ViewBag.Title = "Quản lý đơn hàng";
+
+    int startPage = Math.Max(1, Model.CurrentPage - 2);
+    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
 }
 
 <div class="admin-page-header">
@@ -22,31 +25,19 @@
 <section class="content">
     <div class="container-fluid p-0">
 
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
         <div class="card admin-card mb-3">
             <div class="card-header admin-card-header border-0">
                 <div class="admin-card-title-wrap">
                     <h3 class="admin-card-title">Bộ lọc đơn hàng</h3>
-                    <span class="admin-card-count">@Model.Orders.Count đơn hàng</span>
+                    <span class="admin-card-count">@Model.TotalItems đơn hàng</span>
                 </div>
             </div>
 
             <div class="card-body">
                 @using (Html.BeginForm("Index", "ManagerOrder", FormMethod.Get, new { @class = "row" }))
                 {
+                    <input type="hidden" name="page" value="1" />
+
                     <div class="col-md-5">
                         <div class="form-group">
                             <label>Tìm kiếm</label>
@@ -88,7 +79,9 @@
             <div class="card-header admin-card-header border-0">
                 <div class="admin-card-title-wrap">
                     <h3 class="admin-card-title">Danh sách đơn hàng</h3>
-                    <span class="admin-card-count">@Model.Orders.Count đơn</span>
+                    <span class="admin-card-count">
+                        Hiển thị @Model.Orders.Count / @Model.TotalItems đơn
+                    </span>
                 </div>
             </div>
 
@@ -125,13 +118,16 @@
                                                 <div class="admin-account-avatar">
                                                     <i class="fas fa-user"></i>
                                                 </div>
+
                                                 <div>
                                                     <div class="admin-account-name">
                                                         @(string.IsNullOrWhiteSpace(item.HoTenNguoiNhan) ? item.TenKhachHang : item.HoTenNguoiNhan)
                                                     </div>
+
                                                     <div class="admin-account-sub">
                                                         @item.SoDienThoaiNguoiNhan
                                                     </div>
+
                                                     <div class="admin-order-subtext">
                                                         @item.DiaChiNhanHang
                                                     </div>
@@ -141,6 +137,7 @@
 
                                         <td>
                                             <div>@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</div>
+
                                             @if (item.NgayXacNhan.HasValue)
                                             {
                                                 <div class="admin-order-subtext">
@@ -153,6 +150,7 @@
                                             <div class="admin-price-strong">
                                                 @item.TongThanhToan.ToString("N0") đ
                                             </div>
+
                                             <div class="admin-order-subtext">
                                                 Tiền hàng: @item.TongTienHang.ToString("N0") đ
                                             </div>
@@ -234,6 +232,62 @@
                         </tfoot>
                     </table>
                 </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="admin-order-pagination">
+                        <div class="admin-order-pagination__info">
+                            Trang @Model.CurrentPage / @Model.TotalPages —
+                            hiển thị @Model.Orders.Count trên tổng @Model.TotalItems đơn hàng
+                        </div>
+
+                        <div class="admin-order-pagination__links">
+                            <a class="admin-order-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                               href="@(Model.HasPreviousPage ? Url.Action("Index", new { keyword = Model.Keyword, status = Model.StatusFilter, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+
+                            @if (startPage > 1)
+                            {
+                                <a class="admin-order-page-link"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.StatusFilter, page = 1 })">
+                                    1
+                                </a>
+
+                                if (startPage > 2)
+                                {
+                                    <span class="admin-order-page-dots">...</span>
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <a class="admin-order-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.StatusFilter, page = i })">
+                                    @i
+                                </a>
+                            }
+
+                            @if (endPage < Model.TotalPages)
+                            {
+                                if (endPage < Model.TotalPages - 1)
+                                {
+                                    <span class="admin-order-page-dots">...</span>
+                                }
+
+                                <a class="admin-order-page-link"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.StatusFilter, page = Model.TotalPages })">
+                                    @Model.TotalPages
+                                </a>
+                            }
+
+                            <a class="admin-order-page-link @(Model.HasNextPage ? "" : "disabled")"
+                               href="@(Model.HasNextPage ? Url.Action("Index", new { keyword = Model.Keyword, status = Model.StatusFilter, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
@@ -296,5 +350,75 @@
     .admin-status-badge.muted {
         background: #f3f4f6;
         color: #6b7280;
+    }
+
+    .admin-order-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px 4px 4px;
+        border-top: 1px solid #f0ebe3;
+        margin-top: 12px;
+    }
+
+    .admin-order-pagination__info {
+        color: #8a8378;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .admin-order-pagination__links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .admin-order-page-link {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid #efe7dc;
+        background: #fbf9f6;
+        color: #1f1f1f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        transition: all .2s ease;
+    }
+
+        .admin-order-page-link:hover {
+            text-decoration: none;
+            background: #1f1f1f;
+            color: #fff;
+            border-color: #1f1f1f;
+        }
+
+        .admin-order-page-link.active {
+            background: #1f1f1f;
+            color: #fff;
+            border-color: #1f1f1f;
+        }
+
+        .admin-order-page-link.disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+    .admin-order-page-dots {
+        color: #8a8378;
+        font-weight: 800;
+        padding: 0 4px;
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-order-pagination {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
 </style>

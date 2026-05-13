@@ -1,0 +1,274 @@
+﻿/* ===== System Category Pages: Brand + Product Type ===== */
+
+.admin-system-page .admin-card,
+.admin-system-page .admin-form-card {
+    border: 1px solid #e7e0d7;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.admin-system-page .admin-card-header {
+    padding: 22px 24px 12px;
+    background: #fff;
+}
+
+.admin-system-page .admin-card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f1f1f;
+    margin: 0;
+}
+
+.admin-system-page .admin-card-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #f6f1e8;
+    color: #8a6b34;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-system-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-system-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .admin-system-table thead th,
+    .admin-system-table tfoot th {
+        border-top: none;
+        border-bottom: 1px solid #eee7dc;
+        color: #81786f;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        white-space: nowrap;
+        padding: 15px 14px;
+        font-weight: 800;
+    }
+
+    .admin-system-table tbody td {
+        border-top: none;
+        border-bottom: 1px solid #f0ebe3;
+        padding: 16px 14px;
+        vertical-align: middle;
+    }
+
+    .admin-system-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+.admin-system-code {
+    color: #b08d57;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.admin-system-name {
+    font-size: 15px;
+    font-weight: 900;
+    color: #1f1f1f;
+    line-height: 1.4;
+}
+
+.admin-system-desc {
+    max-width: 260px;
+    color: #7d756d;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.admin-system-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 34px;
+    border-radius: 999px;
+    background: #f6f1e8;
+    color: #1f1f1f;
+    font-weight: 900;
+}
+
+.admin-system-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 13px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+    .admin-system-badge.active {
+        background: #edf8f0;
+        color: #2f7d32;
+    }
+
+    .admin-system-badge.inactive {
+        background: #f3f1ed;
+        color: #70675d;
+    }
+
+.admin-system-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.admin-system-action {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 14px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid transparent;
+    transition: all .2s ease;
+}
+
+    .admin-system-action.edit {
+        background: #111;
+        border-color: #111;
+        color: #fff;
+    }
+
+        .admin-system-action.edit:hover {
+            background: #000;
+            color: #fff;
+        }
+
+    .admin-system-action.disable {
+        background: #fff3f3;
+        border-color: #f0c8c4;
+        color: #b42318;
+    }
+
+        .admin-system-action.disable:hover {
+            background: #b42318;
+            border-color: #b42318;
+            color: #fff;
+        }
+
+.admin-system-form-card .card-header {
+    padding: 22px 24px 8px;
+}
+
+.admin-system-form-card .card-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #1f1f1f;
+}
+
+.admin-system-form-card .card-body {
+    padding: 20px 24px 24px;
+}
+
+.admin-system-form-card label {
+    font-weight: 800;
+    color: #1f1f1f;
+    margin-bottom: 8px;
+}
+
+.admin-system-form-card .admin-input {
+    min-height: 48px;
+    border-radius: 14px;
+    border: 1px solid #e7e0d7;
+    background: #fff;
+    color: #1f1f1f;
+}
+
+    .admin-system-form-card .admin-input:focus {
+        border-color: #b08d57;
+        box-shadow: 0 0 0 3px rgba(176, 141, 87, .12);
+    }
+
+.admin-system-note {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.admin-system-form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.admin-system-empty {
+    text-align: center;
+    padding: 44px 20px;
+    color: #8a8378;
+}
+
+    .admin-system-empty strong {
+        display: block;
+        color: #1f1f1f;
+        font-size: 18px;
+        margin-bottom: 6px;
+    }
+
+@media (max-width: 991.98px) {
+    .admin-system-page .row {
+        row-gap: 18px;
+    }
+
+    .admin-system-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-system-action {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-system-page .admin-card-header {
+        padding: 18px 18px 8px;
+    }
+
+    .admin-system-page .admin-card-title-wrap {
+        gap: 10px;
+    }
+
+    .admin-system-table {
+        min-width: 760px;
+    }
+
+    .admin-system-form-card .card-body {
+        padding: 18px;
+    }
+
+    .admin-system-form-actions .btn {
+        width: 100%;
+    }
+}
+
+.admin-system-action.activate {
+    background: #edf8f0;
+    border-color: #cde8d2;
+    color: #2f7d32;
+}
+
+    .admin-system-action.activate:hover {
+        background: #2f7d32;
+        border-color: #2f7d32;
+        color: #fff;
+    }

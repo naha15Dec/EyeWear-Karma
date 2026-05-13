@@ -3,14 +3,22 @@
 
 @{
     ViewBag.Title = "Thông tin cửa hàng";
+
     var login = Session["LoginInformation"] as TaiKhoan;
     var acc = login != null ? login.TenDangNhap : "";
+
+    Func<string, string> displayText = value =>
+    {
+        return string.IsNullOrWhiteSpace(value) ? "—" : value;
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Thông tin cửa hàng</h1>
-        <p class="admin-page-subtitle">Cập nhật thông tin liên hệ và theo dõi lịch sử thay đổi.</p>
+        <p class="admin-page-subtitle">
+            Cập nhật thông tin liên hệ, giới thiệu cửa hàng và theo dõi lịch sử thay đổi.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -21,75 +29,100 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-store-page">
     <div class="container-fluid p-0">
-
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
-            </div>
-        }
 
         <div class="row">
             <div class="col-lg-7">
-                <div class="card admin-card">
+                <div class="card admin-card admin-store-card">
                     <div class="card-header admin-card-header border-0">
                         <div class="admin-card-title-wrap">
                             <h3 class="admin-card-title">Lịch sử thay đổi</h3>
-                            <span class="admin-card-count">@((Model.History != null) ? Model.History.Count : 0) lần cập nhật</span>
+                            <span class="admin-card-count">
+                                @((Model.History != null) ? Model.History.Count : 0) lần cập nhật
+                            </span>
                         </div>
                     </div>
 
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table admin-table align-middle">
+                        <div class="table-responsive admin-store-table-wrap">
+                            <table class="table admin-table admin-store-table align-middle">
                                 <thead>
                                     <tr>
                                         <th>Mã</th>
                                         <th>Người cập nhật</th>
                                         <th>Thời gian</th>
+                                        <th>Trạng thái</th>
                                         <th class="text-center">Thao tác</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     @if (Model.History != null && Model.History.Count > 0)
                                     {
                                         foreach (var item in Model.History)
                                         {
+                                            bool isCurrent = Model.CurrentInfo != null &&
+                                                             Model.CurrentInfo.ThongTinCuaHangId == item.ThongTinCuaHangId;
+
                                             <tr>
                                                 <td>
-                                                    <span class="admin-code-text">#@item.ThongTinCuaHangId</span>
+                                                    <span class="admin-store-code">#@item.ThongTinCuaHangId</span>
                                                 </td>
+
                                                 <td>
-                                                    <div class="admin-order-user">
-                                                        <div class="admin-order-user-icon">
+                                                    <div class="admin-store-user">
+                                                        <div class="admin-store-user-icon">
                                                             <i class="fas fa-user"></i>
                                                         </div>
-                                                        <span>@(item.TaiKhoan != null ? item.TaiKhoan.TenDangNhap : "Không xác định")</span>
+                                                        <div>
+                                                            <strong>@(item.TaiKhoan != null ? item.TaiKhoan.TenDangNhap : "Không xác định")</strong>
+                                                            <span>@(item.TaiKhoan != null ? item.TaiKhoan.HoTen : "—")</span>
+                                                        </div>
                                                     </div>
                                                 </td>
+
                                                 <td>
-                                                    <span class="admin-date-text">@item.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                                    <div class="admin-store-date">
+                                                        @item.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+                                                    </div>
                                                 </td>
+
+                                                <td>
+                                                    @if (isCurrent)
+                                                    {
+                                                        <span class="admin-store-badge active">Đang dùng</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="admin-store-badge inactive">Lịch sử cũ</span>
+                                                    }
+                                                </td>
+
                                                 <td class="text-center">
-                                                    <div class="admin-action-group">
+                                                    <div class="admin-store-actions">
                                                         <button type="button"
-                                                                class="btn admin-btn admin-btn-detail"
+                                                                class="btn admin-store-action view"
                                                                 data-toggle="modal"
                                                                 data-target="#historyModal@(item.ThongTinCuaHangId)">
-                                                            <i class="fas fa-eye mr-1"></i> Chi tiết
+                                                            <i class="fas fa-eye"></i>
+                                                            <span>Chi tiết</span>
                                                         </button>
 
-                                                        @using (Html.BeginForm("DeleteHistoryChange", "SettingInformationWebsite", FormMethod.Post, new { @class = "d-inline" }))
+                                                        @if (!isCurrent)
                                                         {
-                                                            @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="id" value="@item.ThongTinCuaHangId" />
-                                                            <button type="submit"
-                                                                    class="btn admin-btn admin-btn-delete"
-                                                                    onclick="return confirm('Bạn có chắc muốn xóa lịch sử thay đổi này?')">
-                                                                <i class="fas fa-trash-alt mr-1"></i> Xóa
-                                                            </button>
+                                                            using (Html.BeginForm("DeleteHistoryChange", "SettingInformationWebsite", FormMethod.Post, new { @class = "d-inline" }))
+                                                            {
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="id" value="@item.ThongTinCuaHangId" />
+
+                                                                <button type="submit"
+                                                                        class="btn admin-store-action delete"
+                                                                        onclick="return confirm('Bạn có chắc muốn xóa lịch sử thay đổi này?')">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                    <span>Xóa</span>
+                                                                </button>
+                                                            }
                                                         }
                                                     </div>
 
@@ -98,71 +131,116 @@
                                                          tabindex="-1"
                                                          role="dialog"
                                                          aria-hidden="true">
-                                                        <div class="modal-dialog modal-dialog-centered admin-confirm-dialog admin-store-modal-dialog" role="document">
+                                                        <div class="modal-dialog modal-dialog-centered admin-store-modal-dialog" role="document">
                                                             <div class="modal-content admin-modal-content">
+
                                                                 <div class="modal-header admin-modal-header">
                                                                     <div>
                                                                         <h5 class="modal-title">Chi tiết lịch sử thay đổi</h5>
-                                                                        <p class="admin-modal-subtitle mb-0">Bản ghi #@item.ThongTinCuaHangId</p>
+                                                                        <p class="admin-modal-subtitle mb-0">
+                                                                            Bản ghi #@item.ThongTinCuaHangId
+                                                                        </p>
                                                                     </div>
+
                                                                     <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
                                                                         <span aria-hidden="true">&times;</span>
                                                                     </button>
                                                                 </div>
 
                                                                 <div class="modal-body admin-modal-body">
-                                                                    <div class="card admin-form-card">
-                                                                        <div class="card-body">
-                                                                            <div class="form-group">
-                                                                                <label>Tên cửa hàng</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.TenCuaHang" disabled />
+                                                                    <div class="admin-store-history-detail">
+                                                                        <div class="admin-store-history-status">
+                                                                            @if (isCurrent)
+                                                                            {
+                                                                                <span class="admin-store-badge active">Đang dùng</span>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span class="admin-store-badge inactive">Lịch sử cũ</span>
+                                                                            }
+
+                                                                            <span>Cập nhật lúc @item.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                                                        </div>
+
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Tên cửa hàng</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.TenCuaHang)" disabled />
+                                                                                </div>
                                                                             </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Hotline</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.Hotline" disabled />
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Hotline</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.Hotline)" disabled />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Email</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.Email)" disabled />
+                                                                                </div>
                                                                             </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Email</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.Email" disabled />
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Địa chỉ</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.DiaChi)" disabled />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="form-group">
+                                                                            <label>Mô tả ngắn</label>
+                                                                            <textarea class="form-control admin-input admin-store-textarea" disabled>@displayText(item.MoTaNgan)</textarea>
+                                                                        </div>
+
+                                                                        <div class="form-group">
+                                                                            <label>Giới thiệu</label>
+                                                                            <textarea class="form-control admin-input admin-store-textarea admin-store-textarea-large" disabled>@displayText(item.GioiThieu)</textarea>
+                                                                        </div>
+
+                                                                        <div class="row">
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Logo</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.Logo)" disabled />
+                                                                                </div>
                                                                             </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Địa chỉ</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.DiaChi" disabled />
+                                                                            <div class="col-md-6">
+                                                                                <div class="form-group">
+                                                                                    <label>Banner</label>
+                                                                                    <input type="text" class="form-control admin-input" value="@displayText(item.Banner)" disabled />
+                                                                                </div>
                                                                             </div>
+                                                                        </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Mô tả ngắn</label>
-                                                                                <textarea class="form-control admin-input admin-store-textarea" disabled>@item.MoTaNgan</textarea>
-                                                                            </div>
+                                                                        <div class="form-group">
+                                                                            <label>Facebook</label>
+                                                                            <input type="text" class="form-control admin-input" value="@displayText(item.FacebookUrl)" disabled />
+                                                                        </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Giới thiệu</label>
-                                                                                <textarea class="form-control admin-input admin-store-textarea" disabled>@item.GioiThieu</textarea>
-                                                                            </div>
+                                                                        <div class="form-group">
+                                                                            <label>Instagram</label>
+                                                                            <input type="text" class="form-control admin-input" value="@displayText(item.InstagramUrl)" disabled />
+                                                                        </div>
 
-                                                                            <div class="form-group">
-                                                                                <label>Facebook</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.FacebookUrl" disabled />
-                                                                            </div>
-
-                                                                            <div class="form-group">
-                                                                                <label>Instagram</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.InstagramUrl" disabled />
-                                                                            </div>
-
-                                                                            <div class="form-group mb-0">
-                                                                                <label>Zalo</label>
-                                                                                <input type="text" class="form-control admin-input" value="@item.ZaloUrl" disabled />
-                                                                            </div>
+                                                                        <div class="form-group mb-0">
+                                                                            <label>Zalo</label>
+                                                                            <input type="text" class="form-control admin-input" value="@displayText(item.ZaloUrl)" disabled />
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 <div class="modal-footer admin-modal-footer">
-                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
+                                                                    <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">
+                                                                        Đóng
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -174,10 +252,22 @@
                                     else
                                     {
                                         <tr>
-                                            <td colspan="4" class="text-center py-4">Chưa có lịch sử thay đổi nào.</td>
+                                            <td colspan="5" class="text-center py-4">
+                                                Chưa có lịch sử thay đổi nào.
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>
+
+                                <tfoot>
+                                    <tr>
+                                        <th>Mã</th>
+                                        <th>Người cập nhật</th>
+                                        <th>Thời gian</th>
+                                        <th>Trạng thái</th>
+                                        <th class="text-center">Thao tác</th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -189,17 +279,30 @@
                 {
                     @Html.AntiForgeryToken()
 
-                    <div class="card admin-form-card">
+                    <div class="card admin-form-card admin-store-form-card">
                         <div class="card-header border-0">
                             <h3 class="card-title">Cập nhật thông tin hiện tại</h3>
+                            <p class="admin-store-form-subtitle">
+                                Khi lưu thay đổi, hệ thống sẽ tạo một bản lịch sử mới và dùng bản này làm thông tin hiện tại.
+                            </p>
                         </div>
 
                         <div class="card-body">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
+
                             <div class="admin-store-meta-box">
                                 <div class="admin-store-meta-item">
                                     <span class="admin-store-meta-label">Tài khoản cập nhật</span>
                                     <span class="admin-store-meta-value">@acc</span>
                                 </div>
+
+                                @if (Model.CurrentInfo != null)
+                                {
+                                    <div class="admin-store-meta-item">
+                                        <span class="admin-store-meta-label">Bản hiện tại</span>
+                                        <span class="admin-store-meta-value">#@Model.CurrentInfo.ThongTinCuaHangId</span>
+                                    </div>
+                                }
                             </div>
 
                             <div class="form-group mt-3">
@@ -207,7 +310,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="TenCuaHang"
-                                       value="@Model.TenCuaHang" />
+                                       value="@Model.TenCuaHang"
+                                       placeholder="Ví dụ: Karma Eyewear" />
+                                @Html.ValidationMessage("TenCuaHang", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -215,7 +320,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="Hotline"
-                                       value="@Model.Hotline" />
+                                       value="@Model.Hotline"
+                                       placeholder="Ví dụ: 0900000000" />
+                                @Html.ValidationMessage("Hotline", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -223,7 +330,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="Email"
-                                       value="@Model.Email" />
+                                       value="@Model.Email"
+                                       placeholder="Ví dụ: contact@karmaeyewear.vn" />
+                                @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -231,19 +340,25 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="DiaChi"
-                                       value="@Model.DiaChi" />
+                                       value="@Model.DiaChi"
+                                       placeholder="Nhập địa chỉ cửa hàng" />
+                                @Html.ValidationMessage("DiaChi", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
                                 <label>Mô tả ngắn</label>
                                 <textarea class="form-control admin-input admin-store-textarea"
-                                          name="MoTaNgan">@Model.MoTaNgan</textarea>
+                                          name="MoTaNgan"
+                                          placeholder="Mô tả ngắn hiển thị ở footer hoặc trang giới thiệu...">@Model.MoTaNgan</textarea>
+                                @Html.ValidationMessage("MoTaNgan", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
                                 <label>Giới thiệu</label>
-                                <textarea class="form-control admin-input admin-store-textarea"
-                                          name="GioiThieu">@Model.GioiThieu</textarea>
+                                <textarea class="form-control admin-input admin-store-textarea admin-store-textarea-large"
+                                          name="GioiThieu"
+                                          placeholder="Nội dung giới thiệu cửa hàng...">@Model.GioiThieu</textarea>
+                                @Html.ValidationMessage("GioiThieu", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -251,7 +366,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="Logo"
-                                       value="@Model.Logo" />
+                                       value="@Model.Logo"
+                                       placeholder="/Asset/img/logo.png hoặc URL logo" />
+                                @Html.ValidationMessage("Logo", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -259,7 +376,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="Banner"
-                                       value="@Model.Banner" />
+                                       value="@Model.Banner"
+                                       placeholder="/Asset/img/banner.jpg hoặc URL banner" />
+                                @Html.ValidationMessage("Banner", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -267,7 +386,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="FacebookUrl"
-                                       value="@Model.FacebookUrl" />
+                                       value="@Model.FacebookUrl"
+                                       placeholder="https://facebook.com/..." />
+                                @Html.ValidationMessage("FacebookUrl", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -275,7 +396,9 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="InstagramUrl"
-                                       value="@Model.InstagramUrl" />
+                                       value="@Model.InstagramUrl"
+                                       placeholder="https://instagram.com/..." />
+                                @Html.ValidationMessage("InstagramUrl", "", new { @class = "text-danger" })
                             </div>
 
                             <div class="form-group">
@@ -283,15 +406,14 @@
                                 <input type="text"
                                        class="form-control admin-input"
                                        name="ZaloUrl"
-                                       value="@Model.ZaloUrl" />
+                                       value="@Model.ZaloUrl"
+                                       placeholder="https://zalo.me/..." />
+                                @Html.ValidationMessage("ZaloUrl", "", new { @class = "text-danger" })
                             </div>
 
-                            <div class="form-group">
-                                <label>Trạng thái hiển thị</label>
-                                <select name="IsActive" class="form-control admin-input">
-                                    <option value="true" @(Model.IsActive ? "selected" : "")>Đang sử dụng</option>
-                                    <option value="false" @(!Model.IsActive ? "selected" : "")>Ngừng sử dụng</option>
-                                </select>
+                            <div class="admin-store-current-note">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Bản cập nhật mới sẽ tự động trở thành thông tin đang sử dụng.</span>
                             </div>
 
                             <div class="admin-form-actions">
@@ -304,5 +426,6 @@
                 }
             </div>
         </div>
+
     </div>
 </section>

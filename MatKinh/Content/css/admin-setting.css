@@ -1,0 +1,252 @@
+﻿.admin-store-page .admin-card,
+.admin-store-page .admin-form-card {
+    border: 1px solid #e7e0d7;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    background: #fff;
+    overflow: hidden;
+}
+
+.admin-store-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-store-table {
+    min-width: 780px;
+    margin-bottom: 0;
+}
+
+.admin-store-code {
+    color: #b08d57;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.admin-store-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 170px;
+}
+
+.admin-store-user-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    background: #f6f1e8;
+    color: #8a6b34;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-store-user strong {
+    display: block;
+    color: #1f1f1f;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.admin-store-user span {
+    display: block;
+    color: #8a8378;
+    font-size: 13px;
+}
+
+.admin-store-date {
+    color: #1f1f1f;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-store-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 13px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+    .admin-store-badge.active {
+        background: #edf8f0;
+        color: #2f7d32;
+    }
+
+    .admin-store-badge.inactive {
+        background: #f3f1ed;
+        color: #70675d;
+    }
+
+.admin-store-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.admin-store-action {
+    min-height: 38px;
+    border-radius: 14px;
+    padding: 0 13px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid transparent;
+    transition: all .2s ease;
+}
+
+    .admin-store-action.view {
+        background: #111;
+        color: #fff;
+    }
+
+        .admin-store-action.view:hover {
+            background: #000;
+            color: #fff;
+        }
+
+    .admin-store-action.delete {
+        background: #fff3f3;
+        color: #b42318;
+        border-color: #f0c8c4;
+    }
+
+        .admin-store-action.delete:hover {
+            background: #b42318;
+            color: #fff;
+        }
+
+    .admin-store-action.disabled-action {
+        background: #f6f1e8;
+        border-color: #efe7dc;
+        color: #7d756d;
+        cursor: not-allowed;
+    }
+
+.admin-store-form-card .card-header {
+    padding: 22px 24px 8px;
+}
+
+.admin-store-form-card .card-title {
+    color: #1f1f1f;
+    font-weight: 900;
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.admin-store-form-subtitle {
+    margin: 0;
+    color: #8a8378;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.admin-store-form-card .card-body {
+    padding: 20px 24px 24px;
+}
+
+.admin-store-form-card label {
+    font-weight: 800;
+    color: #1f1f1f;
+    margin-bottom: 8px;
+}
+
+.admin-store-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.admin-store-textarea-large {
+    min-height: 140px;
+}
+
+.admin-store-meta-box {
+    border: 1px solid #eee7dc;
+    background: #fbf9f6;
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-store-meta-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.admin-store-meta-label {
+    color: #8a8378;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.admin-store-meta-value {
+    color: #1f1f1f;
+    font-weight: 900;
+    text-align: right;
+}
+
+.admin-store-current-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    border: 1px solid #eee7dc;
+    background: #fbf9f6;
+    color: #6f6b65;
+    border-radius: 14px;
+    padding: 13px 15px;
+    margin-bottom: 18px;
+    line-height: 1.55;
+    font-weight: 600;
+}
+
+    .admin-store-current-note i {
+        color: #b08d57;
+        margin-top: 3px;
+    }
+
+.admin-store-modal-dialog {
+    max-width: 760px;
+}
+
+.admin-store-history-detail label {
+    font-weight: 800;
+    color: #1f1f1f;
+}
+
+.admin-store-history-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    color: #8a8378;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+@@media (max-width: 991.98px) {
+    .admin-store-page .row {
+        row-gap: 18px;
+    }
+
+    .admin-store-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-store-action {
+        justify-content: center;
+        width: 100%;
+    }
+}
+

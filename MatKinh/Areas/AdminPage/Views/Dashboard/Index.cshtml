@@ -1,23 +1,25 @@
-﻿@using MatKinh.Models
+﻿@model MatKinh.ViewModel.AdminDashboardVm
+@using MatKinh.Models
+
 @{
     ViewBag.Title = "Dashboard";
 
-    var login = Session["LoginInformation"] as TaiKhoan;
-    var roleCode = "";
-    if (login != null && login.VaiTro != null)
-    {
-        roleCode = login.VaiTro.MaVaiTro ?? "";
-    }
+    bool isAdmin = string.Equals(Model.RoleCode, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase);
+    bool isStaff = string.Equals(Model.RoleCode, RoleConstants.STAFF, StringComparison.OrdinalIgnoreCase);
+    bool isShipper = string.Equals(Model.RoleCode, RoleConstants.SHIPPER, StringComparison.OrdinalIgnoreCase);
 
-    bool isAdmin = roleCode == RoleConstants.ADMIN;
-    bool isStaff = roleCode == RoleConstants.STAFF;
-    bool isShipper = roleCode == RoleConstants.SHIPPER;
+    Func<decimal, string> money = value =>
+    {
+        return string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:c0}", value);
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Dashboard</h1>
-        <p class="admin-page-subtitle">Tổng quan hoạt động quản trị cửa hàng mắt kính.</p>
+        <p class="admin-page-subtitle">
+            Xin chào @Model.DisplayName, tổng quan hoạt động quản trị cửa hàng mắt kính.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -28,91 +30,154 @@
 <section class="content">
     <div class="container-fluid p-0">
 
-        @if (isAdmin || isStaff)
+        @if (isAdmin)
+        {
+            <div class="row">
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card dashboard-stat-card--primary">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Doanh thu đã ghi nhận</div>
+                                <div class="dashboard-stat-value">@money(Model.TotalRevenue)</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-revenue">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Tính từ đơn giao thành công và đã thanh toán.</p>
+                        <a href="@Url.Action("Revenue", "ManagerRevenue")" class="dashboard-stat-link">
+                            Xem doanh thu <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Doanh thu tháng</div>
+                                <div class="dashboard-stat-value">@money(Model.MonthRevenue)</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-revenue">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Doanh thu hoàn tất trong tháng hiện tại.</p>
+                        <a href="@Url.Action("Revenue", "ManagerRevenue")" class="dashboard-stat-link">
+                            Xem báo cáo <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Đơn chờ xác nhận</div>
+                                <div class="dashboard-stat-value">@Model.PendingOrders</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-orders">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Đơn mới cần được kiểm tra và xác nhận.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.PENDING })" class="dashboard-stat-link">
+                            Xử lý đơn <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Bài chờ duyệt</div>
+                                <div class="dashboard-stat-value">@Model.PendingBlogs</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-users">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Bài viết nhân viên gửi đang chờ kiểm duyệt.</p>
+                        <a href="@Url.Action("ManagerBlog", "ManagerBlog", new { status = "draft" })" class="dashboard-stat-link">
+                            Duyệt bài <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (isStaff)
         {
             <div class="row">
                 <div class="col-lg-3 col-sm-6">
                     <div class="dashboard-stat-card">
                         <div class="dashboard-stat-top">
                             <div>
-                                <div class="dashboard-stat-label">Đơn hàng</div>
-                                <div class="dashboard-stat-value">Vận hành</div>
+                                <div class="dashboard-stat-label">Đơn chờ xác nhận</div>
+                                <div class="dashboard-stat-value">@Model.PendingOrders</div>
                             </div>
                             <div class="dashboard-stat-icon icon-orders">
                                 <i class="fas fa-shopping-bag"></i>
                             </div>
                         </div>
-                        <p class="dashboard-stat-desc">
-                            Kiểm tra đơn hàng đang chờ xác nhận, chuẩn bị và giao hàng.
-                        </p>
-                        <a href='@Url.Action("Index", "ManagerOrder")' class="dashboard-stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        <p class="dashboard-stat-desc">Đơn hàng mới cần xác nhận trước khi chuẩn bị.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.PENDING })" class="dashboard-stat-link">
+                            Xem đơn <i class="fas fa-arrow-right ml-1"></i>
                         </a>
                     </div>
                 </div>
-
-                @if (isAdmin)
-                {
-                    <div class="col-lg-3 col-sm-6">
-                        <div class="dashboard-stat-card">
-                            <div class="dashboard-stat-top">
-                                <div>
-                                    <div class="dashboard-stat-label">Doanh thu</div>
-                                    <div class="dashboard-stat-value">Báo cáo</div>
-                                </div>
-                                <div class="dashboard-stat-icon icon-revenue">
-                                    <i class="fas fa-chart-line"></i>
-                                </div>
-                            </div>
-                            <p class="dashboard-stat-desc">
-                                Theo dõi hiệu quả kinh doanh và doanh thu bán hàng.
-                            </p>
-                            <a href='@Url.Action("Revenue", "ManagerRevenue")' class="dashboard-stat-link">
-                                Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                }
-
-                @if (isAdmin)
-                {
-                    <div class="col-lg-3 col-sm-6">
-                        <div class="dashboard-stat-card">
-                            <div class="dashboard-stat-top">
-                                <div>
-                                    <div class="dashboard-stat-label">Tài khoản</div>
-                                    <div class="dashboard-stat-value">Quản lý</div>
-                                </div>
-                                <div class="dashboard-stat-icon icon-users">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                            <p class="dashboard-stat-desc">
-                                Quản lý tài khoản nhân viên, shipper và người dùng trong hệ thống.
-                            </p>
-                            <a href='@Url.Action("AccountManager", "ManagerAccount")' class="dashboard-stat-link">
-                                Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                }
 
                 <div class="col-lg-3 col-sm-6">
                     <div class="dashboard-stat-card">
                         <div class="dashboard-stat-top">
                             <div>
-                                <div class="dashboard-stat-label">Sản phẩm</div>
-                                <div class="dashboard-stat-value">Kho hàng</div>
+                                <div class="dashboard-stat-label">Đang chuẩn bị</div>
+                                <div class="dashboard-stat-value">@Model.PreparingOrders</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-orders">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Đơn đã xác nhận và đang chờ gán shipper.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.PREPARING })" class="dashboard-stat-link">
+                            Chuẩn bị hàng <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Sản phẩm của tôi</div>
+                                <div class="dashboard-stat-value">@Model.MyProducts</div>
                             </div>
                             <div class="dashboard-stat-icon icon-products">
                                 <i class="fas fa-glasses"></i>
                             </div>
                         </div>
-                        <p class="dashboard-stat-desc">
-                            Xem danh sách sản phẩm, tình trạng tồn kho và cập nhật thông tin.
-                        </p>
-                        <a href='@Url.Action("ProductsList", "ListProduct")' class="dashboard-stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        <p class="dashboard-stat-desc">Các sản phẩm do bạn tạo và quản lý.</p>
+                        <a href="@Url.Action("ProductsList", "ListProduct")" class="dashboard-stat-link">
+                            Xem sản phẩm <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Sản phẩm hết hàng</div>
+                                <div class="dashboard-stat-value">@Model.OutOfStockProducts</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-products">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Sản phẩm đang bán nhưng tồn kho bằng 0.</p>
+                        <a href="@Url.Action("Index", "ManagerProduct", new { statusProduct = "outofstock" })" class="dashboard-stat-link">
+                            Kiểm tra kho <i class="fas fa-arrow-right ml-1"></i>
                         </a>
                     </div>
                 </div>
@@ -122,42 +187,74 @@
         @if (isShipper)
         {
             <div class="row">
-                <div class="col-lg-4 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                     <div class="dashboard-stat-card">
                         <div class="dashboard-stat-top">
                             <div>
                                 <div class="dashboard-stat-label">Đơn được giao</div>
-                                <div class="dashboard-stat-value">Shipper</div>
+                                <div class="dashboard-stat-value">@Model.MyAssignedOrders</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-orders">
+                                <i class="fas fa-truck-loading"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Đơn đã được phân công và chờ bắt đầu giao.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.ASSIGNED_TO_SHIPPER })" class="dashboard-stat-link">
+                            Nhận giao <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Đang giao</div>
+                                <div class="dashboard-stat-value">@Model.MyDeliveringOrders</div>
                             </div>
                             <div class="dashboard-stat-icon icon-orders">
                                 <i class="fas fa-truck"></i>
                             </div>
                         </div>
-                        <p class="dashboard-stat-desc">
-                            Theo dõi các đơn hàng được phân công cho bạn và cập nhật trạng thái giao hàng.
-                        </p>
-                        <a href='@Url.Action("Index", "ManagerOrder")' class="dashboard-stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        <p class="dashboard-stat-desc">Các đơn đang trên đường giao tới khách hàng.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.DELIVERING })" class="dashboard-stat-link">
+                            Cập nhật giao <i class="fas fa-arrow-right ml-1"></i>
                         </a>
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                     <div class="dashboard-stat-card">
                         <div class="dashboard-stat-top">
                             <div>
-                                <div class="dashboard-stat-label">Hồ sơ cá nhân</div>
-                                <div class="dashboard-stat-value">Thông tin</div>
+                                <div class="dashboard-stat-label">Giao thành công</div>
+                                <div class="dashboard-stat-value">@Model.MyDeliveredOrders</div>
                             </div>
-                            <div class="dashboard-stat-icon icon-users">
-                                <i class="fas fa-user-circle"></i>
+                            <div class="dashboard-stat-icon icon-revenue">
+                                <i class="fas fa-check"></i>
                             </div>
                         </div>
-                        <p class="dashboard-stat-desc">
-                            Xem và cập nhật thông tin tài khoản giao hàng của bạn.
-                        </p>
-                        <a href='@Url.Action("Index", "Profile")' class="dashboard-stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right ml-1"></i>
+                        <p class="dashboard-stat-desc">Tổng đơn bạn đã giao thành công.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.DELIVERED })" class="dashboard-stat-link">
+                            Xem lịch sử <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-top">
+                            <div>
+                                <div class="dashboard-stat-label">Giao thất bại</div>
+                                <div class="dashboard-stat-value">@Model.MyFailedOrders</div>
+                            </div>
+                            <div class="dashboard-stat-icon icon-users">
+                                <i class="fas fa-times"></i>
+                            </div>
+                        </div>
+                        <p class="dashboard-stat-desc">Các đơn đã cập nhật giao thất bại.</p>
+                        <a href="@Url.Action("Index", "ManagerOrder", new { status = OrderStatusConstants.DELIVERY_FAILED })" class="dashboard-stat-link">
+                            Xem đơn <i class="fas fa-arrow-right ml-1"></i>
                         </a>
                     </div>
                 </div>
@@ -168,8 +265,9 @@
             <div class="col-lg-8">
                 <div class="card dashboard-panel">
                     <div class="card-header border-0">
-                        <h3 class="card-title dashboard-panel-title">Tổng quan quản trị</h3>
+                        <h3 class="card-title dashboard-panel-title">Tổng quan vận hành</h3>
                     </div>
+
                     <div class="card-body">
                         <div class="dashboard-overview-grid">
 
@@ -179,7 +277,11 @@
                                     <span class="overview-dot"></span>
                                     <div>
                                         <h4>Đơn hàng</h4>
-                                        <p>Theo dõi đơn hàng mới, xử lý trạng thái và bàn giao cho shipper.</p>
+                                        <p>
+                                            Chờ xác nhận: <b>@Model.PendingOrders</b>,
+                                            đang chuẩn bị: <b>@Model.PreparingOrders</b>,
+                                            đang giao: <b>@Model.DeliveringOrders</b>.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -187,15 +289,19 @@
                                     <span class="overview-dot"></span>
                                     <div>
                                         <h4>Sản phẩm</h4>
-                                        <p>Quản lý sản phẩm, thương hiệu, loại sản phẩm và tình trạng kho.</p>
+                                        <p>
+                                            Đang bán: <b>@Model.ActiveProducts</b>,
+                                            hết hàng: <b>@Model.OutOfStockProducts</b>,
+                                            ngừng bán: <b>@Model.InactiveProducts</b>.
+                                        </p>
                                     </div>
                                 </div>
 
                                 <div class="dashboard-overview-item">
                                     <span class="overview-dot"></span>
                                     <div>
-                                        <h4>Nội dung</h4>
-                                        <p>Soạn bài viết, kiểm duyệt nội dung và quản lý hiển thị website.</p>
+                                        <h4>Nội dung của tôi</h4>
+                                        <p>Bạn đang có <b>@Model.MyBlogs</b> bài viết trong khu vực bài viết của tôi.</p>
                                     </div>
                                 </div>
                             }
@@ -205,8 +311,12 @@
                                 <div class="dashboard-overview-item">
                                     <span class="overview-dot"></span>
                                     <div>
-                                        <h4>Hiệu suất</h4>
-                                        <p>Xem doanh thu, tài khoản hệ thống và thiết lập thông tin cửa hàng.</p>
+                                        <h4>Hệ thống</h4>
+                                        <p>
+                                            Tài khoản hoạt động: <b>@Model.ActiveAccounts</b>,
+                                            nhân viên: <b>@Model.StaffAccounts</b>,
+                                            shipper: <b>@Model.ShipperAccounts</b>.
+                                        </p>
                                     </div>
                                 </div>
                             }
@@ -217,18 +327,25 @@
                                     <span class="overview-dot"></span>
                                     <div>
                                         <h4>Giao hàng</h4>
-                                        <p>Nhận đơn được phân công, cập nhật trạng thái đang giao và giao thành công.</p>
+                                        <p>
+                                            Được giao: <b>@Model.MyAssignedOrders</b>,
+                                            đang giao: <b>@Model.MyDeliveringOrders</b>.
+                                        </p>
                                     </div>
                                 </div>
 
                                 <div class="dashboard-overview-item">
                                     <span class="overview-dot"></span>
                                     <div>
-                                        <h4>COD</h4>
-                                        <p>Theo dõi các đơn giao hàng thu tiền khi nhận và cập nhật kết quả giao.</p>
+                                        <h4>Kết quả giao</h4>
+                                        <p>
+                                            Thành công: <b>@Model.MyDeliveredOrders</b>,
+                                            thất bại: <b>@Model.MyFailedOrders</b>.
+                                        </p>
                                     </div>
                                 </div>
                             }
+
                         </div>
                     </div>
                 </div>
@@ -239,6 +356,7 @@
                     <div class="card-header border-0">
                         <h3 class="card-title dashboard-panel-title">Truy cập nhanh</h3>
                     </div>
+
                     <div class="card-body">
                         <div class="dashboard-quick-links">
 
@@ -267,6 +385,11 @@
                                     <span>Kiểm duyệt bài viết</span>
                                 </a>
 
+                                <a href="@Url.Action("AccountManager","ManagerAccount")" class="dashboard-quick-link">
+                                    <i class="fas fa-users-cog"></i>
+                                    <span>Quản lý tài khoản</span>
+                                </a>
+
                                 <a href="@Url.Action("Index","SettingInformationWebsite")" class="dashboard-quick-link">
                                     <i class="fas fa-store"></i>
                                     <span>Thông tin cửa hàng</span>
@@ -285,6 +408,7 @@
                                     <span>Hồ sơ cá nhân</span>
                                 </a>
                             }
+
                         </div>
                     </div>
                 </div>

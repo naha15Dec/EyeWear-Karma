@@ -1,6 +1,10 @@
 ﻿@model MatKinh.ViewModel.AdminProfileVm
 @{
     ViewBag.Title = "Thông tin";
+
+    string activeTab = ViewBag.ActiveTab as string ?? "profileInfo";
+    bool profileActive = activeTab == "profileInfo";
+    bool passwordActive = activeTab == "changePassword";
 }
 
 <div class="admin-page-header">
@@ -21,7 +25,6 @@
     <div class="container-fluid p-0">
         <div class="row">
 
-            <!-- LEFT PROFILE -->
             <div class="col-lg-4 col-xl-3">
                 <div class="card admin-profile-card">
                     <div class="card-body text-center">
@@ -36,7 +39,6 @@
                         <div class="admin-profile-username">@Model.TenDangNhap</div>
 
                         <div class="admin-profile-meta-list">
-
                             <div class="admin-profile-meta-item">
                                 <span class="admin-profile-meta-label">Vai trò</span>
                                 <span class="admin-profile-meta-value">@Model.TenVaiTro</span>
@@ -48,25 +50,24 @@
                                     @(Model.IsActive ? "Hoạt động" : "Khóa")
                                 </span>
                             </div>
-
                         </div>
+
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT FORM -->
             <div class="col-lg-8 col-xl-9">
                 <div class="card admin-form-card admin-tab-card">
 
                     <div class="card-header border-0 pb-0">
                         <ul class="nav nav-pills admin-tab-nav">
                             <li class="nav-item">
-                                <a class="nav-link active" href="#profileInfo" data-toggle="tab">
+                                <a class="nav-link @(profileActive ? "active" : "")" href="#profileInfo" data-toggle="tab">
                                     Thông tin
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#changePassword" data-toggle="tab">
+                                <a class="nav-link @(passwordActive ? "active" : "")" href="#changePassword" data-toggle="tab">
                                     Đổi mật khẩu
                                 </a>
                             </li>
@@ -76,9 +77,7 @@
                     <div class="card-body">
                         <div class="tab-content">
 
-                            <!-- UPDATE INFO -->
-                            <div class="tab-pane active" id="profileInfo">
-
+                            <div class="tab-pane @(profileActive ? "active" : "")" id="profileInfo">
                                 @using (Html.BeginForm("UpdateInformationAccount", "Profile", FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
@@ -101,6 +100,7 @@
                                                        class="form-control admin-input"
                                                        name="Email"
                                                        value="@Model.Email" />
+                                                @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
                                             </div>
                                         </div>
                                     </div>
@@ -111,16 +111,20 @@
                                                class="form-control admin-input"
                                                name="HoTen"
                                                value="@Model.HoTen" />
+                                        @Html.ValidationMessage("HoTen", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Số điện thoại</label>
-                                                <input type="text"
+                                                <input type="tel"
                                                        class="form-control admin-input"
                                                        name="SoDienThoai"
-                                                       value="@Model.SoDienThoai" />
+                                                       value="@Model.SoDienThoai"
+                                                       placeholder="Ví dụ: 0332080172"
+                                                       maxlength="12" />
+                                                @Html.ValidationMessage("SoDienThoai", "", new { @class = "text-danger" })
                                             </div>
                                         </div>
 
@@ -132,6 +136,7 @@
                                                     <option value="true" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
                                                     <option value="false" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
                                                 </select>
+                                                @Html.ValidationMessage("GioiTinh", "", new { @class = "text-danger" })
                                             </div>
                                         </div>
                                     </div>
@@ -141,7 +146,9 @@
                                         <input type="date"
                                                class="form-control admin-input"
                                                name="NgaySinh"
+                                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
                                                value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("yyyy-MM-dd") : "")" />
+                                        @Html.ValidationMessage("NgaySinh", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="form-group">
@@ -150,6 +157,7 @@
                                                class="form-control admin-input"
                                                name="DiaChi"
                                                value="@Model.DiaChi" />
+                                        @Html.ValidationMessage("DiaChi", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="admin-form-actions">
@@ -158,12 +166,9 @@
                                         </button>
                                     </div>
                                 }
-
                             </div>
 
-                            <!-- CHANGE PASSWORD -->
-                            <div class="tab-pane" id="changePassword">
-
+                            <div class="tab-pane @(passwordActive ? "active" : "")" id="changePassword">
                                 @using (Html.BeginForm("ChangePasswordAccount", "Profile", FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
@@ -173,6 +178,7 @@
                                         <input type="password"
                                                class="form-control admin-input"
                                                name="CurrentPassword" />
+                                        @Html.ValidationMessage("CurrentPassword", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="form-group">
@@ -180,6 +186,7 @@
                                         <input type="password"
                                                class="form-control admin-input"
                                                name="NewPassword" />
+                                        @Html.ValidationMessage("NewPassword", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="form-group">
@@ -187,6 +194,7 @@
                                         <input type="password"
                                                class="form-control admin-input"
                                                name="ConfirmPassword" />
+                                        @Html.ValidationMessage("ConfirmPassword", "", new { @class = "text-danger" })
                                     </div>
 
                                     <div class="admin-form-actions">
@@ -195,7 +203,6 @@
                                         </button>
                                     </div>
                                 }
-
                             </div>
 
                         </div>

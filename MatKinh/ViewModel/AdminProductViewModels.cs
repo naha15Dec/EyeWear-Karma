@@ -11,6 +11,24 @@ namespace MatKinh.ViewModel
         public string StatusFilter { get; set; }
         public string Keyword { get; set; }
 
+        public int CurrentPage { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public int TotalPages { get; set; }
+
+        public int TotalStock { get; set; }
+        public int TotalFeatured { get; set; }
+
+        public bool HasPreviousPage
+        {
+            get { return CurrentPage > 1; }
+        }
+
+        public bool HasNextPage
+        {
+            get { return CurrentPage < TotalPages; }
+        }
+
         public List<AdminProductListItemVm> Products { get; set; } = new List<AdminProductListItemVm>();
         public List<SelectListItem> Brands { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
@@ -34,9 +52,11 @@ namespace MatKinh.ViewModel
 
         public string HinhAnhChinh { get; set; }
         public string MoTaNgan { get; set; }
+        public string MoTaChiTiet { get; set; }
 
         public int TrangThai { get; set; }
         public bool IsFeatured { get; set; }
+        public string NguoiTao { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -75,5 +95,6 @@ namespace MatKinh.ViewModel
 
         public string StatusFilter { get; set; }
         public string Keyword { get; set; }
+        public int Page { get; set; }
     }
 }

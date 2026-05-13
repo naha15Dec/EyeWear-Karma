@@ -41,6 +41,10 @@
     };
 
     Func<decimal, string> money = value => string.Format(vi, "{0:N0}", value);
+
+    string defaultImg = Url.Content("~/Asset/img/no-image.png");
+    string dealFallbackImg = Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png");
+    string heroFallbackImg = Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png");
 }
 
 <div class="home-modern">
@@ -68,19 +72,25 @@
                         </p>
 
                         <div class="hero-actions">
-                            <a href="@Url.Action("Index", "Product")" class="btn-luxury primary">Khám phá sản phẩm</a>
-                            <a href="@Url.Action("Index", "Blog")" class="btn-luxury secondary">Xem xu hướng</a>
+                            <a href="@Url.Action("Index", "Product")" class="btn-luxury primary">
+                                Khám phá sản phẩm
+                            </a>
+                            <a href="@Url.Action("Index", "Blog")" class="btn-luxury secondary">
+                                Xem xu hướng
+                            </a>
                         </div>
 
                         <div class="hero-metrics">
                             <div class="hero-metric-item">
-                                <h4>@newProduct.Count + @discountProduct.Count</h4>
+                                <h4>@(newProduct.Count + discountProduct.Count)</h4>
                                 <p>Sản phẩm nổi bật</p>
                             </div>
+
                             <div class="hero-metric-item">
                                 <h4>@(storeInfo != null && !string.IsNullOrWhiteSpace(storeInfo.Hotline) ? "24/7" : "100%")</h4>
                                 <p>@(storeInfo != null && !string.IsNullOrWhiteSpace(storeInfo.Hotline) ? "Hỗ trợ tận tâm" : "Phong cách hiện đại")</p>
                             </div>
+
                             <div class="hero-metric-item">
                                 <h4>@(latestBlogs.Count > 0 ? latestBlogs.Count.ToString() : "New")</h4>
                                 <p>Bài viết mới</p>
@@ -91,9 +101,9 @@
                     <div class="col-lg-6">
                         <div class="position-relative">
                             <div class="hero-visual-card">
-                                <img src="@(storeInfo != null ? normalizeImage(storeInfo.Banner) : Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png"))"
+                                <img src="@(storeInfo != null ? normalizeImage(storeInfo.Banner) : heroFallbackImg)"
                                      alt="Karma Eyewear Banner"
-                                     onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/banner/gong-kinh-cat-icon.png")';" />
+                                     onerror="this.onerror=null;this.src='@heroFallbackImg';" />
                             </div>
 
                             <div class="floating-badge top">
@@ -168,13 +178,17 @@
             <div class="row">
                 <div class="col-lg-7 mb-4">
                     <div class="category-card large">
-                        <img src="~/Asset/img/category/xuhuongmatkinh20191.jpg" alt="Kính thời trang hiện đại" />
+                        <img src="~/Asset/img/category/xuhuongmatkinh20191.jpg"
+                             alt="Kính thời trang hiện đại"
+                             onerror="this.onerror=null;this.src='@defaultImg';" />
                         <div class="overlay"></div>
                         <div class="category-content">
                             <span>Bộ sưu tập chủ đạo</span>
                             <h4>Kính thời trang hiện đại</h4>
                             <p>Thiết kế tinh tế, dễ phối cùng trang phục thường ngày và phong cách công sở.</p>
-                            <a href="@Url.Action("Index","Product")">Khám phá ngay <i class="fa fa-long-arrow-right ml-2"></i></a>
+                            <a href="@Url.Action("Index","Product")">
+                                Khám phá ngay <i class="fa fa-long-arrow-right ml-2"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -183,7 +197,9 @@
                     <div class="row">
                         <div class="col-12 mb-4">
                             <div class="category-card">
-                                <img src="~/Asset/img/category/s-l1600.jpg" alt="Gọng kính thanh lịch" />
+                                <img src="~/Asset/img/category/s-l1600.jpg"
+                                     alt="Gọng kính thanh lịch"
+                                     onerror="this.onerror=null;this.src='@defaultImg';" />
                                 <div class="overlay"></div>
                                 <div class="category-content">
                                     <span>Elegant Look</span>
@@ -195,7 +211,9 @@
 
                         <div class="col-12">
                             <div class="category-card">
-                                <img src="~/Asset/img/category/1.1200.1647589845-8ec.png" alt="Kính chống ánh sáng xanh" />
+                                <img src="~/Asset/img/category/1.1200.1647589845-8ec.png"
+                                     alt="Kính chống ánh sáng xanh"
+                                     onerror="this.onerror=null;this.src='@defaultImg';" />
                                 <div class="overlay"></div>
                                 <div class="category-content">
                                     <span>Daily Comfort</span>
@@ -212,7 +230,6 @@
 
     <section class="product-section-modern">
         <div class="container">
-
             <div class="section-heading">
                 <span class="eyebrow">Lựa chọn nổi bật</span>
                 <h2>Sản phẩm được yêu thích</h2>
@@ -221,8 +238,6 @@
                     mức giá hợp lý và khả năng ứng dụng cao trong nhiều phong cách khác nhau.
                 </p>
             </div>
-
-            <!-- ====================== SẢN PHẨM GIẢM GIÁ ====================== -->
 
             <div class="d-flex align-items-center justify-content-between mb-4 product-subheading">
                 <div>
@@ -247,25 +262,34 @@
 
                             <div class="col-lg-3 col-md-6 mb-4">
                                 <div class="product-card-modern">
-                                    <div class="product-thumb">
-                                        <span class="product-badge">Sale</span>
+                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="product-thumb-link">
+                                        <div class="product-thumb">
+                                            <span class="product-badge">Sale</span>
 
-                                        <img src="@imageUrl"
-                                             alt="@item.TenSanPham"
-                                             onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
-                                    </div>
+                                            <img src="@imageUrl"
+                                                 alt="@item.TenSanPham"
+                                                 onerror="this.onerror=null;this.src='@defaultImg';" />
+                                        </div>
+                                    </a>
 
                                     <div class="product-body">
-                                        <div class="product-name">@item.TenSanPham</div>
+                                        <div class="product-name">
+                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
+                                                @item.TenSanPham
+                                            </a>
+                                        </div>
 
                                         <div class="product-price">
                                             <span class="sale">@money(item.GiaBan)đ</span>
                                             <span class="original">@money(item.GiaGoc)đ</span>
                                         </div>
 
-                                        <div class="small text-danger font-weight-bold mb-2">
-                                            Tiết kiệm @money(saveAmount)đ
-                                        </div>
+                                        @if (saveAmount > 0)
+                                        {
+                                            <div class="product-save-text">
+                                                Tiết kiệm @money(saveAmount)đ
+                                            </div>
+                                        }
 
                                         <div class="product-actions">
                                             @if (conHang)
@@ -293,15 +317,13 @@
                     else
                     {
                         <div class="col-12">
-                            <div class="alert alert-light border">
+                            <div class="home-empty-card">
                                 Hiện chưa có sản phẩm giảm giá.
                             </div>
                         </div>
                     }
                 </div>
             </div>
-
-            <!-- ====================== SẢN PHẨM MỚI ====================== -->
 
             <div class="d-flex align-items-center justify-content-between mb-4 mt-5 product-subheading">
                 <div>
@@ -325,19 +347,21 @@
 
                             <div class="col-lg-3 col-md-6 mb-4">
                                 <div class="product-card-modern">
-                                    <div class="product-thumb">
-                                        <span class="product-badge" style="background:#b08d57;">
-                                            New
-                                        </span>
+                                    <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })" class="product-thumb-link">
+                                        <div class="product-thumb">
+                                            <span class="product-badge product-badge--gold">New</span>
 
-                                        <img src="@imageUrl"
-                                             alt="@item.TenSanPham"
-                                             onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
-                                    </div>
+                                            <img src="@imageUrl"
+                                                 alt="@item.TenSanPham"
+                                                 onerror="this.onerror=null;this.src='@defaultImg';" />
+                                        </div>
+                                    </a>
 
                                     <div class="product-body">
                                         <div class="product-name">
-                                            @item.TenSanPham
+                                            <a href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
+                                                @item.TenSanPham
+                                            </a>
                                         </div>
 
                                         <div class="product-price">
@@ -370,25 +394,26 @@
                     else
                     {
                         <div class="col-12">
-                            <div class="alert alert-light border">
+                            <div class="home-empty-card">
                                 Hiện chưa có sản phẩm mới.
                             </div>
                         </div>
                     }
                 </div>
             </div>
-
         </div>
     </section>
 
-    <section class="section-space">
+    <section class="section-space home-deal-section">
         <div class="container">
             <div class="promo-panel">
-                <div class="row align-items-center no-gutters">
+                <div class="row align-items-stretch no-gutters">
                     <div class="col-lg-5">
                         <div class="promo-left">
                             <span class="eyebrow">Ưu đãi độc quyền</span>
+
                             <h2>Deal nổi bật đang chờ bạn khám phá</h2>
+
                             <p>
                                 Săn ngay những mẫu kính có mức giá ưu đãi hấp dẫn. Đây là lựa chọn lý tưởng nếu bạn
                                 đang muốn nâng cấp phong cách với chi phí hợp lý hơn.
@@ -399,62 +424,141 @@
                                     <h3 class="days">00</h3>
                                     <span>Ngày</span>
                                 </div>
+
                                 <div class="count-box">
                                     <h3 class="hours">00</h3>
                                     <span>Giờ</span>
                                 </div>
+
                                 <div class="count-box">
                                     <h3 class="minutes">00</h3>
                                     <span>Phút</span>
                                 </div>
+
                                 <div class="count-box">
                                     <h3 class="seconds">00</h3>
                                     <span>Giây</span>
                                 </div>
                             </div>
 
-                            <a href="@Url.Action("Index","Product")" class="btn-luxury primary">Mua ngay</a>
+                            <div class="promo-note">
+                                <i class="fa fa-bolt"></i>
+                                <span>Ưu đãi được cập nhật định kỳ theo bộ sưu tập và chương trình khuyến mãi hiện tại.</span>
+                            </div>
+
+                            <a href="@Url.Action("Index","Product")" class="btn-luxury primary">
+                                Mua ngay
+                            </a>
                         </div>
                     </div>
 
                     <div class="col-lg-7">
                         <div class="promo-right">
-                            <div class="active-exclusive-product-slider owl-carousel">
-                                @if (dealHot.Any())
-                                {
-                                    foreach (var item in dealHot)
+                            @if (dealHot.Any())
+                            {
+                                <div class="home-deal-slider owl-carousel">
+                                    @foreach (var item in dealHot)
                                     {
                                         string imageUrl = normalizeImage(item.HinhAnhChinh);
+                                        bool isSale = item.GiaGoc > item.GiaBan;
+                                        bool conHang = item.TrangThai == 1 && item.SoLuongTon > 0;
+                                        decimal saveAmount = item.GiaGoc - item.GiaBan;
 
                                         <div class="promo-product-card">
                                             <div class="thumb">
+                                                @if (!conHang)
+                                                {
+                                                    <span class="promo-product-badge soldout">Hết hàng</span>
+                                                }
+                                                else if (isSale)
+                                                {
+                                                    <span class="promo-product-badge">Deal hot</span>
+                                                }
+
                                                 <img src="@imageUrl"
                                                      alt="@item.TenSanPham"
-                                                     onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
+                                                     onerror="this.onerror=null;this.src='@dealFallbackImg';" />
                                             </div>
+
                                             <div class="body">
+                                                <span class="promo-product-label">Karma Eyewear Deal</span>
+
                                                 <h4>@item.TenSanPham</h4>
+
                                                 <div class="price">
                                                     <strong>@money(item.GiaBan)đ</strong>
-                                                    <span>@money(item.GiaGoc)đ</span>
+
+                                                    @if (isSale)
+                                                    {
+                                                        <span>@money(item.GiaGoc)đ</span>
+                                                    }
                                                 </div>
-                                                <a href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })">
-                                                    <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
-                                                </a>
+
+                                                @if (isSale && saveAmount > 0)
+                                                {
+                                                    <div class="promo-save">
+                                                        Tiết kiệm @money(saveAmount)đ
+                                                    </div>
+                                                }
+
+                                                <div class="promo-card-actions">
+                                                    @if (conHang)
+                                                    {
+                                                        <a class="promo-add-cart"
+                                                           href="@Url.Action("AddItemToCart","ShoppingCart", new { sanPhamId = item.SanPhamId })">
+                                                            <i class="fa fa-shopping-bag mr-2"></i>Thêm vào giỏ
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="promo-add-cart disabled">
+                                                            Hết hàng
+                                                        </span>
+                                                    }
+
+                                                    <a class="promo-detail-link"
+                                                       href="@Url.Action("DetailProduct","Product", new { sanPhamId = item.SanPhamId })">
+                                                        Chi tiết
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     }
-                                }
-                                else
-                                {
-                                    <div class="promo-product-card">
-                                        <div class="body">
-                                            <h4>Chưa có deal nổi bật</h4>
-                                            <p>Danh mục ưu đãi sẽ sớm được cập nhật.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="promo-product-card promo-product-card--fallback">
+                                    <div class="thumb">
+                                        <span class="promo-product-badge">Sắp cập nhật</span>
+
+                                        <img src="@dealFallbackImg"
+                                             alt="Ưu đãi Karma Eyewear"
+                                             onerror="this.onerror=null;this.src='@defaultImg';" />
+                                    </div>
+
+                                    <div class="body">
+                                        <span class="promo-product-label">Karma Eyewear Deal</span>
+
+                                        <h4>Ưu đãi nổi bật sắp được cập nhật</h4>
+
+                                        <p>
+                                            Các mẫu kính có mức giá tốt sẽ được hiển thị tại đây khi cửa hàng cập nhật chương trình khuyến mãi.
+                                        </p>
+
+                                        <div class="price">
+                                            <strong>Khám phá ngay</strong>
+                                        </div>
+
+                                        <div class="promo-card-actions">
+                                            <a class="promo-add-cart"
+                                               href="@Url.Action("Index","Product")">
+                                                Xem sản phẩm
+                                            </a>
                                         </div>
                                     </div>
-                                }
-                            </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -482,20 +586,27 @@
                                 <div class="blog-card-modern__image">
                                     <img src="@imageUrl"
                                          alt="@item.TieuDe"
-                                         onerror="this.onerror=null;this.src='@Url.Content("~/Asset/img/no-image.png")';" />
+                                         onerror="this.onerror=null;this.src='@defaultImg';" />
                                 </div>
+
                                 <div class="blog-card-modern__content">
                                     <div class="blog-card-modern__meta">
-                                        <span><i class="lnr lnr-calendar-full"></i> @string.Format("{0:dd/MM/yyyy}", item.NgayDang ?? item.CreatedAt)</span>
+                                        <span>
+                                            <i class="lnr lnr-calendar-full"></i>
+                                            @string.Format("{0:dd/MM/yyyy}", item.NgayDang ?? item.CreatedAt)
+                                        </span>
                                     </div>
+
                                     <h3 class="blog-card-modern__title">
                                         @item.TieuDe
                                     </h3>
+
                                     <p class="blog-card-modern__excerpt">
                                         @(string.IsNullOrWhiteSpace(item.TomTat)
                                             ? "Khám phá thêm những nội dung mới từ Karma Eyewear."
                                             : (item.TomTat.Length > 120 ? item.TomTat.Substring(0, 120) + "..." : item.TomTat))
                                     </p>
+
                                     <a href="@Url.Action("DetailBlog", "Blog", new { id = item.BaiVietId })" class="optical-btn optical-btn--light">
                                         Đọc thêm
                                     </a>
@@ -520,11 +631,21 @@
 
             <div class="brand-strip">
                 <div class="row align-items-center">
-                    <a class="col brand-logo-item" href="#"><img src="~/Asset/img/brand/481_rayban.jpg" alt="Rayban" /></a>
-                    <a class="col brand-logo-item" href="#"><img src="~/Asset/img/brand/1050-7.png" alt="Brand 2" /></a>
-                    <a class="col brand-logo-item" href="#"><img src="~/Asset/img/brand/20200908_DOzjTsNv4HN3KVD8gGyBDhuL.jpg" alt="Brand 3" /></a>
-                    <a class="col brand-logo-item" href="#"><img src="~/Asset/img/brand/images.png" alt="Brand 4" /></a>
-                    <a class="col brand-logo-item" href="#"><img src="~/Asset/img/brand/persol_career_tech_studio_vietnam_logo.jpg" alt="Brand 5" /></a>
+                    <a class="col brand-logo-item" href="#">
+                        <img src="~/Asset/img/brand/481_rayban.jpg" alt="Rayban" onerror="this.onerror=null;this.src='@defaultImg';" />
+                    </a>
+                    <a class="col brand-logo-item" href="#">
+                        <img src="~/Asset/img/brand/1050-7.png" alt="Brand 2" onerror="this.onerror=null;this.src='@defaultImg';" />
+                    </a>
+                    <a class="col brand-logo-item" href="#">
+                        <img src="~/Asset/img/brand/20200908_DOzjTsNv4HN3KVD8gGyBDhuL.jpg" alt="Brand 3" onerror="this.onerror=null;this.src='@defaultImg';" />
+                    </a>
+                    <a class="col brand-logo-item" href="#">
+                        <img src="~/Asset/img/brand/images.png" alt="Brand 4" onerror="this.onerror=null;this.src='@defaultImg';" />
+                    </a>
+                    <a class="col brand-logo-item" href="#">
+                        <img src="~/Asset/img/brand/persol_career_tech_studio_vietnam_logo.jpg" alt="Brand 5" onerror="this.onerror=null;this.src='@defaultImg';" />
+                    </a>
                 </div>
             </div>
         </div>
@@ -535,6 +656,7 @@
     <script>
         $(function () {
             var countdown = document.getElementById("homeDealCountdown");
+
             if (countdown) {
                 var endTimeStr = countdown.getAttribute("data-end");
                 var endTime = new Date(endTimeStr).getTime();
@@ -574,6 +696,19 @@
 
                 updateCountdown();
                 var timer = setInterval(updateCountdown, 1000);
+            }
+
+            if ($.fn.owlCarousel && $(".home-deal-slider").length) {
+                $(".home-deal-slider").owlCarousel({
+                    items: 1,
+                    loop: $(".home-deal-slider .promo-product-card").length > 1,
+                    nav: false,
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 3800,
+                    smartSpeed: 650,
+                    margin: 12
+                });
             }
         });
     </script>

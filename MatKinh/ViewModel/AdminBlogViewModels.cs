@@ -10,6 +10,21 @@ namespace MatKinh.ViewModel
         public string StatusFilter { get; set; }
         public string Keyword { get; set; }
 
+        public int CurrentPage { get; set; }
+        public int PageSize { get; set; }
+        public int TotalItems { get; set; }
+        public int TotalPages { get; set; }
+
+        public bool HasPreviousPage
+        {
+            get { return CurrentPage > 1; }
+        }
+
+        public bool HasNextPage
+        {
+            get { return CurrentPage < TotalPages; }
+        }
+
         public List<AdminBlogListItemVm> Posts { get; set; } = new List<AdminBlogListItemVm>();
         public List<SelectListItem> StatusOptions { get; set; } = new List<SelectListItem>();
     }
@@ -20,6 +35,7 @@ namespace MatKinh.ViewModel
         public string MaBaiViet { get; set; }
         public string TieuDe { get; set; }
         public string TomTat { get; set; }
+        public string NoiDung { get; set; }
         public string AnhDaiDien { get; set; }
 
         public int TrangThai { get; set; }

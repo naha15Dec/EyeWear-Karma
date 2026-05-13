@@ -17,20 +17,23 @@ namespace MatKinh.Areas.AdminPage.Controllers
         private const int PRODUCT_STATUS_ACTIVE = 1;
         private const int PRODUCT_STATUS_INACTIVE = 2;
 
+        // Muốn 18 sản phẩm/trang thì đổi dòng này thành 18
+        private const int PAGE_SIZE = 10;
+
         // stock      -> còn hàng
         // outofstock -> hết hàng
         // inactive   -> ngừng bán
         [HttpGet]
-        public ActionResult Index(string statusProduct = "stock", string keyword = "")
+        public ActionResult Index(string statusProduct = "stock", string keyword = "", int page = 1)
         {
-            var model = BuildIndexViewModel(statusProduct, keyword);
+            var model = BuildIndexViewModel(statusProduct, keyword, page);
             return View(model);
         }
 
         [HttpGet]
-        public ActionResult FindProductByID(string idProduct, string statusProduct = "stock")
+        public ActionResult FindProductByID(string idProduct, string statusProduct = "stock", int page = 1)
         {
-            var model = BuildIndexViewModel(statusProduct, idProduct);
+            var model = BuildIndexViewModel(statusProduct, idProduct, page);
             return View("Index", model);
         }
 
@@ -44,11 +47,21 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("Index");
             }
 
+            if (model.Page <= 0)
+            {
+                model.Page = 1;
+            }
+
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == model.SanPhamId);
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
-                return RedirectToAction("Index", new { statusProduct = model.StatusFilter, keyword = model.Keyword });
+                return RedirectToAction("Index", new
+                {
+                    statusProduct = model.StatusFilter,
+                    keyword = model.Keyword,
+                    page = model.Page
+                });
             }
 
             ValidateProductModel(model, product.SanPhamId);
@@ -56,7 +69,12 @@ namespace MatKinh.Areas.AdminPage.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Dữ liệu cập nhật chưa hợp lệ.";
-                return RedirectToAction("Index", new { statusProduct = model.StatusFilter, keyword = model.Keyword });
+                return RedirectToAction("Index", new
+                {
+                    statusProduct = model.StatusFilter,
+                    keyword = model.Keyword,
+                    page = model.Page
+                });
             }
 
             product.MaSanPham = (model.MaSanPham ?? string.Empty).Trim();
@@ -80,18 +98,28 @@ namespace MatKinh.Areas.AdminPage.Controllers
             db.SaveChanges();
 
             TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công.";
-            return RedirectToAction("Index", new { statusProduct = model.StatusFilter, keyword = model.Keyword });
+            return RedirectToAction("Index", new
+            {
+                statusProduct = model.StatusFilter,
+                keyword = model.Keyword,
+                page = model.Page
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, string statusProduct = "stock", string keyword = "")
+        public ActionResult Delete(int id, string statusProduct = "stock", string keyword = "", int page = 1)
         {
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == id);
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
-                return RedirectToAction("Index", new { statusProduct, keyword });
+                return RedirectToAction("Index", new { statusProduct, keyword, page });
             }
 
             // Không xóa cứng vì sản phẩm có thể đã nằm trong đơn hàng
@@ -102,18 +130,23 @@ namespace MatKinh.Areas.AdminPage.Controllers
             db.SaveChanges();
 
             TempData["SuccessMessage"] = "Đã chuyển sản phẩm sang trạng thái ngừng bán.";
-            return RedirectToAction("Index", new { statusProduct, keyword });
+            return RedirectToAction("Index", new { statusProduct, keyword, page });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ToggleFeatured(int id, string statusProduct = "stock", string keyword = "")
+        public ActionResult ToggleFeatured(int id, string statusProduct = "stock", string keyword = "", int page = 1)
         {
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == id);
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
-                return RedirectToAction("Index", new { statusProduct, keyword });
+                return RedirectToAction("Index", new { statusProduct, keyword, page });
             }
 
             product.IsFeatured = !product.IsFeatured;
@@ -122,19 +155,24 @@ namespace MatKinh.Areas.AdminPage.Controllers
             db.SaveChanges();
 
             TempData["SuccessMessage"] = "Đã cập nhật trạng thái nổi bật.";
-            return RedirectToAction("Index", new { statusProduct, keyword });
+            return RedirectToAction("Index", new { statusProduct, keyword, page });
         }
 
-        private AdminProductIndexVm BuildIndexViewModel(string statusProduct, string keyword)
+        private AdminProductIndexVm BuildIndexViewModel(string statusProduct, string keyword, int page)
         {
             statusProduct = (statusProduct ?? "stock").Trim().ToLower();
             keyword = (keyword ?? string.Empty).Trim();
 
-            var query = db.SanPhams.AsQueryable();
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
+            var baseQuery = db.SanPhams.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
-                query = query.Where(x =>
+                baseQuery = baseQuery.Where(x =>
                     x.MaSanPham.Contains(keyword) ||
                     x.TenSanPham.Contains(keyword));
             }
@@ -142,46 +180,80 @@ namespace MatKinh.Areas.AdminPage.Controllers
             switch (statusProduct)
             {
                 case "outofstock":
-                    query = query.Where(x => x.TrangThai == PRODUCT_STATUS_ACTIVE && x.SoLuongTon <= 0);
+                    baseQuery = baseQuery.Where(x => x.TrangThai == PRODUCT_STATUS_ACTIVE && x.SoLuongTon <= 0);
                     break;
 
                 case "inactive":
-                    query = query.Where(x => x.TrangThai == PRODUCT_STATUS_INACTIVE);
+                    baseQuery = baseQuery.Where(x => x.TrangThai == PRODUCT_STATUS_INACTIVE);
                     break;
 
                 default:
                     statusProduct = "stock";
-                    query = query.Where(x => x.TrangThai == PRODUCT_STATUS_ACTIVE && x.SoLuongTon > 0);
+                    baseQuery = baseQuery.Where(x => x.TrangThai == PRODUCT_STATUS_ACTIVE && x.SoLuongTon > 0);
                     break;
             }
+
+            int totalItems = baseQuery.Count();
+            int totalPages = (int)Math.Ceiling((double)totalItems / PAGE_SIZE);
+
+            if (totalPages <= 0)
+            {
+                totalPages = 1;
+            }
+
+            if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            int totalStock = baseQuery.Sum(x => (int?)x.SoLuongTon) ?? 0;
+            int totalFeatured = baseQuery.Count(x => x.IsFeatured);
+
+            var products = baseQuery
+                .OrderByDescending(x => x.UpdatedAt.HasValue ? x.UpdatedAt.Value : x.CreatedAt)
+                .Skip((page - 1) * PAGE_SIZE)
+                .Take(PAGE_SIZE)
+                .Select(x => new AdminProductListItemVm
+                {
+                    SanPhamId = x.SanPhamId,
+                    MaSanPham = x.MaSanPham,
+                    TenSanPham = x.TenSanPham,
+                    ThuongHieuId = x.ThuongHieuId,
+                    ThuongHieuTen = x.ThuongHieu.TenThuongHieu,
+                    LoaiSanPhamId = x.LoaiSanPhamId,
+                    LoaiSanPhamTen = x.LoaiSanPham.TenLoaiSanPham,
+                    GiaGoc = x.GiaGoc,
+                    GiaBan = x.GiaBan,
+                    SoLuongTon = x.SoLuongTon,
+                    HinhAnhChinh = x.HinhAnhChinh,
+                    MoTaNgan = x.MoTaNgan,
+                    MoTaChiTiet = x.MoTaChiTiet,
+                    TrangThai = x.TrangThai,
+                    IsFeatured = x.IsFeatured,
+                    NguoiTao = db.TaiKhoans
+                        .Where(tk => tk.TaiKhoanId == x.CreatedById)
+                        .Select(tk => tk.HoTen)
+                        .FirstOrDefault(),
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt
+                })
+                .ToList();
 
             var model = new AdminProductIndexVm
             {
                 HeaderTitle = GetHeaderTitle(statusProduct),
                 StatusFilter = statusProduct,
                 Keyword = keyword,
-                Products = query
-                    .OrderByDescending(x => x.UpdatedAt.HasValue ? x.UpdatedAt.Value : x.CreatedAt)
-                    .Select(x => new AdminProductListItemVm
-                    {
-                        SanPhamId = x.SanPhamId,
-                        MaSanPham = x.MaSanPham,
-                        TenSanPham = x.TenSanPham,
-                        ThuongHieuId = x.ThuongHieuId,
-                        ThuongHieuTen = x.ThuongHieu.TenThuongHieu,
-                        LoaiSanPhamId = x.LoaiSanPhamId,
-                        LoaiSanPhamTen = x.LoaiSanPham.TenLoaiSanPham,
-                        GiaGoc = x.GiaGoc,
-                        GiaBan = x.GiaBan,
-                        SoLuongTon = x.SoLuongTon,
-                        HinhAnhChinh = x.HinhAnhChinh,
-                        MoTaNgan = x.MoTaNgan,
-                        TrangThai = x.TrangThai,
-                        IsFeatured = x.IsFeatured,
-                        CreatedAt = x.CreatedAt,
-                        UpdatedAt = x.UpdatedAt
-                    })
-                    .ToList(),
+
+                CurrentPage = page,
+                PageSize = PAGE_SIZE,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                TotalStock = totalStock,
+                TotalFeatured = totalFeatured,
+
+                Products = products,
+
                 Brands = db.ThuongHieux
                     .Where(x => x.IsActive)
                     .OrderBy(x => x.TenThuongHieu)
@@ -191,6 +263,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                         Text = x.TenThuongHieu
                     })
                     .ToList(),
+
                 Categories = db.LoaiSanPhams
                     .Where(x => x.IsActive)
                     .OrderBy(x => x.TenLoaiSanPham)
@@ -211,8 +284,10 @@ namespace MatKinh.Areas.AdminPage.Controllers
             {
                 case "outofstock":
                     return "Danh sách hết hàng";
+
                 case "inactive":
                     return "Danh sách ngừng bán";
+
                 default:
                     return "Danh sách còn hàng";
             }
@@ -264,13 +339,19 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 ModelState.AddModelError("MaSanPham", "Mã sản phẩm đã tồn tại.");
             }
 
-            var brandExists = db.ThuongHieux.Any(x => x.ThuongHieuId == model.ThuongHieuId && x.IsActive);
+            var brandExists = db.ThuongHieux.Any(x =>
+                x.ThuongHieuId == model.ThuongHieuId &&
+                x.IsActive);
+
             if (!brandExists)
             {
                 ModelState.AddModelError("ThuongHieuId", "Thương hiệu không tồn tại hoặc đã bị khóa.");
             }
 
-            var categoryExists = db.LoaiSanPhams.Any(x => x.LoaiSanPhamId == model.LoaiSanPhamId && x.IsActive);
+            var categoryExists = db.LoaiSanPhams.Any(x =>
+                x.LoaiSanPhamId == model.LoaiSanPhamId &&
+                x.IsActive);
+
             if (!categoryExists)
             {
                 ModelState.AddModelError("LoaiSanPhamId", "Loại sản phẩm không tồn tại hoặc đã bị khóa.");

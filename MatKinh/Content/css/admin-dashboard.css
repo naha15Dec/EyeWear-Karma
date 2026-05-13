@@ -238,3 +238,21 @@
     }
 }
 
+.dashboard-stat-card--primary {
+    background: linear-gradient(135deg, #ffffff 0%, #fbf7ef 100%);
+    border-color: #decda9;
+}
+
+.dashboard-stat-value {
+    word-break: break-word;
+}
+
+.dashboard-overview-item b {
+    color: #1f1f1f;
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-stat-value {
+        font-size: 21px;
+    }
+}

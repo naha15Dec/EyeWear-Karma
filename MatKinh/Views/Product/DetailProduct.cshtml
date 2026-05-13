@@ -57,11 +57,14 @@
 }
 
 <section class="detail-page">
-    <section class="optical-breadcrumb">
+    <section class="optical-breadcrumb product-breadcrumb-compact">
         <div class="container">
             <div class="optical-breadcrumb__inner">
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Product</span>
                 <h1>Chi tiết sản phẩm</h1>
+                <p class="optical-breadcrumb__desc">
+                    Xem thông tin sản phẩm, giá bán, tình trạng tồn kho và các mẫu kính gợi ý phù hợp.
+                </p>
                 <nav>
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
                     <span>/</span>
@@ -279,8 +282,8 @@
                 <span class="eyebrow">Gợi ý cho bạn</span>
                 <h2>Sản phẩm gợi ý</h2>
                 <p>
-                    Những mẫu kính được hệ thống đề xuất dựa trên hành vi người dùng,
-                    sản phẩm tương đồng, cùng thương hiệu hoặc mức giá gần tương đương.
+                    Những mẫu kính tương đồng về phong cách, thương hiệu hoặc mức giá,
+                    giúp bạn dễ dàng so sánh và lựa chọn sản phẩm phù hợp hơn.
                 </p>
             </div>
 
@@ -291,19 +294,37 @@
                     {
                         string itemImg = normalizeImage(item.HinhAnhChinh);
                         bool itemIsSale = item.GiaGoc > item.GiaBan;
+                        bool itemConHang = item.TrangThai == 1 && item.SoLuongTon > 0;
                         string itemName = item.TenSanPham ?? "Sản phẩm";
+
+                        string itemBrand = item.ThuongHieu != null
+                            ? item.ThuongHieu.TenThuongHieu
+                            : "Karma Eyewear";
 
                         <div class="col-md-6 col-lg-3 mb-4">
                             <div class="recommend-product-card">
                                 <a href="@Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })"
                                    class="recommend-product-link">
                                     <div class="recommend-product-image">
+                                        @if (!itemConHang)
+                                        {
+                                            <span class="product-status-badge soldout">Hết hàng</span>
+                                        }
+                                        else if (itemIsSale)
+                                        {
+                                            <span class="product-status-badge sale">Sale</span>
+                                        }
+
                                         <img src="@itemImg"
                                              alt="@itemName"
                                              onerror="this.onerror=null;this.src='@fallbackImg';" />
                                     </div>
 
                                     <div class="recommend-product-body">
+                                        <div class="product-card-meta">
+                                            <span>@itemBrand</span>
+                                        </div>
+
                                         <h5 class="recommend-product-title">
                                             @(itemName.Length > 45
                                                 ? itemName.Substring(0, 45) + "..."
@@ -337,6 +358,10 @@
                 <div class="catalog-empty">
                     <h3>Chưa có dữ liệu gợi ý</h3>
                     <p>Hệ thống sẽ sớm cập nhật thêm các sản phẩm phù hợp dành cho bạn.</p>
+                    <a href="@Url.Action("Index", "Product")"
+                       class="optical-btn optical-btn--dark catalog-empty-btn">
+                        Xem tất cả sản phẩm
+                    </a>
                 </div>
             }
         </div>

@@ -21,14 +21,21 @@ namespace MatKinh.ViewModel
     public class AdminProfileUpdateVm
     {
         [Required(ErrorMessage = "Vui lòng nhập họ tên")]
+        [StringLength(150, ErrorMessage = "Họ tên không được vượt quá 150 ký tự")]
         public string HoTen { get; set; }
 
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [StringLength(100, ErrorMessage = "Email không được vượt quá 100 ký tự")]
         public string Email { get; set; }
 
+        [RegularExpression(@"^(0|\+84)(\d{9})$", ErrorMessage = "Số điện thoại không hợp lệ. Ví dụ: 0332080172 hoặc +84332080172")]
         public string SoDienThoai { get; set; }
+
         public bool? GioiTinh { get; set; }
+
         public DateTime? NgaySinh { get; set; }
+
+        [StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự")]
         public string DiaChi { get; set; }
     }
 

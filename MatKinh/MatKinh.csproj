@@ -603,12 +603,16 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\buttons.bootstrap4.min.css" />
+    <Content Include="Content\css\admin-blog.css" />
     <Content Include="Content\css\admin-dashboard.css" />
     <Content Include="Content\css\admin-layout.css" />
     <Content Include="Content\css\admin-order.css" />
     <Content Include="Content\css\admin-post.css" />
+    <Content Include="Content\css\admin-product.css" />
     <Content Include="Content\css\admin-profile.css" />
     <Content Include="Content\css\admin-revenue.css" />
+    <Content Include="Content\css\admin-setting.css" />
+    <Content Include="Content\css\admin-system-category.css" />
     <Content Include="Content\css\admin-table.css" />
     <Content Include="Content\css\auth.css" />
     <Content Include="Content\css\blog.css" />
@@ -621,6 +625,7 @@
     <Content Include="Content\css\home.css" />
     <Content Include="Content\css\layout.css" />
     <Content Include="Content\css\order-detail.css" />
+    <Content Include="Content\css\premium-toast.css" />
     <Content Include="Content\css\product.css" />
     <Content Include="Content\css\profile.css" />
     <Content Include="Content\css\responsive.css" />
@@ -826,6 +831,7 @@
     <Compile Include="ViewModel\AdminBlogViewModels.cs" />
     <Compile Include="ViewModel\AdminBrandViewModels.cs" />
     <Compile Include="ViewModel\AdminCategoryViewModels.cs" />
+    <Compile Include="ViewModel\AdminDashboardVm.cs" />
     <Compile Include="ViewModel\AdminOrderViewModels.cs" />
     <Compile Include="ViewModel\AdminProductCreateVm.cs" />
     <Compile Include="ViewModel\AdminProductListPageVm.cs" />
@@ -836,7 +842,7 @@
     <Compile Include="ViewModel\FiltersProduct.cs" />
     <Compile Include="ViewModel\Login.cs" />
     <Compile Include="ViewModel\ProductCatalogFilterVm.cs" />
-    <Compile Include="ViewModel\ProfileViewModels.cs" />
+    <Compile Include="ViewModel\AdminProfileViewModels.cs" />
     <Compile Include="ViewModel\PurchaseInformation.cs" />
     <Compile Include="ViewModel\Register.cs" />
     <Compile Include="ViewModel\UpdateAccount.cs" />

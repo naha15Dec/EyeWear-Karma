@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -14,26 +16,61 @@ namespace MatKinh.Areas.AdminPage.Controllers
     {
         private readonly BanMatKinhEntities db = new BanMatKinhEntities();
 
-        // ================= LIST =================
-        public ActionResult BlogList(string keyword = "")
+        [HttpGet]
+        public ActionResult BlogList(string keyword = "", int? status = null)
         {
             var user = GetCurrentUser();
-            if (user == null) return RedirectToLogin();
+            if (user == null)
+            {
+                return RedirectToLogin();
+            }
 
-            var list = db.BaiViets
-                .Where(x => x.CreatedById == user.TaiKhoanId &&
-                           (string.IsNullOrEmpty(keyword) || x.TieuDe.Contains(keyword)))
-                .OrderByDescending(x => x.CreatedAt)
+            keyword = (keyword ?? string.Empty).Trim();
+
+            var query = db.BaiViets
+                .Include(x => x.TaiKhoan)
+                .Where(x => x.CreatedById == user.TaiKhoanId);
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(x =>
+                    x.MaBaiViet.Contains(keyword) ||
+                    x.TieuDe.Contains(keyword));
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(x => x.TrangThai == status.Value);
+            }
+
+            ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
+            ViewBag.IsAdmin = IsAdmin(user);
+
+            var list = query
+                .OrderByDescending(x => x.UpdatedAt.HasValue ? x.UpdatedAt.Value : x.CreatedAt)
                 .ToList();
 
             return View(list);
         }
 
-        // ================= CREATE =================
         [HttpGet]
         public ActionResult AddBlog()
         {
-            return View(new AdminBlogCreateVm());
+            var user = GetCurrentUser();
+            if (user == null)
+            {
+                return RedirectToLogin();
+            }
+
+            ViewBag.IsAdmin = IsAdmin(user);
+
+            var model = new AdminBlogCreateVm
+            {
+                TrangThai = BlogStatusConstants.DRAFT
+            };
+
+            return View(model);
         }
 
         [HttpPost]
@@ -41,79 +78,202 @@ namespace MatKinh.Areas.AdminPage.Controllers
         public ActionResult AddBlog(AdminBlogCreateVm vm, HttpPostedFileBase imageAvatar)
         {
             var user = GetCurrentUser();
-            if (user == null) return RedirectToLogin();
+            if (user == null)
+            {
+                return RedirectToLogin();
+            }
+
+            bool isAdmin = IsAdmin(user);
+            ViewBag.IsAdmin = isAdmin;
 
             if (!ModelState.IsValid)
-                return View(vm);
-
-            var post = new BaiViet
             {
-                MaBaiViet = GenerateCode(),
-                TieuDe = vm.TieuDe,
-                TomTat = vm.TomTat,
-                NoiDung = vm.NoiDung,
-                CreatedById = user.TaiKhoanId,
-                TrangThai = BlogStatusConstants.DRAFT,
-                CreatedAt = DateTime.Now
-            };
+                return View(vm);
+            }
 
-            SaveImage(imageAvatar, post);
+            try
+            {
+                int status = BlogStatusConstants.DRAFT;
 
-            db.BaiViets.Add(post);
-            db.SaveChanges();
+                if (isAdmin && vm.TrangThai == BlogStatusConstants.PUBLISHED)
+                {
+                    status = BlogStatusConstants.PUBLISHED;
+                }
 
-            return RedirectToAction("BlogList");
+                var post = new BaiViet
+                {
+                    MaBaiViet = GenerateCode(),
+                    TieuDe = (vm.TieuDe ?? string.Empty).Trim(),
+                    TomTat = string.IsNullOrWhiteSpace(vm.TomTat) ? null : vm.TomTat.Trim(),
+                    NoiDung = vm.NoiDung,
+                    CreatedById = user.TaiKhoanId,
+                    TrangThai = status,
+                    NgayDang = status == BlogStatusConstants.PUBLISHED ? DateTime.Now : (DateTime?)null,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = null
+                };
+
+                SaveImage(imageAvatar, post);
+
+                db.BaiViets.Add(post);
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = isAdmin && status == BlogStatusConstants.PUBLISHED
+                    ? "Tạo và đăng bài viết thành công."
+                    : "Tạo bài viết thành công. Bài đang chờ duyệt.";
+
+                return RedirectToAction("BlogList");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Tạo bài viết thất bại: " + ex.Message);
+                return View(vm);
+            }
         }
 
-        // ================= UPDATE =================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Update(int id, AdminBlogCreateVm vm, HttpPostedFileBase imageAvatar)
         {
+            var user = GetCurrentUser();
+            if (user == null)
+            {
+                return RedirectToLogin();
+            }
+
             var post = db.BaiViets.FirstOrDefault(x => x.BaiVietId == id);
-            if (post == null) return RedirectToAction("BlogList");
+            if (post == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy bài viết.";
+                return RedirectToAction("BlogList");
+            }
 
-            post.TieuDe = vm.TieuDe;
-            post.TomTat = vm.TomTat;
-            post.NoiDung = vm.NoiDung;
-            post.UpdatedAt = DateTime.Now;
+            if (post.CreatedById != user.TaiKhoanId)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền sửa bài viết này.";
+                return RedirectToAction("BlogList");
+            }
 
-            SaveImage(imageAvatar, post);
+            bool isAdmin = IsAdmin(user);
 
-            db.SaveChanges();
+            if (!isAdmin && post.TrangThai == BlogStatusConstants.PUBLISHED)
+            {
+                TempData["ErrorMessage"] = "Bài viết đã đăng. Nhân viên không được sửa trực tiếp bài đã đăng.";
+                return RedirectToAction("BlogList");
+            }
 
-            return RedirectToAction("BlogList");
+            if (string.IsNullOrWhiteSpace(vm.TieuDe) || string.IsNullOrWhiteSpace(vm.NoiDung))
+            {
+                TempData["ErrorMessage"] = "Tiêu đề và nội dung bài viết không được để trống.";
+                return RedirectToAction("BlogList");
+            }
+
+            try
+            {
+                post.TieuDe = vm.TieuDe.Trim();
+                post.TomTat = string.IsNullOrWhiteSpace(vm.TomTat) ? null : vm.TomTat.Trim();
+                post.NoiDung = vm.NoiDung;
+                post.UpdatedAt = DateTime.Now;
+
+                if (isAdmin)
+                {
+                    if (vm.TrangThai == BlogStatusConstants.PUBLISHED)
+                    {
+                        post.TrangThai = BlogStatusConstants.PUBLISHED;
+                        if (!post.NgayDang.HasValue)
+                        {
+                            post.NgayDang = DateTime.Now;
+                        }
+                    }
+                    else if (vm.TrangThai == BlogStatusConstants.DRAFT)
+                    {
+                        post.TrangThai = BlogStatusConstants.DRAFT;
+                        post.NgayDang = null;
+                    }
+                    else if (vm.TrangThai == BlogStatusConstants.HIDDEN)
+                    {
+                        post.TrangThai = BlogStatusConstants.HIDDEN;
+                    }
+                }
+
+                SaveImage(imageAvatar, post);
+
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Cập nhật bài viết thành công.";
+                return RedirectToAction("BlogList");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Cập nhật bài viết thất bại: " + ex.Message;
+                return RedirectToAction("BlogList");
+            }
         }
 
-        // ================= DELETE =================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
-            var post = db.BaiViets.FirstOrDefault(x => x.BaiVietId == id);
-            if (post != null)
+            var user = GetCurrentUser();
+            if (user == null)
             {
-                db.BaiViets.Remove(post);
-                db.SaveChanges();
+                return RedirectToLogin();
             }
 
+            var post = db.BaiViets.FirstOrDefault(x => x.BaiVietId == id);
+            if (post == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy bài viết.";
+                return RedirectToAction("BlogList");
+            }
+
+            if (post.CreatedById != user.TaiKhoanId)
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền xóa bài viết này.";
+                return RedirectToAction("BlogList");
+            }
+
+            bool isAdmin = IsAdmin(user);
+
+            if (!isAdmin && post.TrangThai == BlogStatusConstants.PUBLISHED)
+            {
+                TempData["ErrorMessage"] = "Bài viết đã đăng. Nhân viên không được xóa/ẩn bài đã đăng.";
+                return RedirectToAction("BlogList");
+            }
+
+            post.TrangThai = BlogStatusConstants.HIDDEN;
+            post.UpdatedAt = DateTime.Now;
+
+            db.SaveChanges();
+
+            TempData["SuccessMessage"] = "Đã chuyển bài viết sang trạng thái ẩn.";
             return RedirectToAction("BlogList");
         }
 
-        // ================= SEARCH =================
+        [HttpGet]
         public ActionResult FindPostByName(string keyword)
         {
             return RedirectToAction("BlogList", new { keyword });
         }
 
-        // ================= HELPER =================
-
         private TaiKhoan GetCurrentUser()
         {
             var session = Session["LoginInformation"] as TaiKhoan;
-            if (session == null) return null;
+            if (session == null)
+            {
+                return null;
+            }
 
-            return db.TaiKhoans.FirstOrDefault(x => x.TaiKhoanId == session.TaiKhoanId);
+            return db.TaiKhoans
+                .Include(x => x.VaiTro)
+                .FirstOrDefault(x => x.TaiKhoanId == session.TaiKhoanId && x.IsActive);
+        }
+
+        private bool IsAdmin(TaiKhoan user)
+        {
+            return user != null &&
+                   user.VaiTro != null &&
+                   string.Equals(user.VaiTro.MaVaiTro, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase);
         }
 
         private ActionResult RedirectToLogin()
@@ -123,25 +283,67 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
         private string GenerateCode()
         {
-            return DateTime.Now.ToString("MMddHHmmss");
+            string code;
+
+            do
+            {
+                code = "BV" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
+            }
+            while (db.BaiViets.Any(x => x.MaBaiViet == code));
+
+            return code;
         }
 
         private void SaveImage(HttpPostedFileBase file, BaiViet post)
         {
-            if (file != null && file.ContentLength > 0)
+            if (file == null || file.ContentLength <= 0)
             {
-                string folder = "/Asset/SaveImgBlog/";
-                string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-
-                string path = Server.MapPath(folder);
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-
-                string fullPath = Path.Combine(path, fileName);
-                file.SaveAs(fullPath);
-
-                post.AnhDaiDien = folder + fileName;
+                return;
             }
+
+            const int maxSize = 3 * 1024 * 1024;
+            if (file.ContentLength > maxSize)
+            {
+                throw new InvalidOperationException("Ảnh đại diện không được vượt quá 3MB.");
+            }
+
+            string extension = Path.GetExtension(file.FileName);
+            string lowerExtension = (extension ?? string.Empty).ToLower();
+
+            var allowedExtensions = new HashSet<string>
+            {
+                ".jpg", ".jpeg", ".png", ".webp"
+            };
+
+            if (!allowedExtensions.Contains(lowerExtension))
+            {
+                throw new InvalidOperationException("Chỉ cho phép upload ảnh .jpg, .jpeg, .png hoặc .webp.");
+            }
+
+            string folder = "/Asset/SaveImgBlog/";
+            string physicalFolder = Server.MapPath("~" + folder);
+
+            if (!Directory.Exists(physicalFolder))
+            {
+                Directory.CreateDirectory(physicalFolder);
+            }
+
+            string fileName = Guid.NewGuid() + extension;
+            string fullPath = Path.Combine(physicalFolder, fileName);
+
+            file.SaveAs(fullPath);
+
+            post.AnhDaiDien = folder + fileName;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }
