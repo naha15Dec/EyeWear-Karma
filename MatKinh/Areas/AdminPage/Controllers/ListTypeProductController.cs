@@ -61,18 +61,15 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("ProductType");
             }
 
-            if (!category.IsActive)
-            {
-                TempData["ErrorMessage"] = "Loại sản phẩm này đã ngừng sử dụng trước đó.";
-                return RedirectToAction("ProductType");
-            }
-
-            category.IsActive = false;
+            category.IsActive = !category.IsActive;
             category.UpdatedAt = DateTime.Now;
 
             db.SaveChanges();
 
-            TempData["SuccessMessage"] = "Đã chuyển loại sản phẩm sang trạng thái ngừng sử dụng.";
+            TempData["SuccessMessage"] = category.IsActive
+                ? "Đã kích hoạt lại loại sản phẩm."
+                : "Đã chuyển loại sản phẩm sang trạng thái ngừng sử dụng.";
+
             return RedirectToAction("ProductType");
         }
 

@@ -13,7 +13,7 @@
 
         pendingConfirmElement = element;
 
-        var message = element.attr("data-confirm") || "Bạn xác nhận thao tác này?";
+        var message = element.attr("data-confirm") || "Vui lòng kiểm tra kỹ trước khi tiếp tục.";
         var title = element.attr("data-confirm-title") || "Bạn xác nhận thao tác này?";
         var okText = element.attr("data-confirm-ok") || "Xác nhận";
 
@@ -37,17 +37,31 @@
 
         $("#globalConfirmModal").modal("hide");
 
-        if (element.is("button[type='submit']")) {
-            element.closest("form").submit();
+        if (element.is("button[type='submit']") || element.is("input[type='submit']")) {
+            var form = element.closest("form");
+
+            if (form.length) {
+                form.trigger("submit");
+            }
+
             return;
         }
 
         if (element.is("a")) {
-            window.location.href = element.attr("href");
+            var href = element.attr("href");
+
+            if (href && href !== "#") {
+                window.location.href = href;
+            }
+
             return;
         }
 
         element.data("confirmed", true);
         element.trigger("click");
+    });
+
+    $("#globalConfirmModal").on("hidden.bs.modal", function () {
+        pendingConfirmElement = null;
     });
 });

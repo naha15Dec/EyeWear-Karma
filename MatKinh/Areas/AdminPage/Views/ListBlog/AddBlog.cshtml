@@ -9,7 +9,9 @@
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Thêm bài viết</h1>
-        <p class="admin-page-subtitle">Tạo nội dung bài viết mới cho website.</p>
+        <p class="admin-page-subtitle">
+            Tạo nội dung bài viết mới cho website mắt kính, hỗ trợ hình ảnh đại diện và trình soạn thảo nội dung chi tiết.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -23,118 +25,195 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-blog-create-page">
     <div class="container-fluid p-0">
-        @using (Html.BeginForm("AddBlog", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        @using (Html.BeginForm("AddBlog", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data", @class = "admin-blog-create-form" }))
         {
             @Html.AntiForgeryToken()
 
             <div class="row">
-                <div class="col-lg-7">
-                    <div class="card admin-form-card mb-4">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card admin-blog-create-card">
                         <div class="card-header border-0">
-                            <h3 class="card-title">Thông tin chính</h3>
+                            <div class="admin-blog-card-heading">
+                                <div class="admin-blog-card-icon">
+                                    <i class="fas fa-pen-nib"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="admin-blog-card-title">Thông tin chính</h3>
+                                    <p class="admin-blog-card-subtitle">
+                                        Nhập tiêu đề và phần tóm tắt để người đọc hiểu nhanh nội dung bài viết.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card-body">
-                            <div class="form-group">
+                            <div class="form-group admin-blog-form-group">
                                 <label>Tên bài viết</label>
                                 @Html.TextBoxFor(m => m.TieuDe,
-                                    new { @class = "form-control admin-input", placeholder = "Nhập tiêu đề..." })
-                                @Html.ValidationMessageFor(m => m.TieuDe, "", new { @class = "text-danger" })
+                                    new
+                                    {
+                                        @class = "form-control admin-blog-input",
+                                        placeholder = "Ví dụ: Cách chọn gọng kính phù hợp với khuôn mặt"
+                                    })
+                                @Html.ValidationMessageFor(m => m.TieuDe, "", new { @class = "text-danger admin-blog-validation" })
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group admin-blog-form-group mb-0">
                                 <label>Nội dung tóm tắt</label>
                                 @Html.TextAreaFor(m => m.TomTat,
-                                    new { @class = "form-control admin-input", rows = "4", placeholder = "Tóm tắt ngắn..." })
-                                @Html.ValidationMessageFor(m => m.TomTat, "", new { @class = "text-danger" })
+                                    new
+                                    {
+                                        @class = "form-control admin-blog-input admin-blog-summary-input",
+                                        rows = "4",
+                                        placeholder = "Viết đoạn tóm tắt ngắn để hiển thị ở danh sách bài viết..."
+                                    })
+                                @Html.ValidationMessageFor(m => m.TomTat, "", new { @class = "text-danger admin-blog-validation" })
                             </div>
                         </div>
                     </div>
 
-                    <div class="card admin-form-card">
+                    <div class="card admin-blog-create-card admin-blog-editor-card">
                         <div class="card-header border-0">
-                            <h3 class="card-title">Nội dung chi tiết bài viết</h3>
+                            <div class="admin-blog-card-heading">
+                                <div class="admin-blog-card-icon">
+                                    <i class="fas fa-align-left"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="admin-blog-card-title">Nội dung chi tiết bài viết</h3>
+                                    <p class="admin-blog-card-subtitle">
+                                        Soạn nội dung chính của bài viết, có thể định dạng chữ, chèn ảnh, liên kết và bảng.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card-body">
-                            @Html.TextAreaFor(m => m.NoiDung,
-                                new
-                                {
-                                    @class = "admin-textarea tinymce-editor",
-                                    placeholder = "Nhập nội dung bài viết..."
-                                })
-                            @Html.ValidationMessageFor(m => m.NoiDung, "", new { @class = "text-danger" })
+                            <div class="admin-blog-editor-wrap">
+                                @Html.TextAreaFor(m => m.NoiDung,
+                                    new
+                                    {
+                                        @class = "admin-blog-textarea tinymce-editor",
+                                        placeholder = "Nhập nội dung bài viết..."
+                                    })
+                            </div>
+
+                            @Html.ValidationMessageFor(m => m.NoiDung, "", new { @class = "text-danger admin-blog-validation" })
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-5">
-                    <div class="card admin-form-card mb-4">
-                        <div class="card-header border-0">
-                            <h3 class="card-title">Ảnh đại diện bài viết</h3>
-                        </div>
+                <div class="col-xl-4 col-lg-5">
+                    <div class="admin-blog-side-sticky">
+                        <div class="card admin-blog-create-card">
+                            <div class="card-header border-0">
+                                <div class="admin-blog-card-heading">
+                                    <div class="admin-blog-card-icon">
+                                        <i class="fas fa-image"></i>
+                                    </div>
 
-                        <div class="card-body">
-                            <div id="imagePreviewSingle" class="admin-image-preview-single">
-                                <span class="admin-image-placeholder">Xem trước ảnh đại diện</span>
-                            </div>
-
-                            <div class="input-group mt-3">
-                                <div class="custom-file">
-                                    <input type="file"
-                                           class="custom-file-input"
-                                           id="inputSingleFile"
-                                           name="imageAvatar"
-                                           accept=".jpg,.jpeg,.png,.webp" />
-                                    <label class="custom-file-label" for="inputSingleFile">Chọn ảnh</label>
+                                    <div>
+                                        <h3 class="admin-blog-card-title">Ảnh đại diện</h3>
+                                        <p class="admin-blog-card-subtitle">
+                                            Ảnh dùng để hiển thị ngoài danh sách bài viết và trang chi tiết.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
+
+                            <div class="card-body">
+                                <div id="imagePreviewSingle" class="admin-blog-image-preview">
+                                    <div class="admin-blog-image-placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <strong>Xem trước ảnh đại diện</strong>
+                                        <span>Hỗ trợ JPG, JPEG, PNG, WEBP</span>
+                                    </div>
+                                </div>
+
+                                <div class="admin-blog-file-box">
+                                    <div class="custom-file">
+                                        <input type="file"
+                                               class="custom-file-input admin-blog-file-input"
+                                               id="inputSingleFile"
+                                               name="imageAvatar"
+                                               accept=".jpg,.jpeg,.png,.webp" />
+                                        <label class="custom-file-label admin-blog-file-label" for="inputSingleFile">
+                                            Chọn ảnh
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="admin-blog-upload-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Nên dùng ảnh ngang, rõ sản phẩm hoặc chủ đề bài viết để giao diện đẹp hơn.</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="card admin-form-card">
-                        <div class="card-header border-0">
-                            <h3 class="card-title">Xuất bản</h3>
-                        </div>
+                        <div class="card admin-blog-create-card">
+                            <div class="card-header border-0">
+                                <div class="admin-blog-card-heading">
+                                    <div class="admin-blog-card-icon">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
 
-                        <div class="card-body">
-                            @Html.ValidationSummary(true, "", new { @class = "text-danger mb-3" })
-
-                            @if (isAdmin)
-                            {
-                                <div class="form-group">
-                                    <label>Trạng thái bài viết</label>
-                                    <select name="TrangThai" class="form-control admin-input">
-                                        <option value="@BlogStatusConstants.DRAFT">Lưu chờ duyệt</option>
-                                        <option value="@BlogStatusConstants.PUBLISHED">Đăng ngay</option>
-                                    </select>
+                                    <div>
+                                        <h3 class="admin-blog-card-title">Xuất bản</h3>
+                                        <p class="admin-blog-card-subtitle">
+                                            Chọn trạng thái lưu bài viết trước khi gửi lên hệ thống.
+                                        </p>
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div class="admin-publish-note">
-                                    Admin có thể đăng bài ngay hoặc lưu ở trạng thái chờ duyệt.
+                            <div class="card-body">
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger admin-blog-validation-summary" })
+
+                                @if (isAdmin)
+                                {
+                                    <div class="form-group admin-blog-form-group">
+                                        <label>Trạng thái bài viết</label>
+                                        <select name="TrangThai" class="form-control admin-blog-input">
+                                            <option value="@BlogStatusConstants.DRAFT">Lưu chờ duyệt</option>
+                                            <option value="@BlogStatusConstants.PUBLISHED">Đăng ngay</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="admin-blog-publish-note admin-blog-publish-note--admin">
+                                        <i class="fas fa-crown"></i>
+                                        <div>
+                                            <strong>Quyền quản trị viên</strong>
+                                            <span>Admin có thể đăng bài ngay hoặc lưu bài ở trạng thái chờ duyệt.</span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <input type="hidden" name="TrangThai" value="@BlogStatusConstants.DRAFT" />
+
+                                    <div class="admin-blog-publish-note">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <strong>Bài viết sẽ chờ duyệt</strong>
+                                            <span>Admin sẽ kiểm tra và đăng bài nếu nội dung phù hợp.</span>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="admin-blog-form-actions">
+                                    <button type="submit" class="btn admin-blog-btn admin-blog-btn-save">
+                                        <i class="fas fa-paper-plane mr-1"></i>
+                                        Tạo bài viết
+                                    </button>
+
+                                    <a href="@Url.Action("BlogList", "ListBlog")"
+                                       class="btn admin-blog-btn admin-blog-btn-light">
+                                        Quay lại
+                                    </a>
                                 </div>
-                            }
-                            else
-                            {
-                                <input type="hidden" name="TrangThai" value="@BlogStatusConstants.DRAFT" />
-
-                                <div class="admin-publish-note">
-                                    Bài viết sẽ được lưu ở trạng thái <b>chờ duyệt</b>.
-                                    Admin sẽ kiểm tra và đăng bài nếu nội dung phù hợp.
-                                </div>
-                            }
-
-                            <div class="admin-form-actions mt-3">
-                                <button type="submit" class="btn admin-btn admin-btn-save">
-                                    <i class="fas fa-paper-plane mr-1"></i> Tạo bài viết
-                                </button>
-
-                                <a href="@Url.Action("BlogList", "ListBlog")"
-                                   class="btn admin-btn admin-btn-light ml-2">
-                                    Quay lại
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -146,26 +225,53 @@
 
 <script src="https://cdn.tiny.cloud/1/zihqpwrk4mgc8xsa9hlg2hm0etuz7f7dh1ovyeioicuygk8v/tinymce/6/tinymce.min.js"></script>
 
+<script src="https://cdn.tiny.cloud/1/zihqpwrk4mgc8xsa9hlg2hm0etuz7f7dh1ovyeioicuygk8v/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
 <script>
-    tinymce.init({
-        selector: '.tinymce-editor',
-        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-        height: 500
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof tinymce !== 'undefined') {
+            tinymce.init({
+                selector: 'textarea.tinymce-editor',
+                plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount code',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image media table | numlist bullist indent outdent | emoticons charmap | code | removeformat',
+                height: 500,
+                menubar: false,
+                branding: false
+            });
+        }
 
-    document.getElementById('inputSingleFile').addEventListener('change', function () {
-        var file = this.files[0];
+        var form = document.querySelector('.admin-blog-create-form');
 
-        if (file) {
-            var reader = new FileReader();
+        if (form) {
+            form.addEventListener('submit', function () {
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.triggerSave();
+                }
+            });
+        }
 
-            reader.onload = function (e) {
-                document.getElementById('imagePreviewSingle').innerHTML =
-                    '<img src="' + e.target.result + '" />';
-            };
+        var inputFile = document.getElementById('inputSingleFile');
 
-            reader.readAsDataURL(file);
+        if (inputFile) {
+            inputFile.addEventListener('change', function () {
+                var file = this.files[0];
+                var label = this.parentElement.querySelector('.custom-file-label');
+
+                if (label) {
+                    label.textContent = file ? file.name : 'Chọn ảnh';
+                }
+
+                if (file) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        document.getElementById('imagePreviewSingle').innerHTML =
+                            '<img src="' + e.target.result + '" alt="Ảnh đại diện bài viết" />';
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
         }
     });
 </script>

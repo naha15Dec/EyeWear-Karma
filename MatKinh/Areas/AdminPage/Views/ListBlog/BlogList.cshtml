@@ -7,12 +7,29 @@
     bool isAdmin = ViewBag.IsAdmin != null && (bool)ViewBag.IsAdmin;
     string keyword = ViewBag.Keyword as string ?? "";
     int? status = ViewBag.Status as int?;
+    int totalBlogs = Model != null ? Model.Count : 0;
+
+    Func<int, string> getStatusText = s =>
+    {
+        if (s == BlogStatusConstants.PUBLISHED) return "Đã đăng";
+        if (s == BlogStatusConstants.DRAFT) return "Chờ duyệt";
+        return "Ẩn";
+    };
+
+    Func<int, string> getStatusCss = s =>
+    {
+        if (s == BlogStatusConstants.PUBLISHED) return "admin-blog-status--published";
+        if (s == BlogStatusConstants.DRAFT) return "admin-blog-status--draft";
+        return "admin-blog-status--hidden";
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Danh sách bài viết của tôi</h1>
-        <p class="admin-page-subtitle">Quản lý bài viết và trạng thái nội dung của tài khoản hiện tại.</p>
+        <p class="admin-page-subtitle">
+            Quản lý nội dung bài viết của bạn. Nhân viên chỉ chỉnh sửa nội dung, trạng thái bài viết do admin kiểm duyệt.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -23,273 +40,365 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-blog-list-page">
     <div class="container-fluid p-0">
-        <div class="card admin-card">
-            <div class="card-header admin-card-header border-0">
-                <div class="admin-card-title-wrap">
-                    <h3 class="admin-card-title">Danh sách bài viết</h3>
-                    <span class="admin-card-count">@((Model != null) ? Model.Count : 0) bài viết</span>
-                </div>
 
-                <div class="admin-card-tools">
-                    @using (Html.BeginForm("FindPostByName", "ListBlog", FormMethod.Get, new { @class = "admin-search-form" }))
-                    {
-                        <div class="admin-search-box">
-                            <i class="fas fa-search"></i>
-                            <input class="form-control"
-                                   type="search"
-                                   name="keyword"
-                                   value="@keyword"
-                                   placeholder="Nhập tiêu đề bài viết..."
-                                   aria-label="Search" />
-                            <button class="btn admin-search-btn" type="submit">Tìm</button>
+        <div class="card admin-blog-list-card">
+            <div class="card-header border-0">
+                <div class="admin-blog-list-header">
+                    <div class="admin-blog-title-wrap">
+                        <div class="admin-blog-title-icon">
+                            <i class="fas fa-newspaper"></i>
                         </div>
-                    }
+
+                        <div>
+                            <h3 class="admin-blog-list-title">Bài viết của tôi</h3>
+                            <p class="admin-blog-list-subtitle">
+                                Có <b>@totalBlogs</b> bài viết trong danh sách hiện tại.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="admin-blog-list-actions">
+                        @using (Html.BeginForm("BlogList", "ListBlog", FormMethod.Get, new { @class = "admin-blog-search-form", autocomplete = "off" }))
+                        {
+                            <div class="admin-blog-filter-row">
+                                <select name="status"
+                                        class="form-control admin-blog-filter-select"
+                                        onchange="this.form.submit()"
+                                        autocomplete="off">
+                                    <option value="" @(status.HasValue ? "" : "selected")>Tất cả trạng thái</option>
+                                    <option value="@BlogStatusConstants.DRAFT" @(status == BlogStatusConstants.DRAFT ? "selected" : "")>Chờ duyệt</option>
+                                    <option value="@BlogStatusConstants.PUBLISHED" @(status == BlogStatusConstants.PUBLISHED ? "selected" : "")>Đã đăng</option>
+                                    <option value="@BlogStatusConstants.HIDDEN" @(status == BlogStatusConstants.HIDDEN ? "selected" : "")>Ẩn</option>
+                                </select>
+
+                                <div class="admin-blog-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input class="form-control"
+                                           type="search"
+                                           name="keyword"
+                                           value="@keyword"
+                                           placeholder="Nhập mã hoặc tiêu đề bài viết..."
+                                           aria-label="Search"
+                                           autocomplete="off" />
+                                    <button class="btn admin-blog-search-btn" type="submit">
+                                        Tìm
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <a href="@Url.Action("AddBlog", "ListBlog")" class="btn admin-blog-btn admin-blog-btn-save">
+                            <i class="fas fa-plus mr-1"></i>
+                            Thêm bài viết
+                        </a>
+
+                        @if (!string.IsNullOrWhiteSpace(keyword) || status.HasValue)
+                        {
+                            <a href="@Url.Action("BlogList", "ListBlog")" class="btn admin-blog-btn admin-blog-btn-light">
+                                <i class="fas fa-times mr-1"></i>
+                                Xóa lọc
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
 
             <div class="card-body">
-                <div class="mb-3">
-                    <a href="@Url.Action("AddBlog", "ListBlog")" class="btn admin-btn admin-btn-save">
-                        <i class="fas fa-plus mr-1"></i> Thêm bài viết
-                    </a>
-                </div>
+                @if (Model != null && Model.Count > 0)
+                {
+                    <div class="table-responsive admin-blog-table-wrap">
+                        <table class="table admin-blog-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã bài viết</th>
+                                    <th>Bài viết</th>
+                                    <th>Ngày tạo / đăng</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
 
-                <div class="table-responsive">
-                    <table class="table admin-table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Mã bài viết</th>
-                                <th>Tên bài viết</th>
-                                <th>Ngày tạo / đăng</th>
-                                <th>Trạng thái</th>
-                                <th class="text-center">Lệnh</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @if (Model != null && Model.Count > 0)
-                            {
-                                foreach (var item in Model)
+                            <tbody>
+                                @foreach (var item in Model)
                                 {
                                     bool canEdit = isAdmin || item.TrangThai != BlogStatusConstants.PUBLISHED;
                                     bool canDelete = isAdmin || item.TrangThai != BlogStatusConstants.PUBLISHED;
 
+                                    string statusText = getStatusText(item.TrangThai);
+                                    string statusCss = getStatusCss(item.TrangThai);
+
                                     <tr>
-                                        <td>
+                                        <td data-label="Mã bài viết">
                                             @if (item.TrangThai == BlogStatusConstants.PUBLISHED)
                                             {
                                                 <a target="_blank"
-                                                   class="admin-code-link"
+                                                   class="admin-blog-code-link"
                                                    href='@Url.Action("DetailBlog","Blog", new { area = "", idBlog = item.MaBaiViet })'>
                                                     #@item.MaBaiViet
                                                 </a>
                                             }
                                             else
                                             {
-                                                <span class="admin-code-text">#@item.MaBaiViet</span>
+                                                <span class="admin-blog-code-text">#@item.MaBaiViet</span>
                                             }
                                         </td>
 
-                                        <td>
-                                            <div class="admin-post-title">@item.TieuDe</div>
-                                            <div class="admin-post-summary">
-                                                @(string.IsNullOrEmpty(item.TomTat)
-                                                    ? "Chưa có mô tả tóm tắt"
-                                                    : (item.TomTat.Length > 70 ? item.TomTat.Substring(0, 70) + "..." : item.TomTat))
+                                        <td data-label="Bài viết">
+                                            <div class="admin-blog-post-info">
+                                                <div class="admin-blog-post-title">@item.TieuDe</div>
+                                                <div class="admin-blog-post-summary">
+                                                    @(string.IsNullOrEmpty(item.TomTat)
+                                                        ? "Chưa có mô tả tóm tắt"
+                                                        : (item.TomTat.Length > 86 ? item.TomTat.Substring(0, 86) + "..." : item.TomTat))
+                                                </div>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <div class="admin-date-text">
-                                                Tạo: @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        <td data-label="Ngày tạo / đăng">
+                                            <div class="admin-blog-date">
+                                                <i class="fas fa-calendar-plus"></i>
+                                                <span>Tạo: @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
                                             </div>
-                                            <div class="admin-post-summary">
-                                                @(item.NgayDang.HasValue
-                                                    ? "Đăng: " + item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm")
-                                                    : "Chưa đăng")
+
+                                            <div class="admin-blog-date admin-blog-date--muted">
+                                                <i class="fas fa-paper-plane"></i>
+                                                <span>
+                                                    @(item.NgayDang.HasValue
+                                                        ? "Đăng: " + item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm")
+                                                        : "Chưa đăng")
+                                                </span>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            @if (item.TrangThai == BlogStatusConstants.PUBLISHED)
-                                            {
-                                                <span class="admin-status-badge success">Đã đăng</span>
-                                            }
-                                            else if (item.TrangThai == BlogStatusConstants.DRAFT)
-                                            {
-                                                <span class="admin-status-badge processing">Chờ duyệt</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="admin-status-badge cancel">Ẩn</span>
-                                            }
+                                        <td data-label="Trạng thái">
+                                            <span class="admin-blog-status @statusCss">
+                                                <span></span>
+                                                @statusText
+                                            </span>
                                         </td>
 
-                                        <td class="text-center">
-                                            <div class="admin-action-group">
+                                        <td data-label="Thao tác" class="text-center">
+                                            <div class="admin-blog-action-group">
+
+                                                @if (item.TrangThai == BlogStatusConstants.PUBLISHED)
+                                                {
+                                                    <a target="_blank"
+                                                       class="admin-blog-action admin-blog-action--view"
+                                                       title="Xem bài viết"
+                                                       href='@Url.Action("DetailBlog","Blog", new { area = "", idBlog = item.MaBaiViet })'>
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                }
 
                                                 @if (canEdit)
                                                 {
-                                                    using (Html.BeginForm("Update", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline" }))
+                                                    using (Html.BeginForm("Update", "ListBlog", FormMethod.Post, new { enctype = "multipart/form-data", @class = "d-inline admin-blog-inline-form", autocomplete = "off" }))
                                                     {
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@item.BaiVietId" />
 
+                                                        if (!isAdmin)
+                                                        {
+                                                            <input type="hidden" name="TrangThai" value="@item.TrangThai" />
+                                                        }
+
                                                         <button type="button"
-                                                                class="btn admin-btn admin-btn-edit"
+                                                                class="admin-blog-action admin-blog-action--edit"
+                                                                title="Sửa bài viết"
                                                                 data-toggle="modal"
                                                                 data-target="#postModal-@item.BaiVietId">
-                                                            <i class="fas fa-pen mr-1"></i> Sửa
+                                                            <i class="fas fa-pen"></i>
                                                         </button>
 
-                                                        <div class="modal fade admin-modal"
+                                                        <div class="modal fade admin-blog-edit-modal"
                                                              id="postModal-@item.BaiVietId"
                                                              tabindex="-1"
                                                              role="dialog"
                                                              aria-hidden="true">
-                                                            <div class="modal-dialog modal-dialog-centered modal-xl admin-modal-dialog" role="document">
-                                                                <div class="modal-content admin-modal-content">
+                                                            <div class="modal-dialog modal-dialog-centered modal-xl admin-blog-edit-dialog" role="document">
+                                                                <div class="modal-content admin-blog-edit-content">
 
-                                                                    <div class="modal-header admin-modal-header">
-                                                                        <div>
-                                                                            <h5 class="modal-title">Chỉnh sửa bài viết</h5>
-                                                                            <p class="admin-modal-subtitle mb-0">Bài viết #@item.MaBaiViet</p>
+                                                                    <div class="modal-header admin-blog-edit-header">
+                                                                        <div class="admin-blog-edit-heading">
+                                                                            <div class="admin-blog-edit-icon">
+                                                                                <i class="fas fa-edit"></i>
+                                                                            </div>
+
+                                                                            <div>
+                                                                                <h5 class="modal-title">Chỉnh sửa bài viết</h5>
+                                                                                <p class="admin-blog-edit-subtitle mb-0">
+                                                                                    Bài viết #@item.MaBaiViet
+                                                                                </p>
+                                                                            </div>
                                                                         </div>
-                                                                        <button type="button" class="close admin-modal-close" data-dismiss="modal" aria-label="Close">
+
+                                                                        <button type="button" class="close admin-blog-edit-close" data-dismiss="modal" aria-label="Close">
                                                                             <span aria-hidden="true">&times;</span>
                                                                         </button>
                                                                     </div>
 
-                                                                    <div class="modal-body admin-modal-body">
+                                                                    <div class="modal-body admin-blog-edit-body">
                                                                         <div class="row">
                                                                             <div class="col-lg-7">
-                                                                                <div class="card admin-form-card mb-4">
+                                                                                <div class="card admin-blog-edit-card">
                                                                                     <div class="card-header border-0">
-                                                                                        <h3 class="card-title">Thông tin chính</h3>
+                                                                                        <div class="admin-blog-edit-card-title">
+                                                                                            <i class="fas fa-pen-nib"></i>
+                                                                                            <span>Thông tin chính</span>
+                                                                                        </div>
                                                                                     </div>
+
                                                                                     <div class="card-body">
-                                                                                        <div class="form-group">
+                                                                                        <div class="form-group admin-blog-form-group">
                                                                                             <label>Tên bài viết</label>
                                                                                             <input type="text"
-                                                                                                   class="form-control admin-input"
+                                                                                                   class="form-control admin-blog-input"
                                                                                                    value="@item.TieuDe"
-                                                                                                   name="TieuDe" />
+                                                                                                   name="TieuDe"
+                                                                                                   placeholder="Nhập tên bài viết"
+                                                                                                   autocomplete="off" />
                                                                                         </div>
 
-                                                                                        <div class="form-group">
+                                                                                        <div class="form-group admin-blog-form-group">
                                                                                             <label>Nội dung tóm tắt</label>
-                                                                                            <input type="text"
-                                                                                                   class="form-control admin-input"
-                                                                                                   value="@item.TomTat"
-                                                                                                   name="TomTat" />
+                                                                                            <textarea class="form-control admin-blog-input admin-blog-summary-input"
+                                                                                                      rows="3"
+                                                                                                      name="TomTat"
+                                                                                                      placeholder="Nhập nội dung tóm tắt"
+                                                                                                      autocomplete="off">@item.TomTat</textarea>
                                                                                         </div>
 
                                                                                         <div class="row">
                                                                                             <div class="col-md-6">
-                                                                                                <div class="form-group">
+                                                                                                <div class="form-group admin-blog-form-group">
                                                                                                     <label>Ngày tạo</label>
                                                                                                     <input type="text"
-                                                                                                           class="form-control admin-input"
+                                                                                                           class="form-control admin-blog-input"
                                                                                                            value="@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")"
-                                                                                                           disabled="disabled" />
+                                                                                                           disabled="disabled"
+                                                                                                           autocomplete="off" />
                                                                                                 </div>
                                                                                             </div>
 
                                                                                             <div class="col-md-6">
-                                                                                                <div class="form-group">
+                                                                                                <div class="form-group admin-blog-form-group">
                                                                                                     <label>Ngày đăng</label>
                                                                                                     <input type="text"
-                                                                                                           class="form-control admin-input"
+                                                                                                           class="form-control admin-blog-input"
                                                                                                            value="@(item.NgayDang.HasValue ? item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa đăng")"
-                                                                                                           disabled="disabled" />
+                                                                                                           disabled="disabled"
+                                                                                                           autocomplete="off" />
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
 
-                                                                                        @if (isAdmin)
-                                                                                        {
-                                                                                            <div class="form-group">
-                                                                                                <label>Trạng thái</label>
-                                                                                                <select name="TrangThai" class="form-control admin-input">
-                                                                                                    <option value="@BlogStatusConstants.DRAFT" @(item.TrangThai == BlogStatusConstants.DRAFT ? "selected" : "")>
-                                                                                                        Chờ duyệt
-                                                                                                    </option>
-                                                                                                    <option value="@BlogStatusConstants.PUBLISHED" @(item.TrangThai == BlogStatusConstants.PUBLISHED ? "selected" : "")>
-                                                                                                        Đã đăng
-                                                                                                    </option>
-                                                                                                    <option value="@BlogStatusConstants.HIDDEN" @(item.TrangThai == BlogStatusConstants.HIDDEN ? "selected" : "")>
-                                                                                                        Ẩn
-                                                                                                    </option>
-                                                                                                </select>
-                                                                                            </div>
-                                                                                        }
-                                                                                        else
-                                                                                        {
-                                                                                            <div class="form-group">
-                                                                                                <label>Trạng thái</label>
-                                                                                                <input type="text"
-                                                                                                       class="form-control admin-input"
-                                                                                                       value="@BlogStatusConstants.GetName(item.TrangThai)"
-                                                                                                       disabled="disabled" />
-                                                                                            </div>
+                                                                                        <div class="form-group admin-blog-form-group mb-0">
+                                                                                            <label>Trạng thái</label>
+                                                                                            <input type="text"
+                                                                                                   class="form-control admin-blog-input"
+                                                                                                   value="@statusText"
+                                                                                                   disabled="disabled"
+                                                                                                   autocomplete="off" />
 
                                                                                             <input type="hidden" name="TrangThai" value="@item.TrangThai" />
-                                                                                        }
+
+                                                                                            <small class="admin-blog-field-note">
+                                                                                                Trạng thái bài viết do khu vực quản lý/kiểm duyệt bài viết xử lý.
+                                                                                            </small>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
 
-                                                                                <div class="card admin-form-card">
+                                                                                <div class="card admin-blog-edit-card mb-0">
                                                                                     <div class="card-header border-0">
-                                                                                        <h3 class="card-title">Nội dung chi tiết</h3>
+                                                                                        <div class="admin-blog-edit-card-title">
+                                                                                            <i class="fas fa-align-left"></i>
+                                                                                            <span>Nội dung chi tiết</span>
+                                                                                        </div>
                                                                                     </div>
+
                                                                                     <div class="card-body">
-                                                                                        <textarea class="admin-textarea tinymce-editor"
-                                                                                                  name="NoiDung"
-                                                                                                  rows="14">@item.NoiDung</textarea>
+                                                                                        <div class="admin-blog-editor-wrap">
+                                                                                            <textarea class="admin-blog-textarea tinymce-editor"
+                                                                                                      name="NoiDung"
+                                                                                                      rows="14"
+                                                                                                      autocomplete="off">@item.NoiDung</textarea>
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
 
                                                                             <div class="col-lg-5">
-                                                                                <div class="card admin-form-card">
+                                                                                <div class="card admin-blog-edit-card mb-0">
                                                                                     <div class="card-header border-0">
-                                                                                        <h3 class="card-title">Ảnh đại diện bài viết</h3>
+                                                                                        <div class="admin-blog-edit-card-title">
+                                                                                            <i class="fas fa-image"></i>
+                                                                                            <span>Ảnh đại diện bài viết</span>
+                                                                                        </div>
                                                                                     </div>
+
                                                                                     <div class="card-body">
-                                                                                        <div id="imagePreviewSingle-@item.BaiVietId" class="admin-image-preview-single">
+                                                                                        <div id="imagePreviewSingle-@item.BaiVietId" class="admin-blog-image-preview">
                                                                                             @if (!string.IsNullOrEmpty(item.AnhDaiDien))
                                                                                             {
                                                                                                 <img src="@item.AnhDaiDien" alt="@item.TieuDe" />
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                <img src="/Asset/img/no-image.png" alt="No image" />
+                                                                                                <div class="admin-blog-image-placeholder">
+                                                                                                    <i class="fas fa-image"></i>
+                                                                                                    <strong>Chưa có ảnh đại diện</strong>
+                                                                                                    <span>Chọn ảnh mới để xem trước.</span>
+                                                                                                </div>
                                                                                             }
                                                                                         </div>
 
-                                                                                        <div class="input-group mt-3">
+                                                                                        <div class="admin-blog-file-box">
                                                                                             <div class="custom-file">
                                                                                                 <input type="file"
-                                                                                                       class="custom-file-input post-image-input"
+                                                                                                       class="custom-file-input admin-blog-file-input post-image-input"
                                                                                                        id="inputSingleFile-@item.BaiVietId"
                                                                                                        data-postid="@item.BaiVietId"
                                                                                                        name="imageAvatar"
                                                                                                        accept=".jpg,.jpeg,.png,.webp" />
-                                                                                                <label class="custom-file-label" for="inputSingleFile-@item.BaiVietId">Chọn ảnh đại diện</label>
+                                                                                                <label class="custom-file-label admin-blog-file-label" for="inputSingleFile-@item.BaiVietId">
+                                                                                                    Chọn ảnh đại diện
+                                                                                                </label>
                                                                                             </div>
                                                                                         </div>
+
+                                                                                        <div class="admin-blog-upload-note">
+                                                                                            <i class="fas fa-info-circle"></i>
+                                                                                            <span>
+                                                                                                Nếu không chọn ảnh mới, hệ thống sẽ giữ ảnh đại diện hiện tại.
+                                                                                            </span>
+                                                                                        </div>
+
+                                                                                        @if (!isAdmin)
+                                                                                        {
+                                                                                            <div class="admin-blog-upload-note">
+                                                                                                <i class="fas fa-clock"></i>
+                                                                                                <span>
+                                                                                                    Sau khi chỉnh sửa, bài viết cần được quản trị viên kiểm duyệt trước khi hiển thị công khai.
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        }
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
 
-                                                                    <div class="modal-footer admin-modal-footer">
-                                                                        <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">Đóng</button>
-                                                                        <button type="submit" class="btn admin-btn admin-btn-save">
-                                                                            <i class="fas fa-save mr-1"></i> Lưu
+                                                                    <div class="modal-footer admin-blog-edit-footer">
+                                                                        <button type="button" class="btn admin-blog-btn admin-blog-btn-light" data-dismiss="modal">
+                                                                            Đóng
+                                                                        </button>
+
+                                                                        <button type="submit" class="btn admin-blog-btn admin-blog-btn-save">
+                                                                            <i class="fas fa-save mr-1"></i>
+                                                                            Lưu thay đổi
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -299,20 +408,26 @@
                                                 }
                                                 else
                                                 {
-                                                    <span class="admin-order-subtext">Đã đăng, không thể sửa</span>
+                                                    <span class="admin-blog-lock-note">
+                                                        <i class="fas fa-lock"></i>
+                                                        Đã đăng
+                                                    </span>
                                                 }
 
                                                 @if (canDelete)
                                                 {
-                                                    using (Html.BeginForm("Delete", "ListBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                    using (Html.BeginForm("Delete", "ListBlog", FormMethod.Post, new { @class = "d-inline admin-blog-inline-form", autocomplete = "off" }))
                                                     {
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@item.BaiVietId" />
 
                                                         <button type="submit"
-                                                                class="btn admin-btn admin-btn-delete"
-                                                                onclick="return confirm('Bạn có chắc muốn ẩn bài viết này?')">
-                                                            <i class="fas fa-trash-alt mr-1"></i> Xóa
+                                                                class="admin-blog-action admin-blog-action--delete"
+                                                                title="Ẩn bài viết"
+                                                                data-confirm-title="Ẩn bài viết?"
+                                                                data-confirm="Bài viết sẽ được chuyển sang trạng thái ẩn và không còn hiển thị công khai. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Ẩn bài viết">
+                                                            <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     }
                                                 }
@@ -320,28 +435,52 @@
                                         </td>
                                     </tr>
                                 }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">Không có bài viết nào.</td>
-                                </tr>
-                            }
-                        </tbody>
+                            </tbody>
 
-                        <tfoot>
-                            <tr>
-                                <th>Mã bài viết</th>
-                                <th>Tên bài viết</th>
-                                <th>Ngày tạo / đăng</th>
-                                <th>Trạng thái</th>
-                                <th class="text-center">Lệnh</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                            <tfoot>
+                                <tr>
+                                    <th>Mã bài viết</th>
+                                    <th>Bài viết</th>
+                                    <th>Ngày tạo / đăng</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-blog-empty">
+                        <div class="admin-blog-empty-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+
+                        <h3>Chưa có bài viết nào</h3>
+
+                        @if (!string.IsNullOrWhiteSpace(keyword))
+                        {
+                            <p>
+                                Không tìm thấy bài viết phù hợp với từ khóa
+                                <b>@keyword</b>.
+                            </p>
+                        }
+                        else
+                        {
+                            <p>
+                                Bạn chưa tạo bài viết nào. Hãy bắt đầu bằng cách thêm bài viết mới cho website.
+                            </p>
+                        }
+
+                        <a href="@Url.Action("AddBlog", "ListBlog")" class="btn admin-blog-btn admin-blog-btn-save">
+                            <i class="fas fa-plus mr-1"></i>
+                            Thêm bài viết
+                        </a>
+                    </div>
+                }
             </div>
         </div>
+
     </div>
 </section>
 
@@ -352,25 +491,38 @@
         $(document).on('change', '.post-image-input', function () {
             var postId = $(this).data('postid');
             var input = this;
+            var file = input.files && input.files[0] ? input.files[0] : null;
 
-            if (input.files && input.files[0]) {
+            if (file) {
+                $(this).next('.custom-file-label').text(file.name);
+
                 var reader = new FileReader();
 
                 reader.onload = function (e) {
-                    $('#imagePreviewSingle-' + postId).html('<img src="' + e.target.result + '" alt="Ảnh đại diện" />');
+                    $('#imagePreviewSingle-' + postId).html(
+                        '<img src="' + e.target.result + '" alt="Ảnh đại diện bài viết" />'
+                    );
                 };
 
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         });
 
         if (typeof tinymce !== 'undefined') {
             tinymce.init({
-                selector: '.tinymce-editor',
-                plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-                height: 420
+                selector: 'textarea.tinymce-editor',
+                plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount code',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image media table | numlist bullist indent outdent | emoticons charmap | code | removeformat',
+                height: 420,
+                menubar: false,
+                branding: false
             });
         }
+
+        $(document).on('submit', '.admin-blog-inline-form', function () {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+            }
+        });
     });
 </script>

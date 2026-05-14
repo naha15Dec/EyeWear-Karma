@@ -10,10 +10,10 @@
 
     Func<int, int, string> stockBadgeClass = (status, stock) =>
     {
-        if (status != 1) return "admin-product-badge--danger";
-        if (stock <= 0) return "admin-product-badge--warning";
-        if (stock <= 3) return "admin-product-badge--low";
-        return "admin-product-badge--success";
+        if (status != 1) return "admin-manager-product-status--inactive";
+        if (stock <= 0) return "admin-manager-product-status--out";
+        if (stock <= 3) return "admin-manager-product-status--low";
+        return "admin-manager-product-status--active";
     };
 
     Func<int, int, string> stockText = (status, stock) =>
@@ -31,7 +31,9 @@
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">@Model.HeaderTitle</h1>
-        <p class="admin-page-subtitle">Quản lý sản phẩm theo trạng thái, tồn kho, thương hiệu và loại kính.</p>
+        <p class="admin-page-subtitle">
+            Quản lý sản phẩm theo trạng thái, tồn kho, thương hiệu và loại kính trong toàn hệ thống.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -42,83 +44,116 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-manager-product-page">
     <div class="container-fluid p-0">
 
-        <div class="admin-product-toolbar card">
+        <div class="card admin-manager-product-toolbar">
             <div class="card-body">
-                <div class="admin-product-toolbar__left">
-                    <a class="admin-product-filter @(Model.StatusFilter == "stock" ? "active" : "")"
+                <div class="admin-manager-product-filter-list">
+                    <a class="admin-manager-product-filter @(Model.StatusFilter == "stock" ? "active" : "")"
                        href="@Url.Action("Index", new { statusProduct = "stock", page = 1 })">
+                        <i class="fas fa-box"></i>
                         <span>Còn hàng</span>
                     </a>
 
-                    <a class="admin-product-filter @(Model.StatusFilter == "outofstock" ? "active warning" : "")"
+                    <a class="admin-manager-product-filter @(Model.StatusFilter == "outofstock" ? "active warning" : "")"
                        href="@Url.Action("Index", new { statusProduct = "outofstock", page = 1 })">
+                        <i class="fas fa-exclamation-circle"></i>
                         <span>Hết hàng</span>
                     </a>
 
-                    <a class="admin-product-filter @(Model.StatusFilter == "inactive" ? "active danger" : "")"
+                    <a class="admin-manager-product-filter @(Model.StatusFilter == "inactive" ? "active danger" : "")"
                        href="@Url.Action("Index", new { statusProduct = "inactive", page = 1 })">
+                        <i class="fas fa-ban"></i>
                         <span>Ngừng bán</span>
                     </a>
                 </div>
 
-                <div class="admin-product-toolbar__right">
-                    @using (Html.BeginForm("Index", "ManagerProduct", FormMethod.Get, new { @class = "admin-product-search" }))
+                <div class="admin-manager-product-search-wrap">
+                    @using (Html.BeginForm("Index", "ManagerProduct", FormMethod.Get, new { @class = "admin-manager-product-search", autocomplete = "off" }))
                     {
                         <input type="hidden" name="statusProduct" value="@Model.StatusFilter" />
                         <input type="hidden" name="page" value="1" />
 
-                        <input type="text"
-                               name="keyword"
-                               value="@Model.Keyword"
-                               class="form-control admin-input admin-product-search__input"
-                               placeholder="Tìm theo mã hoặc tên sản phẩm..." />
+                        <div class="admin-manager-product-search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text"
+                                   name="keyword"
+                                   value="@Model.Keyword"
+                                   class="form-control"
+                                   placeholder="Tìm theo mã hoặc tên sản phẩm..."
+                                   autocomplete="off" />
 
-                        <button class="btn admin-btn admin-btn-save admin-product-search__btn" type="submit">
-                            <i class="fas fa-search mr-1"></i> Tìm
-                        </button>
+                            <button class="btn admin-manager-product-search-btn" type="submit">
+                                Tìm
+                            </button>
+                        </div>
                     }
                 </div>
             </div>
         </div>
 
-        <div class="admin-product-stats">
-            <div class="admin-product-stat-card">
-                <span>Tổng sản phẩm</span>
-                <strong>@Model.TotalItems</strong>
+        <div class="admin-manager-product-stats">
+            <div class="admin-manager-product-stat-card">
+                <div class="admin-manager-product-stat-icon">
+                    <i class="fas fa-glasses"></i>
+                </div>
+                <div>
+                    <span>Tổng sản phẩm</span>
+                    <strong>@Model.TotalItems</strong>
+                </div>
             </div>
 
-            <div class="admin-product-stat-card">
-                <span>Sản phẩm nổi bật</span>
-                <strong>@Model.TotalFeatured</strong>
+            <div class="admin-manager-product-stat-card">
+                <div class="admin-manager-product-stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <span>Sản phẩm nổi bật</span>
+                    <strong>@Model.TotalFeatured</strong>
+                </div>
             </div>
 
-            <div class="admin-product-stat-card">
-                <span>Tổng tồn kho</span>
-                <strong>@Model.TotalStock</strong>
+            <div class="admin-manager-product-stat-card">
+                <div class="admin-manager-product-stat-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div>
+                    <span>Tổng tồn kho</span>
+                    <strong>@Model.TotalStock</strong>
+                </div>
             </div>
         </div>
 
-        <div class="card admin-product-card">
+        <div class="card admin-manager-product-card">
+            <div class="card-header border-0">
+                <div class="admin-manager-product-card-heading">
+                    <div>
+                        <h3 class="admin-manager-product-card-title">Danh sách sản phẩm</h3>
+                        <p class="admin-manager-product-card-subtitle">
+                            Theo dõi, cập nhật thông tin, trạng thái và hiển thị nổi bật của sản phẩm.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-body">
                 @if (Model.Products != null && Model.Products.Any())
                 {
-                    <div class="admin-product-table-wrap">
-                        <table class="table admin-product-table">
-                           <thead>
-                               <tr>
-                                   <th>Sản phẩm</th>
-                                   <th>Phân loại</th>
-                                   <th>Người thêm</th>
-                                   <th>Giá bán</th>
-                                   <th>Tồn kho</th>
-                                   <th>Trạng thái</th>
-                                   <th>Nổi bật</th>
-                                   <th class="text-right">Thao tác</th>
-                               </tr>
-                           </thead>
+                    <div class="admin-manager-product-table-wrap">
+                        <table class="table admin-manager-product-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Phân loại</th>
+                                    <th>Người thêm</th>
+                                    <th>Giá bán</th>
+                                    <th>Tồn kho</th>
+                                    <th>Trạng thái</th>
+                                    <th>Nổi bật</th>
+                                    <th class="text-right">Thao tác</th>
+                                </tr>
+                            </thead>
 
                             <tbody>
                                 @foreach (var item in Model.Products)
@@ -127,39 +162,44 @@
                                         ? "/Asset/img/no-image.png"
                                         : item.HinhAnhChinh;
 
+                                    string stockClass = stockBadgeClass(item.TrangThai, item.SoLuongTon);
+                                    string currentStockText = stockText(item.TrangThai, item.SoLuongTon);
+
                                     <tr>
-                                        <td>
-                                            <div class="admin-product-info">
-                                                <div class="admin-product-image">
+                                        <td data-label="Sản phẩm">
+                                            <div class="admin-manager-product-info">
+                                                <div class="admin-manager-product-image">
                                                     <img src="@imageUrl" alt="@item.TenSanPham" />
                                                 </div>
 
-                                                <div>
-                                                    <div class="admin-product-code">#@item.MaSanPham</div>
-                                                    <div class="admin-product-name">@item.TenSanPham</div>
-                                                    <div class="admin-product-desc">
-                                                        @(string.IsNullOrWhiteSpace(item.MoTaNgan) ? "Chưa có mô tả ngắn." : item.MoTaNgan)
+                                                <div class="admin-manager-product-main">
+                                                    <div class="admin-manager-product-code">#@item.MaSanPham</div>
+                                                    <div class="admin-manager-product-name">@item.TenSanPham</div>
+                                                    <div class="admin-manager-product-desc">
+                                                        @(string.IsNullOrWhiteSpace(item.MoTaNgan)
+                                                            ? "Chưa có mô tả ngắn."
+                                                            : (item.MoTaNgan.Length > 95 ? item.MoTaNgan.Substring(0, 95) + "..." : item.MoTaNgan))
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <div class="admin-product-meta">
+                                        <td data-label="Phân loại">
+                                            <div class="admin-manager-product-meta">
                                                 <strong>@item.LoaiSanPhamTen</strong>
                                                 <span>@item.ThuongHieuTen</span>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <div class="admin-product-meta">
+                                        <td data-label="Người thêm">
+                                            <div class="admin-manager-product-meta">
                                                 <strong>@(string.IsNullOrWhiteSpace(item.NguoiTao) ? "—" : item.NguoiTao)</strong>
                                                 <span>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <div class="admin-product-price">
+                                        <td data-label="Giá bán">
+                                            <div class="admin-manager-product-price">
                                                 <strong>@item.GiaBan.ToString("N0") đ</strong>
 
                                                 @if (item.GiaGoc > item.GiaBan)
@@ -169,41 +209,52 @@
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <span class="admin-product-badge @stockBadgeClass(item.TrangThai, item.SoLuongTon)">
-                                                @stockText(item.TrangThai, item.SoLuongTon)
+                                        <td data-label="Tồn kho">
+                                            <span class="admin-manager-product-status @stockClass">
+                                                <span></span>
+                                                @currentStockText
                                             </span>
-                                            <div class="admin-product-stock-number">@item.SoLuongTon sản phẩm</div>
+
+                                            <div class="admin-manager-product-stock-number">
+                                                @item.SoLuongTon sản phẩm
+                                            </div>
                                         </td>
 
-                                        <td>
-                                            <span class="admin-product-badge @(item.TrangThai == 1 ? "admin-product-badge--success" : "admin-product-badge--danger")">
+                                        <td data-label="Trạng thái">
+                                            <span class="admin-manager-product-status @(item.TrangThai == 1 ? "admin-manager-product-status--active" : "admin-manager-product-status--inactive")">
+                                                <span></span>
                                                 @productStatusText(item.TrangThai)
                                             </span>
                                         </td>
 
-                                        <td>
+                                        <td data-label="Nổi bật">
                                             @if (item.IsFeatured)
                                             {
-                                                <span class="admin-product-badge admin-product-badge--featured">Có</span>
+                                                <span class="admin-manager-product-status admin-manager-product-status--featured">
+                                                    <span></span>
+                                                    Có
+                                                </span>
                                             }
                                             else
                                             {
-                                                <span class="admin-product-badge admin-product-badge--muted">Không</span>
+                                                <span class="admin-manager-product-status admin-manager-product-status--muted">
+                                                    <span></span>
+                                                    Không
+                                                </span>
                                             }
                                         </td>
 
-                                        <td class="text-right">
-                                            <div class="admin-product-actions">
+                                        <td data-label="Thao tác" class="text-right">
+                                            <div class="admin-manager-product-actions">
                                                 <button type="button"
-                                                        class="btn admin-product-action admin-product-action--edit"
+                                                        class="btn admin-manager-product-action admin-manager-product-action--edit"
                                                         data-toggle="modal"
                                                         data-target="#editProductModal_@item.SanPhamId"
                                                         title="Cập nhật sản phẩm">
                                                     <i class="fas fa-pen"></i>
                                                 </button>
 
-                                                @using (Html.BeginForm("ToggleFeatured", "ManagerProduct", FormMethod.Post, new { @class = "d-inline" }))
+                                                @using (Html.BeginForm("ToggleFeatured", "ManagerProduct", FormMethod.Post, new { @class = "d-inline admin-manager-product-inline-form", autocomplete = "off" }))
                                                 {
                                                     @Html.AntiForgeryToken()
                                                     @Html.Hidden("id", item.SanPhamId)
@@ -212,26 +263,31 @@
                                                     @Html.Hidden("page", Model.CurrentPage)
 
                                                     <button type="submit"
-                                                            class="btn admin-product-action admin-product-action--star"
+                                                            class="btn admin-manager-product-action admin-manager-product-action--star"
                                                             title="Bật/tắt nổi bật">
                                                         <i class="fas fa-star"></i>
                                                     </button>
                                                 }
 
-                                                @using (Html.BeginForm("Delete", "ManagerProduct", FormMethod.Post, new { @class = "d-inline" }))
+                                                @if (item.TrangThai == 1)
                                                 {
-                                                    @Html.AntiForgeryToken()
-                                                    @Html.Hidden("id", item.SanPhamId)
-                                                    @Html.Hidden("statusProduct", Model.StatusFilter)
-                                                    @Html.Hidden("keyword", Model.Keyword)
-                                                    @Html.Hidden("page", Model.CurrentPage)
+                                                    using (Html.BeginForm("Delete", "ManagerProduct", FormMethod.Post, new { @class = "d-inline admin-manager-product-inline-form", autocomplete = "off" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        @Html.Hidden("id", item.SanPhamId)
+                                                        @Html.Hidden("statusProduct", Model.StatusFilter)
+                                                        @Html.Hidden("keyword", Model.Keyword)
+                                                        @Html.Hidden("page", Model.CurrentPage)
 
-                                                    <button type="submit"
-                                                            class="btn admin-product-action admin-product-action--delete"
-                                                            title="Ngừng bán sản phẩm"
-                                                            onclick="return confirm('Chuyển sản phẩm này sang trạng thái ngừng bán?')">
-                                                        <i class="fas fa-ban"></i>
-                                                    </button>
+                                                        <button type="submit"
+                                                                class="btn admin-manager-product-action admin-manager-product-action--delete"
+                                                                title="Ngừng bán sản phẩm"
+                                                                data-confirm-title="Ngừng bán sản phẩm?"
+                                                                data-confirm="Sản phẩm sẽ được chuyển sang trạng thái ngừng bán và không còn hiển thị để khách mua. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Ngừng bán">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    }
                                                 }
                                             </div>
                                         </td>
@@ -243,33 +299,33 @@
 
                     if (Model.TotalPages > 1)
                     {
-                        <div class="admin-product-pagination">
-                            <div class="admin-product-pagination__info">
+                        <div class="admin-manager-product-pagination">
+                            <div class="admin-manager-product-pagination-info">
                                 Hiển thị @Model.Products.Count sản phẩm trên tổng @Model.TotalItems sản phẩm
                             </div>
 
-                            <div class="admin-product-pagination__links">
-                                <a class="admin-product-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                            <div class="admin-manager-product-pagination-links">
+                                <a class="admin-manager-product-page-link @(Model.HasPreviousPage ? "" : "disabled")"
                                    href="@(Model.HasPreviousPage ? Url.Action("Index", new { statusProduct = Model.StatusFilter, keyword = Model.Keyword, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
 
                                 @if (startPage > 1)
                                 {
-                                    <a class="admin-product-page-link"
+                                    <a class="admin-manager-product-page-link"
                                        href="@Url.Action("Index", new { statusProduct = Model.StatusFilter, keyword = Model.Keyword, page = 1 })">
                                         1
                                     </a>
 
                                     if (startPage > 2)
                                     {
-                                        <span class="admin-product-page-dots">...</span>
+                                        <span class="admin-manager-product-page-dots">...</span>
                                     }
                                 }
 
                                 @for (int i = startPage; i <= endPage; i++)
                                 {
-                                    <a class="admin-product-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                    <a class="admin-manager-product-page-link @(i == Model.CurrentPage ? "active" : "")"
                                        href="@Url.Action("Index", new { statusProduct = Model.StatusFilter, keyword = Model.Keyword, page = i })">
                                         @i
                                     </a>
@@ -279,16 +335,16 @@
                                 {
                                     if (endPage < Model.TotalPages - 1)
                                     {
-                                        <span class="admin-product-page-dots">...</span>
+                                        <span class="admin-manager-product-page-dots">...</span>
                                     }
 
-                                    <a class="admin-product-page-link"
+                                    <a class="admin-manager-product-page-link"
                                        href="@Url.Action("Index", new { statusProduct = Model.StatusFilter, keyword = Model.Keyword, page = Model.TotalPages })">
                                         @Model.TotalPages
                                     </a>
                                 }
 
-                                <a class="admin-product-page-link @(Model.HasNextPage ? "" : "disabled")"
+                                <a class="admin-manager-product-page-link @(Model.HasNextPage ? "" : "disabled")"
                                    href="@(Model.HasNextPage ? Url.Action("Index", new { statusProduct = Model.StatusFilter, keyword = Model.Keyword, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
                                     <i class="fas fa-chevron-right"></i>
                                 </a>
@@ -298,10 +354,11 @@
                 }
                 else
                 {
-                    <div class="admin-product-empty">
-                        <div class="admin-product-empty__icon">
+                    <div class="admin-manager-product-empty">
+                        <div class="admin-manager-product-empty-icon">
                             <i class="fas fa-box-open"></i>
                         </div>
+
                         <h3>Không có sản phẩm</h3>
                         <p>Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</p>
                     </div>
@@ -319,14 +376,14 @@
             ? "/Asset/img/no-image.png"
             : item.HinhAnhChinh;
 
-        <div class="modal fade admin-product-modal"
+        <div class="modal fade admin-manager-product-modal"
              id="editProductModal_@item.SanPhamId"
              tabindex="-1"
              role="dialog"
              aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    @using (Html.BeginForm("Update", "ManagerProduct", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            <div class="modal-dialog modal-xl modal-dialog-centered admin-manager-product-modal-dialog" role="document">
+                <div class="modal-content admin-manager-product-modal-content">
+                    @using (Html.BeginForm("Update", "ManagerProduct", FormMethod.Post, new { enctype = "multipart/form-data", @class = "admin-manager-product-update-form", autocomplete = "off" }))
                     {
                         @Html.AntiForgeryToken()
 
@@ -335,161 +392,225 @@
                         <input type="hidden" name="Keyword" value="@Model.Keyword" />
                         <input type="hidden" name="Page" value="@Model.CurrentPage" />
 
-                        <div class="modal-header admin-product-modal__header">
-                            <div>
-                                <span class="admin-product-modal__eyebrow">Edit product</span>
-                                <h5 class="modal-title">Cập nhật sản phẩm</h5>
+                        <div class="modal-header admin-manager-product-modal-header">
+                            <div class="admin-manager-product-modal-heading">
+                                <div class="admin-manager-product-modal-icon">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+
+                                <div>
+                                    <span class="admin-manager-product-modal-eyebrow">Quản lý sản phẩm</span>
+                                    <h5 class="modal-title">Cập nhật sản phẩm</h5>
+                                </div>
                             </div>
 
-                            <button type="button" class="close admin-product-modal__close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close admin-manager-product-modal-close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
 
-                        <div class="modal-body admin-product-modal__body">
+                        <div class="modal-body admin-manager-product-modal-body">
                             <div class="row">
                                 <div class="col-lg-4">
-                                    <div class="admin-product-edit-preview">
-                                        <img src="@imageUrl" alt="@item.TenSanPham" />
+                                    <div class="admin-manager-product-preview-card">
+                                        <div id="adminProductPreview_@item.SanPhamId" class="admin-manager-product-preview-image">
+                                            <img src="@imageUrl" alt="@item.TenSanPham" />
+                                        </div>
 
-                                        <label class="admin-product-upload">
-                                            <span>Đổi ảnh sản phẩm</span>
-                                            <input type="file" name="imageAvatar" accept="image/*" />
-                                        </label>
+                                        <div class="admin-manager-product-file-box">
+                                            <label class="admin-manager-product-upload">
+                                                <span>Đổi ảnh sản phẩm</span>
+                                                <input type="file"
+                                                       name="imageAvatar"
+                                                       class="admin-manager-product-file-input"
+                                                       data-productid="@item.SanPhamId"
+                                                       accept="image/*" />
+                                            </label>
+                                        </div>
+
+                                        <div class="admin-manager-product-upload-note">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>Nếu không chọn ảnh mới, hệ thống sẽ giữ ảnh hiện tại.</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="col-lg-8">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Mã sản phẩm</label>
-                                                <input type="text"
-                                                       name="MaSanPham"
-                                                       value="@item.MaSanPham"
-                                                       class="form-control admin-input" />
-                                            </div>
+                                    <div class="admin-manager-product-form-section">
+                                        <div class="admin-manager-product-section-title">
+                                            <i class="fas fa-barcode"></i>
+                                            <span>Thông tin định danh</span>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Tên sản phẩm</label>
-                                                <input type="text"
-                                                       name="TenSanPham"
-                                                       value="@item.TenSanPham"
-                                                       class="form-control admin-input" />
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Mã sản phẩm</label>
+                                                    <input type="text"
+                                                           name="MaSanPham"
+                                                           value="@item.MaSanPham"
+                                                           class="form-control admin-manager-product-input"
+                                                           autocomplete="off" />
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Thương hiệu</label>
-                                                <select name="ThuongHieuId" class="form-control admin-input">
-                                                    @foreach (var brand in Model.Brands)
-                                                    {
-                                                        <option value="@brand.Value" @(brand.Value == item.ThuongHieuId.ToString() ? "selected" : "")>
-                                                            @brand.Text
-                                                        </option>
-                                                    }
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Loại sản phẩm</label>
-                                                <select name="LoaiSanPhamId" class="form-control admin-input">
-                                                    @foreach (var category in Model.Categories)
-                                                    {
-                                                        <option value="@category.Value" @(category.Value == item.LoaiSanPhamId.ToString() ? "selected" : "")>
-                                                            @category.Text
-                                                        </option>
-                                                    }
-                                                </select>
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Tên sản phẩm</label>
+                                                    <input type="text"
+                                                           name="TenSanPham"
+                                                           value="@item.TenSanPham"
+                                                           class="form-control admin-manager-product-input"
+                                                           autocomplete="off" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Giá gốc</label>
-                                                <input type="number"
-                                                       name="GiaGoc"
-                                                       value="@item.GiaGoc"
-                                                       class="form-control admin-input" />
-                                            </div>
+                                    <div class="admin-manager-product-form-section">
+                                        <div class="admin-manager-product-section-title">
+                                            <i class="fas fa-layer-group"></i>
+                                            <span>Phân loại</span>
                                         </div>
 
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Giá bán</label>
-                                                <input type="number"
-                                                       name="GiaBan"
-                                                       value="@item.GiaBan"
-                                                       class="form-control admin-input" />
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Thương hiệu</label>
+                                                    <select name="ThuongHieuId" class="form-control admin-manager-product-input" autocomplete="off">
+                                                        @foreach (var brand in Model.Brands)
+                                                        {
+                                                            <option value="@brand.Value" @(brand.Value == item.ThuongHieuId.ToString() ? "selected" : "")>
+                                                                @brand.Text
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Tồn kho</label>
-                                                <input type="number"
-                                                       name="SoLuongTon"
-                                                       value="@item.SoLuongTon"
-                                                       class="form-control admin-input" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Trạng thái</label>
-                                                <select name="TrangThai" class="form-control admin-input">
-                                                    <option value="1" @(item.TrangThai == 1 ? "selected" : "")>Đang bán</option>
-                                                    <option value="2" @(item.TrangThai == 2 ? "selected" : "")>Ngừng bán</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Sản phẩm nổi bật</label>
-                                                <select name="IsFeatured" class="form-control admin-input">
-                                                    <option value="true" @(item.IsFeatured ? "selected" : "")>Có</option>
-                                                    <option value="false" @(!item.IsFeatured ? "selected" : "")>Không</option>
-                                                </select>
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Loại sản phẩm</label>
+                                                    <select name="LoaiSanPhamId" class="form-control admin-manager-product-input" autocomplete="off">
+                                                        @foreach (var category in Model.Categories)
+                                                        {
+                                                            <option value="@category.Value" @(category.Value == item.LoaiSanPhamId.ToString() ? "selected" : "")>
+                                                                @category.Text
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Mô tả ngắn</label>
-                                        <textarea name="MoTaNgan"
-                                                  rows="3"
-                                                  class="form-control admin-input">@item.MoTaNgan</textarea>
+                                    <div class="admin-manager-product-form-section">
+                                        <div class="admin-manager-product-section-title">
+                                            <i class="fas fa-tags"></i>
+                                            <span>Giá bán và tồn kho</span>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Giá gốc</label>
+                                                    <input type="number"
+                                                           name="GiaGoc"
+                                                           value="@item.GiaGoc"
+                                                           class="form-control admin-manager-product-input text-right"
+                                                           autocomplete="off" />
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Giá bán</label>
+                                                    <input type="number"
+                                                           name="GiaBan"
+                                                           value="@item.GiaBan"
+                                                           class="form-control admin-manager-product-input text-right"
+                                                           autocomplete="off" />
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Tồn kho</label>
+                                                    <input type="number"
+                                                           name="SoLuongTon"
+                                                           value="@item.SoLuongTon"
+                                                           class="form-control admin-manager-product-input text-right"
+                                                           autocomplete="off" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Mô tả chi tiết</label>
-                                        <textarea name="MoTaChiTiet"
-                                                  rows="5"
-                                                  class="form-control admin-input">@item.MoTaChiTiet</textarea>
+                                    <div class="admin-manager-product-form-section">
+                                        <div class="admin-manager-product-section-title">
+                                            <i class="fas fa-store"></i>
+                                            <span>Trạng thái hiển thị</span>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Trạng thái</label>
+                                                    <select name="TrangThai" class="form-control admin-manager-product-input" autocomplete="off">
+                                                        <option value="1" @(item.TrangThai == 1 ? "selected" : "")>Đang bán</option>
+                                                        <option value="2" @(item.TrangThai == 2 ? "selected" : "")>Ngừng bán</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Sản phẩm nổi bật</label>
+                                                    <select name="IsFeatured" class="form-control admin-manager-product-input" autocomplete="off">
+                                                        <option value="true" @(item.IsFeatured ? "selected" : "")>Có</option>
+                                                        <option value="false" @(!item.IsFeatured ? "selected" : "")>Không</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="admin-manager-product-form-section mb-0">
+                                        <div class="admin-manager-product-section-title">
+                                            <i class="fas fa-align-left"></i>
+                                            <span>Mô tả sản phẩm</span>
+                                        </div>
+
+                                        <div class="form-group admin-manager-product-form-group">
+                                            <label>Mô tả ngắn</label>
+                                            <textarea name="MoTaNgan"
+                                                      rows="3"
+                                                      class="form-control admin-manager-product-input admin-manager-product-summary-input"
+                                                      autocomplete="off">@item.MoTaNgan</textarea>
+                                        </div>
+
+                                        <div class="form-group admin-manager-product-form-group mb-0">
+                                            <label>Mô tả chi tiết</label>
+                                            <div class="admin-manager-product-editor-wrap">
+                                                <textarea name="MoTaChiTiet"
+                                                          rows="7"
+                                                          class="admin-manager-product-textarea tinymce-editor"
+                                                          autocomplete="off">@item.MoTaChiTiet</textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="modal-footer admin-product-modal__footer">
-                            <button type="button" class="btn admin-btn admin-btn-light" data-dismiss="modal">
+                        <div class="modal-footer admin-manager-product-modal-footer">
+                            <button type="button" class="btn admin-manager-product-btn admin-manager-product-btn-light" data-dismiss="modal">
                                 Hủy
                             </button>
 
-                            <button type="submit" class="btn admin-btn admin-btn-save">
-                                <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                            <button type="submit" class="btn admin-manager-product-btn admin-manager-product-btn-save">
+                                <i class="fas fa-save mr-1"></i>
+                                Lưu thay đổi
                             </button>
                         </div>
                     }
@@ -498,3 +619,44 @@
         </div>
     }
 }
+
+<script src="https://cdn.tiny.cloud/1/mjx5bcjxjzsekqcvy1ai2z4fspdr4j94doloncihjvicobhw/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script>
+    $(document).ready(function () {
+        $(document).on('change', '.admin-manager-product-file-input', function () {
+            var productId = $(this).data('productid');
+            var input = this;
+            var file = input.files && input.files[0] ? input.files[0] : null;
+
+            if (file) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#adminProductPreview_' + productId).html(
+                        '<img src="' + e.target.result + '" alt="Ảnh sản phẩm" />'
+                    );
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+        if (typeof tinymce !== 'undefined') {
+            tinymce.init({
+                selector: 'textarea.tinymce-editor',
+                plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount code',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | link image media table | numlist bullist indent outdent | emoticons charmap | code | removeformat',
+                height: 320,
+                menubar: false,
+                branding: false
+            });
+        }
+
+        $(document).on('submit', '.admin-manager-product-update-form', function () {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+            }
+        });
+    });
+</script>

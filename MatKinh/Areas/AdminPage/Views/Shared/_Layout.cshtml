@@ -28,17 +28,16 @@
             roleName = account.VaiTro.TenVaiTro ?? string.Empty;
         }
 
-        // Bài viết đang chờ admin duyệt = trạng thái nháp
         if (roleCode == RoleConstants.ADMIN)
         {
             numberOfBlogWaitingApproval = db.BaiViets.Count(x => x.TrangThai == BlogStatusConstants.DRAFT);
         }
 
-        // Đơn đang xử lý = chưa hoàn tất và chưa hủy
         if (roleCode == RoleConstants.ADMIN || roleCode == RoleConstants.STAFF)
         {
             numberOfOrderProcessing = db.DonHangs.Count(x =>
                 x.TrangThai != OrderStatusConstants.DELIVERED &&
+                x.TrangThai != OrderStatusConstants.DELIVERY_FAILED &&
                 x.TrangThai != OrderStatusConstants.CANCELLED);
         }
 
@@ -47,6 +46,7 @@
             numberOfAssignedOrders = db.DonHangs.Count(x =>
                 x.ShipperId == account.TaiKhoanId &&
                 x.TrangThai != OrderStatusConstants.DELIVERED &&
+                x.TrangThai != OrderStatusConstants.DELIVERY_FAILED &&
                 x.TrangThai != OrderStatusConstants.CANCELLED);
         }
     }
@@ -60,15 +60,35 @@
         : "Tài khoản";
 
     string displayUsername = account != null ? account.TenDangNhap : string.Empty;
+
     string avatar = (account != null && !string.IsNullOrWhiteSpace(account.AnhDaiDien))
         ? account.AnhDaiDien
         : Url.Content("~/Asset/img/image_Account.jpg");
+
+    string currentController = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
+    string currentAction = (ViewContext.RouteData.Values["action"] ?? "").ToString();
+
+    Func<string, bool> isController = controller =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+
+    Func<string, bool> isAction = action =>
+        string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+
+    Func<string, string> activeController = controller =>
+        isController(controller) ? "active" : "";
+
+    Func<string[], string> activeAnyController = controllers =>
+        controllers.Any(x => string.Equals(currentController, x, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+
+    Func<string[], string> menuOpen = controllers =>
+        controllers.Any(x => string.Equals(currentController, x, StringComparison.OrdinalIgnoreCase)) ? "menu-open" : "";
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>@ViewBag.Title - Admin | KarmaEyewear</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,500,600,700&display=fallback">
@@ -80,6 +100,7 @@
     <link href="/Content/responsive.bootstrap4.min.css" rel="stylesheet" />
     <link href="/Content/buttons.bootstrap4.min.css" rel="stylesheet" />
     <link href="/Content/ekko-lightbox.css" rel="stylesheet" />
+
     <link href="~/Content/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
     <link href="~/Content/icheck-bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/jqvmap.min.css" rel="stylesheet" />
@@ -88,23 +109,31 @@
     <link href="~/Content/summernote-bs4.min.css" rel="stylesheet" />
 
     <link href="~/Content/css/admin-layout.css" rel="stylesheet" />
-    <link href="~/Content/css/admin-table.css" rel="stylesheet" />
-    <link href="~/Content/css/admin-form.css" rel="stylesheet" />
     <link href="~/Content/css/admin-dashboard.css" rel="stylesheet" />
-    <link href="~/Content/css/admin-order.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-order-list.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-order-detail.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-account-list.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-account-detail.css" rel="stylesheet" />
     <link href="~/Content/css/admin-post.css" rel="stylesheet" />
     <link href="~/Content/css/admin-revenue.css" rel="stylesheet" />
     <link href="~/Content/css/admin-profile.css" rel="stylesheet" />
-    <link href="~/Content/css/admin-product.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-product-create.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-product-list.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-manager-product.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-addblog.css" rel="stylesheet" />
     <link href="~/Content/css/admin-blog.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-manager-blog.css" rel="stylesheet" />
     <link href="~/Content/css/admin-system-category.css" rel="stylesheet" />
     <link href="~/Content/css/admin-setting.css" rel="stylesheet" />
     <link href="~/Content/css/premium-toast.css" rel="stylesheet" />
+    <link href="~/Content/css/premium-confirm.css" rel="stylesheet" />
+
+    @RenderSection("Styles", required: false)
 </head>
+
 <body class="hold-transition sidebar-mini layout-fixed admin-modern">
     <div class="wrapper">
 
-        <!-- Topbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light admin-topbar">
             <ul class="navbar-nav">
                 <li class="nav-item">
@@ -112,9 +141,11 @@
                         <i class="fas fa-bars"></i>
                     </a>
                 </li>
+
                 <li class="nav-item d-none d-sm-inline-block">
                     <a href="@Url.Action("Index","Home",new { area="" })" class="nav-link admin-home-link">
-                        <i class="fas fa-globe-asia mr-1"></i> Trang chủ website
+                        <i class="fas fa-globe-asia mr-1"></i>
+                        Trang chủ website
                     </a>
                 </li>
             </ul>
@@ -129,18 +160,26 @@
                         <img src="@avatar" class="user-image img-circle elevation-2" alt="User Image">
                         <span class="d-none d-md-inline">@displayName</span>
                     </a>
+
                     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right admin-user-dropdown">
                         <li class="user-header">
                             <img src="@avatar" class="img-circle elevation-2" alt="User Image">
+
                             <p>
                                 @displayName
                                 <small>@displayUsername</small>
                                 <small>@roleName</small>
                             </p>
                         </li>
+
                         <li class="user-footer">
-                            <a href="@Url.Action("Index","Profile")" class="btn btn-outline-secondary btn-sm">Thông tin</a>
-                            <a href="@Url.Action("LogoutAccount","Account",new { area="" })" class="btn btn-dark btn-sm float-right">Đăng xuất</a>
+                            <a href="@Url.Action("Index","Profile")" class="btn btn-outline-secondary btn-sm">
+                                Thông tin
+                            </a>
+
+                            <a href="@Url.Action("LogoutAccount","Account",new { area="" })" class="btn btn-dark btn-sm float-right">
+                                Đăng xuất
+                            </a>
                         </li>
                     </ul>
                 </li>
@@ -153,7 +192,6 @@
             </ul>
         </nav>
 
-        <!-- Sidebar -->
         <aside class="main-sidebar elevation-4 admin-sidebar">
             <a href="@Url.Action("Index","Dashboard")" class="brand-link admin-brand">
                 <span class="brand-mark">K</span>
@@ -172,16 +210,15 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column admin-menu" data-widget="treeview" role="menu" data-accordion="false">
 
-                        <!-- CHUNG -->
                         <li class="nav-item">
-                            <a href="@Url.Action("Index","Dashboard")" class="nav-link">
+                            <a href="@Url.Action("Index","Dashboard")" class="nav-link @activeController("Dashboard")">
                                 <i class="nav-icon fas fa-th-large"></i>
                                 <p>Dashboard</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="@Url.Action("Index","Profile")" class="nav-link">
+                            <a href="@Url.Action("Index","Profile")" class="nav-link @activeController("Profile")">
                                 <i class="nav-icon fas fa-user-circle"></i>
                                 <p>Hồ sơ cá nhân</p>
                             </a>
@@ -191,20 +228,27 @@
                         {
                             <li class="nav-header">TÁC NGHIỆP</li>
 
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
+                            <li class="nav-item @menuOpen(new[] { "ListBlog" })">
+                                <a href="#" class="nav-link @activeAnyController(new[] { "ListBlog" })">
                                     <i class="nav-icon fas fa-newspaper"></i>
-                                    <p>Bài viết của tôi <i class="fas fa-angle-left right"></i></p>
+                                    <p>
+                                        Bài viết của tôi
+                                        <i class="fas fa-angle-left right"></i>
+                                    </p>
                                 </a>
+
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
-                                        <a href="@Url.Action("AddBlog","ListBlog")" class="nav-link">
+                                        <a href="@Url.Action("AddBlog","ListBlog")"
+                                           class="nav-link @(isController("ListBlog") && isAction("AddBlog") ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Thêm bài viết</p>
                                         </a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="@Url.Action("BlogList","ListBlog")" class="nav-link">
+                                        <a href="@Url.Action("BlogList","ListBlog")"
+                                           class="nav-link @(isController("ListBlog") && isAction("BlogList") ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Danh sách bài viết</p>
                                         </a>
@@ -212,20 +256,27 @@
                                 </ul>
                             </li>
 
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
+                            <li class="nav-item @menuOpen(new[] { "ListProduct" })">
+                                <a href="#" class="nav-link @activeAnyController(new[] { "ListProduct" })">
                                     <i class="nav-icon fas fa-glasses"></i>
-                                    <p>Sản phẩm của tôi <i class="right fas fa-angle-left"></i></p>
+                                    <p>
+                                        Sản phẩm của tôi
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
                                 </a>
+
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
-                                        <a href="@Url.Action("AddProduct","ListProduct")" class="nav-link">
+                                        <a href="@Url.Action("AddProduct","ListProduct")"
+                                           class="nav-link @(isController("ListProduct") && isAction("AddProduct") ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Thêm sản phẩm</p>
                                         </a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="@Url.Action("ProductsList","ListProduct")" class="nav-link">
+                                        <a href="@Url.Action("ProductsList","ListProduct")"
+                                           class="nav-link @(isController("ListProduct") && isAction("ProductsList") ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Danh sách sản phẩm</p>
                                         </a>
@@ -237,7 +288,7 @@
                         @if (isAdmin || isStaff)
                         {
                             <li class="nav-item">
-                                <a href="@Url.Action("Index","ManagerOrder")" class="nav-link">
+                                <a href="@Url.Action("Index","ManagerOrder")" class="nav-link @activeController("ManagerOrder")">
                                     <i class="nav-icon fas fa-shopping-bag"></i>
                                     <p>
                                         Đơn hàng vận hành
@@ -255,7 +306,7 @@
                             <li class="nav-header">GIAO HÀNG</li>
 
                             <li class="nav-item">
-                                <a href="@Url.Action("Index","ManagerOrder")" class="nav-link">
+                                <a href="@Url.Action("Index","ManagerOrder")" class="nav-link @activeController("ManagerOrder")">
                                     <i class="nav-icon fas fa-truck"></i>
                                     <p>
                                         Đơn được giao cho tôi
@@ -273,7 +324,8 @@
                             <li class="nav-header">QUẢN TRỊ HỆ THỐNG</li>
 
                             <li class="nav-item">
-                                <a href="@Url.Action("ManagerBlog","ManagerBlog", new { status = "draft" })" class="nav-link">
+                                <a href="@Url.Action("ManagerBlog","ManagerBlog", new { status = "draft" })"
+                                   class="nav-link @activeController("ManagerBlog")">
                                     <i class="nav-icon fas fa-check-circle"></i>
                                     <p>
                                         Kiểm duyệt bài viết
@@ -285,26 +337,35 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
+                            <li class="nav-item @menuOpen(new[] { "ManagerProduct" })">
+                                <a href="#" class="nav-link @activeAnyController(new[] { "ManagerProduct" })">
                                     <i class="nav-icon fas fa-box-open"></i>
-                                    <p>Quản lý sản phẩm <i class="fas fa-angle-left right"></i></p>
+                                    <p>
+                                        Quản lý sản phẩm
+                                        <i class="fas fa-angle-left right"></i>
+                                    </p>
                                 </a>
+
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
-                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "stock" })" class="nav-link">
+                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "stock" })"
+                                           class="nav-link @(isController("ManagerProduct") && Request.QueryString["statusProduct"] == "stock" ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Còn hàng</p>
                                         </a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "outofstock" })" class="nav-link">
+                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "outofstock" })"
+                                           class="nav-link @(isController("ManagerProduct") && Request.QueryString["statusProduct"] == "outofstock" ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Hết hàng</p>
                                         </a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "inactive" })" class="nav-link">
+                                        <a href="@Url.Action("Index","ManagerProduct", new { statusProduct = "inactive" })"
+                                           class="nav-link @(isController("ManagerProduct") && Request.QueryString["statusProduct"] == "inactive" ? "active" : "")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Ngừng bán</p>
                                         </a>
@@ -312,20 +373,25 @@
                                 </ul>
                             </li>
 
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
+                            <li class="nav-item @menuOpen(new[] { "ListTypeProduct", "ListBrand" })">
+                                <a href="#" class="nav-link @activeAnyController(new[] { "ListTypeProduct", "ListBrand" })">
                                     <i class="nav-icon fas fa-tags"></i>
-                                    <p>Danh mục hệ thống <i class="fas fa-angle-left right"></i></p>
+                                    <p>
+                                        Danh mục hệ thống
+                                        <i class="fas fa-angle-left right"></i>
+                                    </p>
                                 </a>
+
                                 <ul class="nav nav-treeview">
                                     <li class="nav-item">
-                                        <a href="@Url.Action("ProductType","ListTypeProduct")" class="nav-link">
+                                        <a href="@Url.Action("ProductType","ListTypeProduct")" class="nav-link @activeController("ListTypeProduct")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Loại sản phẩm</p>
                                         </a>
                                     </li>
+
                                     <li class="nav-item">
-                                        <a href="@Url.Action("Brand","ListBrand")" class="nav-link">
+                                        <a href="@Url.Action("Brand","ListBrand")" class="nav-link @activeController("ListBrand")">
                                             <i class="far fa-circle nav-icon"></i>
                                             <p>Thương hiệu</p>
                                         </a>
@@ -334,21 +400,21 @@
                             </li>
 
                             <li class="nav-item">
-                                <a href="@Url.Action("AccountManager","ManagerAccount")" class="nav-link">
+                                <a href="@Url.Action("AccountManager","ManagerAccount")" class="nav-link @activeController("ManagerAccount")">
                                     <i class="nav-icon fas fa-users-cog"></i>
                                     <p>Quản lý tài khoản</p>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="@Url.Action("Revenue","ManagerRevenue")" class="nav-link">
+                                <a href="@Url.Action("Revenue","ManagerRevenue")" class="nav-link @activeController("ManagerRevenue")">
                                     <i class="nav-icon fas fa-chart-line"></i>
                                     <p>Doanh thu</p>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="@Url.Action("Index","SettingInformationWebsite")" class="nav-link">
+                                <a href="@Url.Action("Index","SettingInformationWebsite")" class="nav-link @activeController("SettingInformationWebsite")">
                                     <i class="nav-icon fas fa-store"></i>
                                     <p>Thông tin cửa hàng</p>
                                 </a>
@@ -359,15 +425,13 @@
             </div>
         </aside>
 
-        <!-- Content -->
         <div class="content-wrapper admin-content-wrapper">
             <section class="content pt-3">
                 <div class="container-fluid">
-
                     <div class="premium-toast-container">
                         @Html.Partial("~/Views/Shared/_FlashMessage.cshtml")
-
                     </div>
+
                     @RenderBody()
                 </div>
             </section>
@@ -381,10 +445,15 @@
         </footer>
     </div>
 
+    @Html.Partial("~/Views/Shared/_PremiumConfirmModal.cshtml")
+
     <script src="~/Scripts/jquery.min.js"></script>
     <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+    <script src="~/Content/js/premium-confirm.js"></script>
+    <script src="~/Content/js/premium-toast.js"></script>
     <script src="~/Scripts/adminlte.min.js"></script>
     <script src="~/Scripts/demo.js"></script>
+
     <script src="~/Scripts/jquery.dataTables.min.js"></script>
     <script src="~/Scripts/dataTables.bootstrap4.min.js"></script>
     <script src="~/Scripts/dataTables.responsive.min.js"></script>
@@ -462,5 +531,7 @@
             }
         });
     </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

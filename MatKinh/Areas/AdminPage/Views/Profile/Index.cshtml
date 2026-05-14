@@ -5,12 +5,21 @@
     string activeTab = ViewBag.ActiveTab as string ?? "profileInfo";
     bool profileActive = activeTab == "profileInfo";
     bool passwordActive = activeTab == "changePassword";
+
+    string avatarUrl = string.IsNullOrEmpty(Model.AnhDaiDien)
+        ? "/Asset/img/image_Account.jpg"
+        : Model.AnhDaiDien;
+
+    string statusText = Model.IsActive ? "Hoạt động" : "Khóa";
+    string statusClass = Model.IsActive ? "admin-profile-status--active" : "admin-profile-status--locked";
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Thông tin tài khoản</h1>
-        <p class="admin-page-subtitle">Xem và cập nhật hồ sơ quản trị viên.</p>
+        <p class="admin-page-subtitle">
+            Xem và cập nhật hồ sơ quản trị viên trong hệ thống quản lý cửa hàng mắt kính.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -21,35 +30,58 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-profile-page">
     <div class="container-fluid p-0">
         <div class="row">
 
             <div class="col-lg-4 col-xl-3">
                 <div class="card admin-profile-card">
-                    <div class="card-body text-center">
+                    <div class="card-body">
 
-                        <div class="admin-profile-avatar-wrap">
-                            <img class="admin-profile-avatar"
-                                 src="@(string.IsNullOrEmpty(Model.AnhDaiDien) ? "/Asset/img/image_Account.jpg" : Model.AnhDaiDien)"
-                                 alt="User profile" />
+                        <div class="admin-profile-hero">
+                            <div class="admin-profile-avatar-wrap">
+                                <img class="admin-profile-avatar"
+                                     src="@avatarUrl"
+                                     alt="User profile" />
+                            </div>
+
+                            <h3 class="admin-profile-name">@Model.HoTen</h3>
+                            <div class="admin-profile-username">
+                                <i class="fas fa-user-circle"></i>
+                                <span>@Model.TenDangNhap</span>
+                            </div>
                         </div>
-
-                        <h3 class="admin-profile-name">@Model.HoTen</h3>
-                        <div class="admin-profile-username">@Model.TenDangNhap</div>
 
                         <div class="admin-profile-meta-list">
                             <div class="admin-profile-meta-item">
-                                <span class="admin-profile-meta-label">Vai trò</span>
-                                <span class="admin-profile-meta-value">@Model.TenVaiTro</span>
+                                <div>
+                                    <span class="admin-profile-meta-label">Vai trò</span>
+                                    <span class="admin-profile-meta-hint">Quyền truy cập hệ thống</span>
+                                </div>
+
+                                <span class="admin-profile-role-badge">
+                                    @Model.TenVaiTro
+                                </span>
                             </div>
 
                             <div class="admin-profile-meta-item">
-                                <span class="admin-profile-meta-label">Trạng thái</span>
-                                <span class="admin-profile-meta-value">
-                                    @(Model.IsActive ? "Hoạt động" : "Khóa")
+                                <div>
+                                    <span class="admin-profile-meta-label">Trạng thái</span>
+                                    <span class="admin-profile-meta-hint">Tình trạng tài khoản</span>
+                                </div>
+
+                                <span class="admin-profile-status @statusClass">
+                                    <span></span>
+                                    @statusText
                                 </span>
                             </div>
+                        </div>
+
+                        <div class="admin-profile-note">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>
+                                Thông tin tài khoản dùng để định danh người quản trị khi thao tác trong hệ thống.
+                            </p>
                         </div>
 
                     </div>
@@ -60,18 +92,34 @@
                 <div class="card admin-form-card admin-tab-card">
 
                     <div class="card-header border-0 pb-0">
-                        <ul class="nav nav-pills admin-tab-nav">
-                            <li class="nav-item">
-                                <a class="nav-link @(profileActive ? "active" : "")" href="#profileInfo" data-toggle="tab">
-                                    Thông tin
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link @(passwordActive ? "active" : "")" href="#changePassword" data-toggle="tab">
-                                    Đổi mật khẩu
-                                </a>
-                            </li>
-                        </ul>
+                        <div class="admin-tab-header">
+                            <div>
+                                <h3 class="admin-tab-title">Thiết lập tài khoản</h3>
+                                <p class="admin-tab-subtitle">
+                                    Cập nhật thông tin cá nhân hoặc thay đổi mật khẩu đăng nhập.
+                                </p>
+                            </div>
+
+                            <ul class="nav nav-pills admin-tab-nav">
+                                <li class="nav-item">
+                                    <a class="nav-link @(profileActive ? "active" : "")"
+                                       href="#profileInfo"
+                                       data-toggle="tab">
+                                        <i class="fas fa-id-card"></i>
+                                        <span>Thông tin</span>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link @(passwordActive ? "active" : "")"
+                                       href="#changePassword"
+                                       data-toggle="tab">
+                                        <i class="fas fa-key"></i>
+                                        <span>Đổi mật khẩu</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="card-body">
@@ -82,87 +130,105 @@
                                 {
                                     @Html.AntiForgeryToken()
 
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Tài khoản</label>
-                                                <input type="text"
-                                                       class="form-control admin-input"
-                                                       value="@Model.TenDangNhap"
-                                                       disabled />
-                                            </div>
+                                    <div class="admin-form-section">
+                                        <div class="admin-form-section-heading">
+                                            <h4>Thông tin đăng nhập</h4>
+                                            <p>Tên tài khoản không thể chỉnh sửa tại trang này.</p>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Email</label>
-                                                <input type="email"
-                                                       class="form-control admin-input"
-                                                       name="Email"
-                                                       value="@Model.Email" />
-                                                @Html.ValidationMessage("Email", "", new { @class = "text-danger" })
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-form-group">
+                                                    <label>Tài khoản</label>
+                                                    <input type="text"
+                                                           class="form-control admin-input"
+                                                           value="@Model.TenDangNhap"
+                                                           disabled />
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="form-group">
-                                        <label>Họ và tên</label>
-                                        <input type="text"
-                                               class="form-control admin-input"
-                                               name="HoTen"
-                                               value="@Model.HoTen" />
-                                        @Html.ValidationMessage("HoTen", "", new { @class = "text-danger" })
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Số điện thoại</label>
-                                                <input type="tel"
-                                                       class="form-control admin-input"
-                                                       name="SoDienThoai"
-                                                       value="@Model.SoDienThoai"
-                                                       placeholder="Ví dụ: 0332080172"
-                                                       maxlength="12" />
-                                                @Html.ValidationMessage("SoDienThoai", "", new { @class = "text-danger" })
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Giới tính</label>
-                                                <select name="GioiTinh" class="form-control admin-input">
-                                                    <option value="">-- Chọn --</option>
-                                                    <option value="true" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
-                                                    <option value="false" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
-                                                </select>
-                                                @Html.ValidationMessage("GioiTinh", "", new { @class = "text-danger" })
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-form-group">
+                                                    <label>Email</label>
+                                                    <input type="email"
+                                                           class="form-control admin-input"
+                                                           name="Email"
+                                                           value="@Model.Email"
+                                                           placeholder="Nhập email" />
+                                                    @Html.ValidationMessage("Email", "", new { @class = "text-danger admin-validation" })
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Ngày sinh</label>
-                                        <input type="date"
-                                               class="form-control admin-input"
-                                               name="NgaySinh"
-                                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
-                                               value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("yyyy-MM-dd") : "")" />
-                                        @Html.ValidationMessage("NgaySinh", "", new { @class = "text-danger" })
-                                    </div>
+                                    <div class="admin-form-section">
+                                        <div class="admin-form-section-heading">
+                                            <h4>Thông tin cá nhân</h4>
+                                            <p>Cập nhật thông tin hiển thị và liên hệ của tài khoản.</p>
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label>Địa chỉ</label>
-                                        <input type="text"
-                                               class="form-control admin-input"
-                                               name="DiaChi"
-                                               value="@Model.DiaChi" />
-                                        @Html.ValidationMessage("DiaChi", "", new { @class = "text-danger" })
+                                        <div class="form-group admin-form-group">
+                                            <label>Họ và tên</label>
+                                            <input type="text"
+                                                   class="form-control admin-input"
+                                                   name="HoTen"
+                                                   value="@Model.HoTen"
+                                                   placeholder="Nhập họ và tên" />
+                                            @Html.ValidationMessage("HoTen", "", new { @class = "text-danger admin-validation" })
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-form-group">
+                                                    <label>Số điện thoại</label>
+                                                    <input type="tel"
+                                                           class="form-control admin-input"
+                                                           name="SoDienThoai"
+                                                           value="@Model.SoDienThoai"
+                                                           placeholder="Ví dụ: 0332080172"
+                                                           maxlength="12" />
+                                                    @Html.ValidationMessage("SoDienThoai", "", new { @class = "text-danger admin-validation" })
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group admin-form-group">
+                                                    <label>Giới tính</label>
+                                                    <select name="GioiTinh" class="form-control admin-input">
+                                                        <option value="">-- Chọn --</option>
+                                                        <option value="true" @(Model.GioiTinh == true ? "selected" : "")>Nam</option>
+                                                        <option value="false" @(Model.GioiTinh == false ? "selected" : "")>Nữ</option>
+                                                    </select>
+                                                    @Html.ValidationMessage("GioiTinh", "", new { @class = "text-danger admin-validation" })
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group admin-form-group">
+                                            <label>Ngày sinh</label>
+                                            <input type="date"
+                                                   class="form-control admin-input"
+                                                   name="NgaySinh"
+                                                   max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                                   value="@(Model.NgaySinh.HasValue ? Model.NgaySinh.Value.ToString("yyyy-MM-dd") : "")" />
+                                            @Html.ValidationMessage("NgaySinh", "", new { @class = "text-danger admin-validation" })
+                                        </div>
+
+                                        <div class="form-group admin-form-group">
+                                            <label>Địa chỉ</label>
+                                            <input type="text"
+                                                   class="form-control admin-input"
+                                                   name="DiaChi"
+                                                   value="@Model.DiaChi"
+                                                   placeholder="Nhập địa chỉ liên hệ" />
+                                            @Html.ValidationMessage("DiaChi", "", new { @class = "text-danger admin-validation" })
+                                        </div>
                                     </div>
 
                                     <div class="admin-form-actions">
                                         <button type="submit" class="btn admin-btn admin-btn-save">
-                                            <i class="fas fa-save mr-1"></i> Lưu thông tin
+                                            <i class="fas fa-save mr-1"></i>
+                                            Lưu thông tin
                                         </button>
                                     </div>
                                 }
@@ -173,33 +239,61 @@
                                 {
                                     @Html.AntiForgeryToken()
 
-                                    <div class="form-group">
-                                        <label>Mật khẩu hiện tại</label>
-                                        <input type="password"
-                                               class="form-control admin-input"
-                                               name="CurrentPassword" />
-                                        @Html.ValidationMessage("CurrentPassword", "", new { @class = "text-danger" })
+                                    <div class="admin-password-box">
+                                        <div class="admin-password-icon">
+                                            <i class="fas fa-lock"></i>
+                                        </div>
+
+                                        <div>
+                                            <h4>Bảo mật tài khoản</h4>
+                                            <p>
+                                                Sử dụng mật khẩu đủ mạnh và không chia sẻ thông tin đăng nhập với người khác.
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Mật khẩu mới</label>
-                                        <input type="password"
-                                               class="form-control admin-input"
-                                               name="NewPassword" />
-                                        @Html.ValidationMessage("NewPassword", "", new { @class = "text-danger" })
-                                    </div>
+                                    <div class="admin-form-section">
+                                        <div class="admin-form-section-heading">
+                                            <h4>Đổi mật khẩu</h4>
+                                            <p>Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật thông tin đăng nhập.</p>
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label>Xác nhận mật khẩu</label>
-                                        <input type="password"
-                                               class="form-control admin-input"
-                                               name="ConfirmPassword" />
-                                        @Html.ValidationMessage("ConfirmPassword", "", new { @class = "text-danger" })
+                                        <div class="form-group admin-form-group">
+                                            <label>Mật khẩu hiện tại</label>
+                                            <input type="password"
+                                                   class="form-control admin-input"
+                                                   name="CurrentPassword"
+                                                   placeholder="Nhập mật khẩu hiện tại" />
+                                            @Html.ValidationMessage("CurrentPassword", "", new { @class = "text-danger admin-validation" })
+                                        </div>
+
+                                        <div class="form-group admin-form-group">
+                                            <label>Mật khẩu mới</label>
+                                            <input type="password"
+                                                   class="form-control admin-input"
+                                                   name="NewPassword"
+                                                   placeholder="Nhập mật khẩu mới" />
+                                            @Html.ValidationMessage("NewPassword", "", new { @class = "text-danger admin-validation" })
+                                        </div>
+
+                                        <div class="form-group admin-form-group">
+                                            <label>Xác nhận mật khẩu</label>
+                                            <input type="password"
+                                                   class="form-control admin-input"
+                                                   name="ConfirmPassword"
+                                                   placeholder="Nhập lại mật khẩu mới" />
+                                            @Html.ValidationMessage("ConfirmPassword", "", new { @class = "text-danger admin-validation" })
+                                        </div>
                                     </div>
 
                                     <div class="admin-form-actions">
-                                        <button type="submit" class="btn admin-btn admin-btn-save">
-                                            <i class="fas fa-key mr-1"></i> Đổi mật khẩu
+                                        <button type="submit"
+                                                class="btn admin-btn admin-btn-save"
+                                                data-confirm-title="Đổi mật khẩu?"
+                                                data-confirm="Mật khẩu tài khoản sẽ được cập nhật sau khi xác nhận. Vui lòng kiểm tra kỹ trước khi tiếp tục."
+                                                data-confirm-ok="Đổi mật khẩu">
+                                            <i class="fas fa-key mr-1"></i>
+                                            Đổi mật khẩu
                                         </button>
                                     </div>
                                 }

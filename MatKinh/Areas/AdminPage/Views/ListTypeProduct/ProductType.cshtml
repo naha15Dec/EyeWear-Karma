@@ -8,7 +8,9 @@
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">Loại sản phẩm</h1>
-        <p class="admin-page-subtitle">Quản lý danh mục loại kính trong hệ thống.</p>
+        <p class="admin-page-subtitle">
+            Quản lý danh mục loại kính trong hệ thống, phục vụ phân loại và hiển thị sản phẩm.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -24,43 +26,51 @@
 
         <div class="row">
             <div class="col-lg-7">
-                <div class="card admin-card">
-                    <div class="card-header admin-card-header border-0">
-                        <div class="admin-card-title-wrap">
-                            <h3 class="admin-card-title">Danh sách loại sản phẩm</h3>
-                            <span class="admin-card-count">@((Model.Categories != null) ? Model.Categories.Count : 0) loại sản phẩm</span>
+                <div class="card admin-system-card">
+                    <div class="card-header border-0">
+                        <div class="admin-system-card-heading">
+                            <div class="admin-system-card-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="admin-system-card-title">Danh sách loại sản phẩm</h3>
+                                <p class="admin-system-card-subtitle">
+                                    Có <b>@((Model.Categories != null) ? Model.Categories.Count : 0)</b> loại sản phẩm trong hệ thống.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card-body">
-                        <div class="table-responsive admin-system-table-wrap">
-                            <table class="table admin-system-table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Mã loại</th>
-                                        <th>Tên loại</th>
-                                        <th>Mô tả</th>
-                                        <th>Trạng thái</th>
-                                        <th>Sản phẩm</th>
-                                        <th class="text-center">Thao tác</th>
-                                    </tr>
-                                </thead>
+                        @if (Model.Categories != null && Model.Categories.Count > 0)
+                        {
+                            <div class="admin-system-table-wrap">
+                                <table class="table admin-system-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã loại</th>
+                                            <th>Tên loại</th>
+                                            <th>Mô tả</th>
+                                            <th>Trạng thái</th>
+                                            <th>Sản phẩm</th>
+                                            <th class="text-center">Thao tác</th>
+                                        </tr>
+                                    </thead>
 
-                                <tbody>
-                                    @if (Model.Categories != null && Model.Categories.Count > 0)
-                                    {
-                                        foreach (var item in Model.Categories)
+                                    <tbody>
+                                        @foreach (var item in Model.Categories)
                                         {
                                             <tr>
-                                                <td>
+                                                <td data-label="Mã loại">
                                                     <span class="admin-system-code">#@item.MaLoaiSanPham</span>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Tên loại">
                                                     <div class="admin-system-name">@item.TenLoaiSanPham</div>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Mô tả">
                                                     <span class="admin-system-desc">
                                                         @(string.IsNullOrWhiteSpace(item.MoTa)
                                                             ? "Chưa có mô tả"
@@ -68,34 +78,41 @@
                                                     </span>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Trạng thái">
                                                     @if (item.IsActive)
                                                     {
-                                                        <span class="admin-system-badge active">Đang sử dụng</span>
+                                                        <span class="admin-system-badge active">
+                                                            <span></span>
+                                                            Đang sử dụng
+                                                        </span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="admin-system-badge inactive">Ngừng sử dụng</span>
+                                                        <span class="admin-system-badge inactive">
+                                                            <span></span>
+                                                            Ngừng sử dụng
+                                                        </span>
                                                     }
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Sản phẩm">
                                                     <span class="admin-system-count">@item.SoSanPham</span>
                                                 </td>
 
-                                                <td class="text-center">
+                                                <td data-label="Thao tác" class="text-center">
                                                     <div class="admin-system-actions">
-                                                        @using (Html.BeginForm("Update", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline" }))
+                                                        @using (Html.BeginForm("Update", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
                                                         {
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="id" value="@item.LoaiSanPhamId" />
 
                                                             <button type="submit" class="btn admin-system-action edit">
-                                                                <i class="fas fa-pen"></i> Sửa
+                                                                <i class="fas fa-pen"></i>
+                                                                <span>Sửa</span>
                                                             </button>
                                                         }
 
-                                                        @using (Html.BeginForm("Delete", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline" }))
+                                                        @using (Html.BeginForm("Delete", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
                                                         {
                                                             @Html.AntiForgeryToken()
                                                             <input type="hidden" name="id" value="@item.LoaiSanPhamId" />
@@ -104,16 +121,22 @@
                                                             {
                                                                 <button type="submit"
                                                                         class="btn admin-system-action disable"
-                                                                        onclick="return confirm('Bạn có chắc muốn ngừng sử dụng loại sản phẩm này?')">
-                                                                    <i class="fas fa-ban"></i> Ngừng sử dụng
+                                                                        data-confirm-title="Ngừng sử dụng loại sản phẩm?"
+                                                                        data-confirm="Loại sản phẩm này sẽ được chuyển sang trạng thái ngừng sử dụng. Các sản phẩm liên quan có thể bị ảnh hưởng khi hiển thị hoặc phân loại."
+                                                                        data-confirm-ok="Ngừng sử dụng">
+                                                                    <i class="fas fa-ban"></i>
+                                                                    <span>Ngừng sử dụng</span>
                                                                 </button>
                                                             }
                                                             else
                                                             {
                                                                 <button type="submit"
                                                                         class="btn admin-system-action activate"
-                                                                        onclick="return confirm('Bạn có chắc muốn kích hoạt lại loại sản phẩm này?')">
-                                                                    <i class="fas fa-check"></i> Kích hoạt lại
+                                                                        data-confirm-title="Kích hoạt lại loại sản phẩm?"
+                                                                        data-confirm="Loại sản phẩm này sẽ được kích hoạt lại và có thể tiếp tục sử dụng trong hệ thống."
+                                                                        data-confirm-ok="Kích hoạt lại">
+                                                                    <i class="fas fa-check"></i>
+                                                                    <span>Kích hoạt lại</span>
                                                                 </button>
                                                             }
                                                         }
@@ -121,36 +144,37 @@
                                                 </td>
                                             </tr>
                                         }
-                                    }
-                                    else
-                                    {
-                                        <tr>
-                                            <td colspan="6" class="admin-system-empty">
-                                                <strong>Chưa có loại sản phẩm</strong>
-                                                <span>Hãy thêm loại sản phẩm đầu tiên cho hệ thống.</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
+                                    </tbody>
 
-                                <tfoot>
-                                    <tr>
-                                        <th>Mã loại</th>
-                                        <th>Tên loại</th>
-                                        <th>Mô tả</th>
-                                        <th>Trạng thái</th>
-                                        <th>Sản phẩm</th>
-                                        <th class="text-center">Thao tác</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Mã loại</th>
+                                            <th>Tên loại</th>
+                                            <th>Mô tả</th>
+                                            <th>Trạng thái</th>
+                                            <th>Sản phẩm</th>
+                                            <th class="text-center">Thao tác</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="admin-system-empty">
+                                <div class="admin-system-empty-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <h3>Chưa có loại sản phẩm</h3>
+                                <p>Hãy thêm loại sản phẩm đầu tiên cho hệ thống.</p>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-5">
-                @using (Html.BeginForm("AddTypeProduct", "ListTypeProduct", FormMethod.Post))
+                @using (Html.BeginForm("AddTypeProduct", "ListTypeProduct", FormMethod.Post, new { autocomplete = "off" }))
                 {
                     @Html.AntiForgeryToken()
 
@@ -158,57 +182,71 @@
                            name="LoaiSanPhamId"
                            value="@(Model.Form.LoaiSanPhamId.HasValue ? Model.Form.LoaiSanPhamId.Value.ToString() : "")" />
 
-                    <div class="card admin-form-card admin-system-form-card">
-                        <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                            <h3 class="card-title mb-0">@(isEdit ? "Cập nhật loại sản phẩm" : "Thêm loại sản phẩm")</h3>
+                    <div class="card admin-system-form-card">
+                        <div class="card-header border-0">
+                            <div class="admin-system-form-heading">
+                                <div class="admin-system-card-icon">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+
+                                <div>
+                                    <h3>@(isEdit ? "Cập nhật loại sản phẩm" : "Thêm loại sản phẩm")</h3>
+                                    <p>
+                                        @(isEdit ? "Chỉnh sửa thông tin loại sản phẩm hiện có." : "Tạo loại sản phẩm mới để phân nhóm sản phẩm kính.")
+                                    </p>
+                                </div>
+                            </div>
 
                             @if (isEdit)
                             {
-                                <a href="@Url.Action("ProductType", "ListTypeProduct")" class="btn admin-btn admin-btn-light">
+                                <a href="@Url.Action("ProductType", "ListTypeProduct")" class="btn admin-system-btn admin-system-btn-light">
                                     Hủy sửa
                                 </a>
                             }
                         </div>
 
                         <div class="card-body">
-                            <div class="form-group">
+                            <div class="form-group admin-system-form-group">
                                 <label>Mã loại sản phẩm</label>
                                 <input type="text"
                                        name="MaLoaiSanPham"
-                                       class="form-control admin-input"
+                                       class="form-control admin-system-input"
                                        placeholder="Ví dụ: KINH-MAT"
-                                       value="@Model.Form.MaLoaiSanPham" />
-                                @Html.ValidationMessage("MaLoaiSanPham", "", new { @class = "text-danger" })
+                                       value="@Model.Form.MaLoaiSanPham"
+                                       autocomplete="off" />
+                                @Html.ValidationMessage("MaLoaiSanPham", "", new { @class = "text-danger admin-system-validation" })
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group admin-system-form-group">
                                 <label>Tên loại sản phẩm</label>
                                 <input type="text"
                                        name="TenLoaiSanPham"
-                                       class="form-control admin-input"
+                                       class="form-control admin-system-input"
                                        placeholder="Tên loại sản phẩm"
-                                       value="@Model.Form.TenLoaiSanPham" />
-                                @Html.ValidationMessage("TenLoaiSanPham", "", new { @class = "text-danger" })
+                                       value="@Model.Form.TenLoaiSanPham"
+                                       autocomplete="off" />
+                                @Html.ValidationMessage("TenLoaiSanPham", "", new { @class = "text-danger admin-system-validation" })
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group admin-system-form-group">
                                 <label>Mô tả</label>
                                 <textarea name="MoTa"
-                                          class="form-control admin-input admin-system-note"
-                                          placeholder="Mô tả loại sản phẩm...">@Model.Form.MoTa</textarea>
-                                @Html.ValidationMessage("MoTa", "", new { @class = "text-danger" })
+                                          class="form-control admin-system-input admin-system-note"
+                                          placeholder="Mô tả loại sản phẩm..."
+                                          autocomplete="off">@Model.Form.MoTa</textarea>
+                                @Html.ValidationMessage("MoTa", "", new { @class = "text-danger admin-system-validation" })
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group admin-system-form-group">
                                 <label>Trạng thái</label>
-                                <select name="IsActive" class="form-control admin-input">
+                                <select name="IsActive" class="form-control admin-system-input" autocomplete="off">
                                     <option value="true" @(Model.Form.IsActive ? "selected" : "")>Đang sử dụng</option>
                                     <option value="false" @(!Model.Form.IsActive ? "selected" : "")>Ngừng sử dụng</option>
                                 </select>
                             </div>
 
                             <div class="admin-system-form-actions">
-                                <button type="submit" class="btn admin-btn admin-btn-save">
+                                <button type="submit" class="btn admin-system-btn admin-system-btn-save">
                                     <i class="fas fa-save mr-1"></i>
                                     @(isEdit ? "Cập nhật loại sản phẩm" : "Lưu loại sản phẩm")
                                 </button>

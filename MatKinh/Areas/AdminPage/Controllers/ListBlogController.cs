@@ -180,6 +180,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     if (vm.TrangThai == BlogStatusConstants.PUBLISHED)
                     {
                         post.TrangThai = BlogStatusConstants.PUBLISHED;
+
                         if (!post.NgayDang.HasValue)
                         {
                             post.NgayDang = DateTime.Now;
@@ -195,12 +196,19 @@ namespace MatKinh.Areas.AdminPage.Controllers
                         post.TrangThai = BlogStatusConstants.HIDDEN;
                     }
                 }
+                else
+                {
+                    post.TrangThai = BlogStatusConstants.DRAFT;
+                    post.NgayDang = null;
+                }
 
                 SaveImage(imageAvatar, post);
 
                 db.SaveChanges();
 
-                TempData["SuccessMessage"] = "Cập nhật bài viết thành công.";
+                TempData["SuccessMessage"] = isAdmin
+                    ? "Cập nhật bài viết thành công."
+                    : "Cập nhật bài viết thành công. Bài viết đã được gửi lại để chờ duyệt.";
                 return RedirectToAction("BlogList");
             }
             catch (Exception ex)

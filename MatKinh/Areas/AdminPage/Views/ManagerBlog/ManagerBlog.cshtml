@@ -14,12 +14,21 @@
         if (status == BlogStatusConstants.HIDDEN) return "Đăng lại";
         return "Cập nhật";
     };
+
+    Func<int, string> statusClass = status =>
+    {
+        if (status == BlogStatusConstants.PUBLISHED) return "admin-manager-blog-status--published";
+        if (status == BlogStatusConstants.DRAFT) return "admin-manager-blog-status--draft";
+        return "admin-manager-blog-status--hidden";
+    };
 }
 
 <div class="admin-page-header">
     <div>
         <h1 class="admin-page-title">@Model.HeaderTitle</h1>
-        <p class="admin-page-subtitle">Quản lý, kiểm duyệt và ẩn bài viết.</p>
+        <p class="admin-page-subtitle">
+            Quản lý, kiểm duyệt, xem nội dung và cập nhật trạng thái bài viết trong hệ thống.
+        </p>
     </div>
 
     <ol class="breadcrumb admin-breadcrumb">
@@ -30,117 +39,134 @@
     </ol>
 </div>
 
-<section class="content">
+<section class="content admin-manager-blog-page">
     <div class="container-fluid p-0">
 
-        <div class="card admin-card">
-            <div class="card-header admin-card-header border-0">
-                <div class="admin-blog-toolbar">
-                    <div class="admin-card-title-wrap">
-                        <h3 class="admin-card-title">Danh sách bài viết</h3>
-                        <span class="admin-card-count">
-                            Hiển thị @Model.Posts.Count / @Model.TotalItems bài viết
-                        </span>
+        <div class="card admin-manager-blog-card">
+            <div class="card-header border-0">
+                <div class="admin-manager-blog-header">
+                    <div class="admin-manager-blog-title-wrap">
+                        <div class="admin-manager-blog-title-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="admin-manager-blog-title">Danh sách bài viết</h3>
+                            <p class="admin-manager-blog-subtitle">
+                                Hiển thị <b>@Model.Posts.Count</b> / <b>@Model.TotalItems</b> bài viết.
+                            </p>
+                        </div>
                     </div>
 
-                    @using (Html.BeginForm("ManagerBlog", "ManagerBlog", FormMethod.Get, new { @class = "admin-blog-filter-form" }))
+                    @using (Html.BeginForm("ManagerBlog", "ManagerBlog", FormMethod.Get, new { @class = "admin-manager-blog-filter-form", autocomplete = "off" }))
                     {
                         <input type="hidden" name="page" value="1" />
 
-                        <select name="status"
-                                class="form-control admin-blog-filter-select"
-                                onchange="this.form.submit()">
-                            @foreach (var option in Model.StatusOptions)
-                            {
-                                <option value="@option.Value" @(option.Selected ? "selected" : "")>
-                                    @option.Text
-                                </option>
-                            }
-                        </select>
+                        <div class="admin-manager-blog-filter-row">
+                            <select name="status"
+                                    class="form-control admin-manager-blog-filter-select"
+                                    onchange="this.form.submit()"
+                                    autocomplete="off">
+                                @foreach (var option in Model.StatusOptions)
+                                {
+                                    <option value="@option.Value" @(option.Selected ? "selected" : "")>
+                                        @option.Text
+                                    </option>
+                                }
+                            </select>
 
-                        <div class="admin-blog-search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text"
-                                   name="keyword"
-                                   value="@Model.Keyword"
-                                   placeholder="Mã hoặc tiêu đề..."
-                                   class="form-control" />
+                            <div class="admin-manager-blog-search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text"
+                                       name="keyword"
+                                       value="@Model.Keyword"
+                                       placeholder="Mã hoặc tiêu đề..."
+                                       class="form-control"
+                                       autocomplete="off" />
+                            </div>
+
+                            <button class="btn admin-manager-blog-filter-btn" type="submit">
+                                Lọc
+                            </button>
                         </div>
-
-                        <button class="btn admin-blog-btn-filter" type="submit">
-                            Lọc
-                        </button>
                     }
                 </div>
             </div>
 
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table admin-table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Mã</th>
-                                <th>Tiêu đề</th>
-                                <th>Người tạo</th>
-                                <th>Ngày đăng</th>
-                                <th>Trạng thái</th>
-                                <th class="text-center">Thao tác</th>
-                            </tr>
-                        </thead>
+                @if (Model.Posts != null && Model.Posts.Count > 0)
+                {
+                    <div class="admin-manager-blog-table-wrap">
+                        <table class="table admin-manager-blog-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Tiêu đề</th>
+                                    <th>Người tạo</th>
+                                    <th>Ngày đăng</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            @if (Model.Posts != null && Model.Posts.Count > 0)
-                            {
-                                foreach (var item in Model.Posts)
+                            <tbody>
+                                @foreach (var item in Model.Posts)
                                 {
+                                    string currentStatusClass = statusClass(item.TrangThai);
+
                                     <tr>
-                                        <td>
-                                            <span class="admin-blog-code">#@item.MaBaiViet</span>
+                                        <td data-label="Mã">
+                                            <span class="admin-manager-blog-code">#@item.MaBaiViet</span>
                                         </td>
 
-                                        <td>
-                                            <div class="admin-blog-title">@item.TieuDe</div>
-                                            <div class="admin-blog-summary">
-                                                @(string.IsNullOrWhiteSpace(item.TomTat)
-                                                    ? "Không có mô tả"
-                                                    : (item.TomTat.Length > 90 ? item.TomTat.Substring(0, 90) + "..." : item.TomTat))
+                                        <td data-label="Tiêu đề">
+                                            <div class="admin-manager-blog-post-info">
+                                                <div class="admin-manager-blog-post-title">@item.TieuDe</div>
+                                                <div class="admin-manager-blog-post-summary">
+                                                    @(string.IsNullOrWhiteSpace(item.TomTat)
+                                                        ? "Không có mô tả"
+                                                        : (item.TomTat.Length > 96 ? item.TomTat.Substring(0, 96) + "..." : item.TomTat))
+                                                </div>
                                             </div>
                                         </td>
 
-                                        <td>
-                                            <span class="admin-blog-author">
-                                                @(string.IsNullOrWhiteSpace(item.NguoiTao) ? "—" : item.NguoiTao)
-                                            </span>
+                                        <td data-label="Người tạo">
+                                            <div class="admin-manager-blog-author">
+                                                <i class="fas fa-user-edit"></i>
+                                                <span>@(string.IsNullOrWhiteSpace(item.NguoiTao) ? "—" : item.NguoiTao)</span>
+                                            </div>
                                         </td>
 
-                                        <td>
-                                            <span class="admin-blog-date @(item.NgayDang.HasValue ? "" : "muted")">
-                                                @(item.NgayDang.HasValue
-                                                    ? item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm")
-                                                    : "Chưa đăng")
-                                            </span>
+                                        <td data-label="Ngày đăng">
+                                            <div class="admin-manager-blog-date @(item.NgayDang.HasValue ? "" : "muted")">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span>
+                                                    @(item.NgayDang.HasValue
+                                                        ? item.NgayDang.Value.ToString("dd/MM/yyyy HH:mm")
+                                                        : "Chưa đăng")
+                                                </span>
+                                            </div>
                                         </td>
 
-                                        <td>
-                                            <span class="admin-blog-status
-                                                @(item.TrangThai == BlogStatusConstants.PUBLISHED ? "admin-blog-status--published" :
-                                                  item.TrangThai == BlogStatusConstants.DRAFT ? "admin-blog-status--draft" : "admin-blog-status--hidden")">
+                                        <td data-label="Trạng thái">
+                                            <span class="admin-manager-blog-status @currentStatusClass">
+                                                <span></span>
                                                 @item.TrangThaiText
                                             </span>
                                         </td>
 
-                                        <td class="text-center">
-                                            <div class="admin-blog-actions">
+                                        <td data-label="Thao tác" class="text-center">
+                                            <div class="admin-manager-blog-actions">
 
                                                 <button type="button"
-                                                        class="btn admin-blog-action admin-blog-action--view"
+                                                        class="btn admin-manager-blog-action admin-manager-blog-action--view"
                                                         data-toggle="modal"
                                                         data-target="#blogModal-@item.BaiVietId"
                                                         title="Xem bài viết">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
 
-                                                @using (Html.BeginForm("ActivateBlog", "ManagerBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                @using (Html.BeginForm("ActivateBlog", "ManagerBlog", FormMethod.Post, new { @class = "d-inline admin-manager-blog-inline-form", autocomplete = "off" }))
                                                 {
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@item.BaiVietId" />
@@ -151,27 +177,33 @@
                                                     if (item.TrangThai == BlogStatusConstants.DRAFT)
                                                     {
                                                         <button type="submit"
-                                                                class="btn admin-blog-action admin-blog-action--publish"
+                                                                class="btn admin-manager-blog-action admin-manager-blog-action--publish"
                                                                 title="Duyệt đăng bài viết"
-                                                                onclick="return confirm('Duyệt đăng bài viết này?')">
+                                                                data-confirm-title="Duyệt đăng bài viết?"
+                                                                data-confirm="Bài viết sẽ được công khai trên website sau khi duyệt. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Duyệt đăng">
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                     }
                                                     else if (item.TrangThai == BlogStatusConstants.PUBLISHED)
                                                     {
                                                         <button type="submit"
-                                                                class="btn admin-blog-action admin-blog-action--hide"
+                                                                class="btn admin-manager-blog-action admin-manager-blog-action--hide"
                                                                 title="Ẩn bài viết"
-                                                                onclick="return confirm('Ẩn bài viết này?')">
+                                                                data-confirm-title="Ẩn bài viết?"
+                                                                data-confirm="Bài viết sẽ không còn hiển thị công khai trên website. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Ẩn bài">
                                                             <i class="fas fa-eye-slash"></i>
                                                         </button>
                                                     }
                                                     else if (item.TrangThai == BlogStatusConstants.HIDDEN)
                                                     {
                                                         <button type="submit"
-                                                                class="btn admin-blog-action admin-blog-action--republish"
+                                                                class="btn admin-manager-blog-action admin-manager-blog-action--republish"
                                                                 title="Đăng lại bài viết"
-                                                                onclick="return confirm('Đăng lại bài viết này?')">
+                                                                data-confirm-title="Đăng lại bài viết?"
+                                                                data-confirm="Bài viết sẽ được hiển thị công khai trở lại trên website. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Đăng lại">
                                                             <i class="fas fa-redo"></i>
                                                         </button>
                                                     }
@@ -179,7 +211,7 @@
 
                                                 @if (item.TrangThai == BlogStatusConstants.DRAFT)
                                                 {
-                                                    using (Html.BeginForm("Delete", "ManagerBlog", FormMethod.Post, new { @class = "d-inline" }))
+                                                    using (Html.BeginForm("Delete", "ManagerBlog", FormMethod.Post, new { @class = "d-inline admin-manager-blog-inline-form", autocomplete = "off" }))
                                                     {
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@item.BaiVietId" />
@@ -188,61 +220,78 @@
                                                         <input type="hidden" name="page" value="@Model.CurrentPage" />
 
                                                         <button type="submit"
-                                                                class="btn admin-blog-action admin-blog-action--hide"
+                                                                class="btn admin-manager-blog-action admin-manager-blog-action--delete"
                                                                 title="Ẩn bài chờ duyệt"
-                                                                onclick="return confirm('Ẩn bài viết này?')">
+                                                                data-confirm-title="Ẩn bài chờ duyệt?"
+                                                                data-confirm="Bài viết chờ duyệt sẽ được chuyển sang trạng thái ẩn. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Ẩn bài">
                                                             <i class="fas fa-ban"></i>
                                                         </button>
                                                     }
                                                 }
                                             </div>
 
-                                            <div class="modal fade admin-modal admin-blog-modal"
+                                            <div class="modal fade admin-manager-blog-modal"
                                                  id="blogModal-@item.BaiVietId"
                                                  tabindex="-1"
                                                  role="dialog"
                                                  aria-hidden="true">
-                                                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                                                    <div class="modal-content admin-modal-content">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered admin-manager-blog-modal-dialog" role="document">
+                                                    <div class="modal-content admin-manager-blog-modal-content">
 
-                                                        <div class="modal-header">
-                                                            <div>
-                                                                <h5 class="modal-title">@item.TieuDe</h5>
-                                                                <div class="admin-blog-modal-subtitle">
-                                                                    #@item.MaBaiViet
-                                                                    · @item.TrangThaiText
-                                                                    · @(string.IsNullOrWhiteSpace(item.NguoiTao) ? "Không rõ người tạo" : item.NguoiTao)
+                                                        <div class="modal-header admin-manager-blog-modal-header">
+                                                            <div class="admin-manager-blog-modal-heading">
+                                                                <div class="admin-manager-blog-modal-icon">
+                                                                    <i class="fas fa-newspaper"></i>
+                                                                </div>
+
+                                                                <div>
+                                                                    <span class="admin-manager-blog-modal-eyebrow">Xem bài viết</span>
+                                                                    <h5 class="modal-title">@item.TieuDe</h5>
+                                                                    <div class="admin-manager-blog-modal-subtitle">
+                                                                        #@item.MaBaiViet
+                                                                        · @item.TrangThaiText
+                                                                        · @(string.IsNullOrWhiteSpace(item.NguoiTao) ? "Không rõ người tạo" : item.NguoiTao)
+                                                                    </div>
                                                                 </div>
                                                             </div>
 
-                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <button type="button"
+                                                                    class="close admin-manager-blog-modal-close"
+                                                                    data-dismiss="modal"
+                                                                    aria-label="Close">
                                                                 <span aria-hidden="true">&times;</span>
                                                             </button>
                                                         </div>
 
-                                                        <div class="modal-body">
+                                                        <div class="modal-body admin-manager-blog-modal-body">
                                                             @if (!string.IsNullOrWhiteSpace(item.AnhDaiDien))
                                                             {
                                                                 <img src="@item.AnhDaiDien"
-                                                                     class="admin-blog-preview-image"
+                                                                     class="admin-manager-blog-preview-image"
                                                                      alt="@item.TieuDe" />
                                                             }
+                                                            else
+                                                            {
+                                                                <div class="admin-manager-blog-preview-empty-image">
+                                                                    <i class="fas fa-image"></i>
+                                                                    <span>Bài viết chưa có ảnh đại diện</span>
+                                                                </div>
+                                                            }
 
-                                                            <div class="admin-blog-preview-summary">
-                                                                <b>Tóm tắt:</b>
-                                                                @(string.IsNullOrWhiteSpace(item.TomTat) ? "Không có mô tả." : item.TomTat)
+                                                            <div class="admin-manager-blog-preview-summary">
+                                                                <strong>Tóm tắt</strong>
+                                                                <p>@(string.IsNullOrWhiteSpace(item.TomTat) ? "Không có mô tả." : item.TomTat)</p>
                                                             </div>
 
-                                                            <hr />
-
-                                                            <div class="admin-blog-preview-content">
+                                                            <div class="admin-manager-blog-preview-content">
                                                                 @Html.Raw(item.NoiDung)
                                                             </div>
                                                         </div>
 
-                                                        <div class="modal-footer">
+                                                        <div class="modal-footer admin-manager-blog-modal-footer">
                                                             <button type="button"
-                                                                    class="btn admin-btn admin-btn-light"
+                                                                    class="btn admin-manager-blog-btn admin-manager-blog-btn-light"
                                                                     data-dismiss="modal">
                                                                 Đóng
                                                             </button>
@@ -254,49 +303,52 @@
                                         </td>
                                     </tr>
                                 }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">
-                                        Không có bài viết phù hợp.
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-manager-blog-empty">
+                        <div class="admin-manager-blog-empty-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+
+                        <h3>Không có bài viết phù hợp</h3>
+                        <p>Không tìm thấy bài viết nào theo bộ lọc hiện tại.</p>
+                    </div>
+                }
 
                 @if (Model.TotalPages > 1)
                 {
-                    <div class="admin-blog-pagination">
-                        <div class="admin-blog-pagination__info">
+                    <div class="admin-manager-blog-pagination">
+                        <div class="admin-manager-blog-pagination-info">
                             Trang @Model.CurrentPage / @Model.TotalPages —
                             hiển thị @Model.Posts.Count trên tổng @Model.TotalItems bài viết
                         </div>
 
-                        <div class="admin-blog-pagination__links">
-                            <a class="admin-blog-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                        <div class="admin-manager-blog-pagination-links">
+                            <a class="admin-manager-blog-page-link @(Model.HasPreviousPage ? "" : "disabled")"
                                href="@(Model.HasPreviousPage ? Url.Action("ManagerBlog", new { status = Model.StatusFilter, keyword = Model.Keyword, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
 
                             @if (startPage > 1)
                             {
-                                <a class="admin-blog-page-link"
+                                <a class="admin-manager-blog-page-link"
                                    href="@Url.Action("ManagerBlog", new { status = Model.StatusFilter, keyword = Model.Keyword, page = 1 })">
                                     1
                                 </a>
 
                                 if (startPage > 2)
                                 {
-                                    <span class="admin-blog-page-dots">...</span>
+                                    <span class="admin-manager-blog-page-dots">...</span>
                                 }
                             }
 
                             @for (int i = startPage; i <= endPage; i++)
                             {
-                                <a class="admin-blog-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                <a class="admin-manager-blog-page-link @(i == Model.CurrentPage ? "active" : "")"
                                    href="@Url.Action("ManagerBlog", new { status = Model.StatusFilter, keyword = Model.Keyword, page = i })">
                                     @i
                                 </a>
@@ -306,16 +358,16 @@
                             {
                                 if (endPage < Model.TotalPages - 1)
                                 {
-                                    <span class="admin-blog-page-dots">...</span>
+                                    <span class="admin-manager-blog-page-dots">...</span>
                                 }
 
-                                <a class="admin-blog-page-link"
+                                <a class="admin-manager-blog-page-link"
                                    href="@Url.Action("ManagerBlog", new { status = Model.StatusFilter, keyword = Model.Keyword, page = Model.TotalPages })">
                                     @Model.TotalPages
                                 </a>
                             }
 
-                            <a class="admin-blog-page-link @(Model.HasNextPage ? "" : "disabled")"
+                            <a class="admin-manager-blog-page-link @(Model.HasNextPage ? "" : "disabled")"
                                href="@(Model.HasNextPage ? Url.Action("ManagerBlog", new { status = Model.StatusFilter, keyword = Model.Keyword, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
