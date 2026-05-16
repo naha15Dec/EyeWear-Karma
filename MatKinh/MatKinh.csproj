@@ -708,7 +708,7 @@
     <Content Include="Scripts\daterangepicker.js" />
     <Content Include="Scripts\demo.js" />
     <Content Include="Scripts\ekko-lightbox.min.js" />
-    <Content Include="Scripts\face-ai.js" />
+    <Content Include="Content\js\face-ai.js" />
     <Content Include="Scripts\gmaps.min.js" />
     <Content Include="Scripts\ion.rangeSlider.js" />
     <Content Include="Scripts\jquery-ui.min.js" />
@@ -744,6 +744,8 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Areas\AdminPage\AdminPageAreaRegistration.cs" />
     <Compile Include="Areas\AdminPage\Controllers\DashboardController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\FaceShapeRuleController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\FrameTypeController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ListBlogController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ListBrandController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ListProductController.cs" />
@@ -806,6 +808,9 @@
     <Compile Include="Models\KhachHang.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\KieuGong.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\LichSuTrangThaiDonHang.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
@@ -816,6 +821,9 @@
     <Compile Include="Models\PaymentConstants.cs" />
     <Compile Include="Models\Payments\VnPayLibrary.cs" />
     <Compile Include="Models\RoleConstants.cs" />
+    <Compile Include="Models\RuleGoiYKinhTheoMat.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\SanPham.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
@@ -844,6 +852,8 @@
     <Compile Include="ViewModel\AdminBrandViewModels.cs" />
     <Compile Include="ViewModel\AdminCategoryViewModels.cs" />
     <Compile Include="ViewModel\AdminDashboardVm.cs" />
+    <Compile Include="ViewModel\AdminFaceShapeRuleVm.cs" />
+    <Compile Include="ViewModel\AdminFrameTypeVm.cs" />
     <Compile Include="ViewModel\AdminOrderViewModels.cs" />
     <Compile Include="ViewModel\AdminProductCreateVm.cs" />
     <Compile Include="ViewModel\AdminProductListPageVm.cs" />
@@ -933,6 +943,8 @@
     </Content>
     <Content Include="Areas\AdminPage\Views\ManagerOrder\Index.cshtml" />
     <Content Include="Areas\AdminPage\Views\ManagerOrder\Detail.cshtml" />
+    <Content Include="Areas\AdminPage\Views\FrameType\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\FaceShapeRule\Index.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />

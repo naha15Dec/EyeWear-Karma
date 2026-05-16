@@ -1,0 +1,372 @@
+@model MatKinh.ViewModel.AdminReturnDetailVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Chi tiết yêu cầu trả hàng";
+
+    var login = Session["LoginInformation"] as TaiKhoan;
+    var roleCode = login != null && login.VaiTro != null ? login.VaiTro.MaVaiTro : string.Empty;
+    bool isAdmin = string.Equals(roleCode, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase);
+    bool isStaff = string.Equals(roleCode, RoleConstants.STAFF, StringComparison.OrdinalIgnoreCase);
+    bool isShipper = string.Equals(roleCode, RoleConstants.SHIPPER, StringComparison.OrdinalIgnoreCase);
+
+    bool isFinal = Model.TrangThai == ReturnStatusConstants.RECEIVED
+                || Model.TrangThai == ReturnStatusConstants.REJECTED;
+
+    bool canApproveOrReject = (isAdmin || isStaff) && Model.TrangThai == ReturnStatusConstants.PENDING;
+    bool canAssignShipper   = (isAdmin || isStaff) && Model.TrangThai == ReturnStatusConstants.APPROVED;
+    bool canShipperPick     = isShipper && Model.TrangThai == ReturnStatusConstants.APPROVED && Model.ShipperId.HasValue;
+    bool canMarkReceived    = (isAdmin || isStaff || isShipper) && Model.TrangThai == ReturnStatusConstants.SHIPPER_PICKING;
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path)) return fallbackImg;
+        path = path.Trim();
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return path;
+        if (path.StartsWith("~/")) return Url.Content(path);
+        if (path.StartsWith("/"))  return Url.Content("~" + path);
+        return Url.Content("~/" + path);
+    };
+
+    Func<int, string> statusClass = s =>
+    {
+        switch (s)
+        {
+            case ReturnStatusConstants.PENDING:        return "warning";
+            case ReturnStatusConstants.APPROVED:       return "info";
+            case ReturnStatusConstants.SHIPPER_PICKING: return "shipping";
+            case ReturnStatusConstants.RECEIVED:       return "success";
+            case ReturnStatusConstants.REJECTED:       return "danger";
+            default: return "default";
+        }
+    };
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Yêu cầu trả hàng #@Model.MaYeuCau</h1>
+        <p class="admin-page-subtitle">Xem xét và xử lý yêu cầu trả hàng từ khách hàng.</p>
+    </div>
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item"><a href="@Url.Action("Index","Dashboard")">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="@Url.Action("Index","ManagerReturn")">Trả hàng</a></li>
+        <li class="breadcrumb-item active">#@Model.MaYeuCau</li>
+    </ol>
+</div>
+
+<section class="content admin-order-detail-page">
+    <div class="container-fluid p-0">
+
+        @if (Model.IsVnPayPaid && Model.TrangThai == ReturnStatusConstants.RECEIVED)
+        {
+            <div class="admin-order-refund-alert">
+                <div class="admin-order-refund-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div>
+                    <strong>Cần xử lý hoàn tiền VNPay</strong>
+                    <p>Đơn hàng đã thanh toán qua VNPay. Vui lòng xử lý hoàn tiền trong 3–5 ngày làm việc.</p>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+
+            @* ===== CỘT TRÁI: thông tin + sản phẩm ===== *@
+            <div class="col-lg-8">
+
+                <div class="card admin-order-detail-card">
+                    <div class="card-header border-0">
+                        <div class="admin-order-detail-heading">
+                            <div class="admin-order-detail-heading-icon"><i class="fas fa-undo"></i></div>
+                            <div>
+                                <h3 class="admin-order-detail-card-title">Thông tin yêu cầu</h3>
+                            </div>
+                            <span class="admin-order-status-badge @statusClass(Model.TrangThai)">
+                                @Model.TrangThaiText
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="admin-order-detail-grid">
+                            <div class="admin-order-detail-box">
+                                <span>Mã yêu cầu</span>
+                                <strong>@Model.MaYeuCau</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Mã đơn hàng</span>
+                                <strong>
+                                    <a href="@Url.Action("Detail","ManagerOrder", new { id = Model.DonHangId })">
+                                        @Model.MaDonHang
+                                    </a>
+                                </strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Khách hàng</span>
+                                <strong>@Model.TenKhachHang</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Ngày yêu cầu</span>
+                                <strong>@Model.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Lý do trả hàng</span>
+                                <strong>@Model.LyDo</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Ghi chú khách hàng</span>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.GhiChuKhachHang) ? "—" : Model.GhiChuKhachHang)</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Người duyệt</span>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.DuyetBoiName) ? "—" : Model.DuyetBoiName)</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Ngày duyệt</span>
+                                <strong>@(Model.NgayDuyet.HasValue ? Model.NgayDuyet.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Shipper lấy hàng</span>
+                                <strong>@(string.IsNullOrWhiteSpace(Model.ShipperName) ? "Chưa gán" : Model.ShipperName)</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Ngày shipper lấy</span>
+                                <strong>@(Model.NgayShipperLay.HasValue ? Model.NgayShipperLay.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                            </div>
+                            <div class="admin-order-detail-box">
+                                <span>Ngày nhận về kho</span>
+                                <strong>@(Model.NgayNhanVe.HasValue ? Model.NgayNhanVe.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(Model.GhiChuAdmin))
+                            {
+                                <div class="admin-order-detail-box admin-order-detail-box-full">
+                                    <span>Ghi chú admin</span>
+                                    <strong>@Model.GhiChuAdmin</strong>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card admin-order-detail-card">
+                    <div class="card-header border-0">
+                        <div class="admin-order-detail-heading">
+                            <div class="admin-order-detail-heading-icon"><i class="fas fa-glasses"></i></div>
+                            <div>
+                                <h3 class="admin-order-detail-card-title">Sản phẩm trả hàng</h3>
+                                <p class="admin-order-detail-card-subtitle">@Model.Items.Count sản phẩm</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="admin-order-items-wrap">
+                            <table class="table admin-order-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng trả</th>
+                                        <th>Lý do chi tiết</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        string imgUrl = normalizeImage(item.HinhAnh);
+                                        <tr>
+                                            <td>
+                                                <div class="admin-order-product-cell">
+                                                    <div class="admin-order-product-thumb">
+                                                        <img src="@imgUrl" alt="@item.TenSanPham"
+                                                             onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                    </div>
+                                                    <div class="admin-order-product-name">@item.TenSanPham</div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center"><strong>@item.SoLuongTra</strong></td>
+                                            <td>@(string.IsNullOrWhiteSpace(item.LyDoChiTiet) ? "—" : item.LyDoChiTiet)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            @* ===== CỘT PHẢI: hành động ===== *@
+            <div class="col-lg-4">
+
+                @if (!isFinal)
+                {
+                    @* Duyệt / Từ chối *@
+                    @if (canApproveOrReject)
+                    {
+                        <div class="card admin-order-side-card">
+                            <div class="card-header border-0">
+                                <h3 class="admin-order-side-title">Duyệt yêu cầu</h3>
+                            </div>
+                            <div class="card-body">
+                                @using (Html.BeginForm("UpdateStatus", "ManagerReturn", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="YeuCauId" value="@Model.YeuCauId" />
+                                    <input type="hidden" name="TrangThaiMoi" value="@ReturnStatusConstants.APPROVED" />
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Gán shipper lấy hàng (không bắt buộc)</label>
+                                        <select name="ShipperId" class="form-control admin-order-input">
+                                            <option value="">-- Chọn shipper --</option>
+                                            @foreach (var s in Model.Shippers)
+                                            {
+                                                <option value="@s.Value">@s.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea name="GhiChuAdmin" rows="2" class="form-control admin-order-input"
+                                                  placeholder="Ghi chú cho khách hàng..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn admin-order-btn admin-order-btn-save w-100 mb-2">
+                                        <i class="fas fa-check mr-1"></i> Duyệt yêu cầu
+                                    </button>
+                                }
+
+                                <hr />
+
+                                @using (Html.BeginForm("UpdateStatus", "ManagerReturn", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="YeuCauId" value="@Model.YeuCauId" />
+                                    <input type="hidden" name="TrangThaiMoi" value="@ReturnStatusConstants.REJECTED" />
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Lý do từ chối <span class="text-danger">*</span></label>
+                                        <textarea name="GhiChuAdmin" rows="2" class="form-control admin-order-input"
+                                                  placeholder="Nhập lý do từ chối..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="fas fa-times mr-1"></i> Từ chối
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Gán shipper sau khi duyệt *@
+                    @if (canAssignShipper)
+                    {
+                        <div class="card admin-order-side-card">
+                            <div class="card-header border-0">
+                                <h3 class="admin-order-side-title">Gán shipper lấy hàng</h3>
+                            </div>
+                            <div class="card-body">
+                                @using (Html.BeginForm("UpdateStatus", "ManagerReturn", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="YeuCauId" value="@Model.YeuCauId" />
+                                    <input type="hidden" name="TrangThaiMoi" value="@ReturnStatusConstants.SHIPPER_PICKING" />
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Chọn shipper <span class="text-danger">*</span></label>
+                                        <select name="ShipperId" class="form-control admin-order-input" required>
+                                            <option value="">-- Chọn shipper --</option>
+                                            @foreach (var s in Model.Shippers)
+                                            {
+                                                <option value="@s.Value"
+                                                        @(Model.ShipperId.HasValue && Model.ShipperId.Value.ToString() == s.Value ? "selected" : "")>
+                                                    @s.Text
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea name="GhiChuAdmin" rows="2" class="form-control admin-order-input"
+                                                  placeholder="Ghi chú cho shipper..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn admin-order-btn admin-order-btn-save w-100">
+                                        <i class="fas fa-truck mr-1"></i> Gán shipper & bắt đầu lấy hàng
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Shipper xác nhận đang lấy *@
+                    @if (canShipperPick)
+                    {
+                        <div class="card admin-order-side-card">
+                            <div class="card-header border-0">
+                                <h3 class="admin-order-side-title">Xác nhận lấy hàng</h3>
+                            </div>
+                            <div class="card-body">
+                                @using (Html.BeginForm("UpdateStatus", "ManagerReturn", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="YeuCauId" value="@Model.YeuCauId" />
+                                    <input type="hidden" name="TrangThaiMoi" value="@ReturnStatusConstants.SHIPPER_PICKING" />
+                                    <button type="submit" class="btn admin-order-btn admin-order-btn-save w-100">
+                                        <i class="fas fa-truck mr-1"></i> Xác nhận đang đi lấy hàng
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Xác nhận đã nhận hàng về *@
+                    @if (canMarkReceived)
+                    {
+                        <div class="card admin-order-side-card">
+                            <div class="card-header border-0">
+                                <h3 class="admin-order-side-title">Xác nhận nhận hàng về</h3>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.IsVnPayPaid)
+                                {
+                                    <div class="admin-order-note-box mb-3">
+                                        <strong>Lưu ý VNPay</strong>
+                                        <p>Sau khi xác nhận, cần xử lý hoàn tiền cho khách trong 3–5 ngày làm việc.</p>
+                                    </div>
+                                }
+                                @using (Html.BeginForm("UpdateStatus", "ManagerReturn", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="YeuCauId" value="@Model.YeuCauId" />
+                                    <input type="hidden" name="TrangThaiMoi" value="@ReturnStatusConstants.RECEIVED" />
+                                    <div class="form-group admin-order-form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea name="GhiChuAdmin" rows="2" class="form-control admin-order-input"
+                                                  placeholder="Ghi chú khi nhận hàng về..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn admin-order-btn admin-order-btn-save w-100">
+                                        <i class="fas fa-check-double mr-1"></i> Đã nhận hàng về kho
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="card admin-order-side-card">
+                        <div class="card-body text-center">
+                            <span class="admin-order-status-badge @statusClass(Model.TrangThai) d-inline-block mb-2">
+                                @Model.TrangThaiText
+                            </span>
+                            <p class="text-muted">Yêu cầu trả hàng đã được xử lý xong.</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="card admin-order-side-card mt-3">
+                    <div class="card-body">
+                        <a href="@Url.Action("Index","ManagerReturn")" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>

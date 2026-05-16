@@ -32,6 +32,7 @@ namespace MatKinh.ViewModel
         public List<AdminProductListItemVm> Products { get; set; } = new List<AdminProductListItemVm>();
         public List<SelectListItem> Brands { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> FrameTypes { get; set; } = new List<SelectListItem>();
     }
 
     public class AdminProductListItemVm
@@ -45,6 +46,10 @@ namespace MatKinh.ViewModel
 
         public int LoaiSanPhamId { get; set; }
         public string LoaiSanPhamTen { get; set; }
+
+        public int? KieuGongId { get; set; }
+        public string MaKieuGong { get; set; }
+        public string TenKieuGong { get; set; }
 
         public decimal GiaGoc { get; set; }
         public decimal GiaBan { get; set; }
@@ -77,6 +82,9 @@ namespace MatKinh.ViewModel
 
         [Required(ErrorMessage = "Vui lòng chọn loại sản phẩm")]
         public int LoaiSanPhamId { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng chọn kiểu gọng")]
+        public int? KieuGongId { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Giá gốc không hợp lệ")]
         public decimal GiaGoc { get; set; }

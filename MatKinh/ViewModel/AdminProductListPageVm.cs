@@ -26,6 +26,7 @@ namespace MatKinh.ViewModel
         public List<AdminProductListPageItemVm> Products { get; set; } = new List<AdminProductListPageItemVm>();
         public List<SelectListItem> Brands { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> FrameTypes { get; set; } = new List<SelectListItem>();
     }
 
     public class AdminProductListPageItemVm
@@ -51,6 +52,10 @@ namespace MatKinh.ViewModel
         public bool IsFeatured { get; set; }
 
         public string NguoiTao { get; set; }
+
+        public int? KieuGongId { get; set; }
+        public string MaKieuGong { get; set; }
+        public string TenKieuGong { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

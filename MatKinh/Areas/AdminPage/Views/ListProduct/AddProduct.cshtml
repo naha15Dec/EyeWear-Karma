@@ -8,7 +8,7 @@
     <div>
         <h1 class="admin-page-title">Thêm sản phẩm</h1>
         <p class="admin-page-subtitle">
-            Tạo sản phẩm mới cho hệ thống bán mắt kính, bao gồm thông tin sản phẩm, giá bán, tồn kho và ảnh đại diện.
+            Tạo sản phẩm mới cho hệ thống bán mắt kính, bao gồm thông tin sản phẩm, giá bán, tồn kho, kiểu gọng và ảnh đại diện.
         </p>
     </div>
 
@@ -129,6 +129,7 @@
                                         {
                                             @class = "form-control admin-product-input currency-input text-right",
                                             autocomplete = "off",
+                                            inputmode = "numeric",
                                             placeholder = "0"
                                         })
                                         @Html.ValidationMessageFor(m => m.GiaGoc, "", new { @class = "text-danger admin-product-validation" })
@@ -142,6 +143,7 @@
                                         {
                                             @class = "form-control admin-product-input currency-input text-right",
                                             autocomplete = "off",
+                                            inputmode = "numeric",
                                             placeholder = "0"
                                         })
                                         @Html.ValidationMessageFor(m => m.GiaBan, "", new { @class = "text-danger admin-product-validation" })
@@ -191,7 +193,7 @@
                                     <div class="admin-product-image-placeholder">
                                         <i class="fas fa-cloud-upload-alt"></i>
                                         <strong>Xem trước ảnh đại diện</strong>
-                                        <span>Hỗ trợ JPG, JPEG, PNG, GIF, WEBP</span>
+                                        <span>Hỗ trợ JPG, JPEG, PNG, GIF, WEBP. Tối đa 3MB.</span>
                                     </div>
                                 </div>
 
@@ -224,7 +226,7 @@
                                     <div>
                                         <h3 class="admin-product-card-title">Phân loại và hiển thị</h3>
                                         <p class="admin-product-card-subtitle">
-                                            Chọn thương hiệu, loại sản phẩm và thiết lập hiển thị ban đầu.
+                                            Chọn thương hiệu, loại sản phẩm, kiểu gọng và thiết lập hiển thị ban đầu.
                                         </p>
                                     </div>
                                 </div>
@@ -252,6 +254,16 @@
                                 </div>
 
                                 <div class="form-group admin-product-form-group">
+                                    <label>Kiểu gọng</label>
+                                    @Html.DropDownListFor(
+                                        m => m.KieuGongId,
+                                        Model.FrameTypes,
+                                        "-- Chọn kiểu gọng --",
+                                        new { @class = "form-control admin-product-input", autocomplete = "off" })
+                                    @Html.ValidationMessageFor(m => m.KieuGongId, "", new { @class = "text-danger admin-product-validation" })
+                                </div>
+
+                                <div class="form-group admin-product-form-group">
                                     <label>Trạng thái</label>
                                     <select name="TrangThai" class="form-control admin-product-input" autocomplete="off">
                                         <option value="1" @(Model.TrangThai == 1 ? "selected" : "")>Đang bán</option>
@@ -271,7 +283,7 @@
                                     <i class="fas fa-store"></i>
                                     <div>
                                         <strong>Sản phẩm mới</strong>
-                                        <span>Sản phẩm sau khi tạo sẽ thuộc danh sách sản phẩm do bạn quản lý.</span>
+                                        <span>Sản phẩm sau khi tạo sẽ thuộc danh sách sản phẩm do bạn quản lý và có thể tham gia AI gợi ý kính theo kiểu gọng.</span>
                                     </div>
                                 </div>
 
@@ -337,6 +349,24 @@
                     label.textContent = file ? file.name : 'Chọn ảnh';
                 }
 
+                if (file && file.size > 3 * 1024 * 1024) {
+                    alert('Ảnh đại diện không được vượt quá 3MB.');
+                    this.value = '';
+
+                    if (label) {
+                        label.textContent = 'Chọn ảnh';
+                    }
+
+                    document.getElementById('imagePreviewSingle').innerHTML =
+                        '<div class="admin-product-image-placeholder">' +
+                        '<i class="fas fa-cloud-upload-alt"></i>' +
+                        '<strong>Xem trước ảnh đại diện</strong>' +
+                        '<span>Hỗ trợ JPG, JPEG, PNG, GIF, WEBP. Tối đa 3MB.</span>' +
+                        '</div>';
+
+                    return;
+                }
+
                 if (file) {
                     var reader = new FileReader();
 
@@ -351,27 +381,67 @@
         }
 
         function formatVndValue(value) {
-            var numeric = value.replace(/[^\d]/g, '');
-            if (!numeric) return '';
-            var number = parseInt(numeric, 10);
-            if (isNaN(number)) return '';
-            return number.toLocaleString('vi-VN');
+            var numeric = String(value || '').replace(/[^\d]/g, '');
+
+            if (!numeric) {
+                return '';
+            }
+
+            numeric = numeric.replace(/^0+(?=\d)/, '');
+
+            return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function getCaretDigitPosition(input) {
+            var valueBeforeCaret = input.value.slice(0, input.selectionStart);
+            return valueBeforeCaret.replace(/[^\d]/g, '').length;
+        }
+
+        function setCaretByDigitPosition(input, digitPosition) {
+            var count = 0;
+            var pos = input.value.length;
+
+            if (digitPosition <= 0) {
+                input.setSelectionRange(0, 0);
+                return;
+            }
+
+            for (var i = 0; i < input.value.length; i++) {
+                if (/\d/.test(input.value[i])) {
+                    count++;
+                }
+
+                if (count >= digitPosition) {
+                    pos = i + 1;
+                    break;
+                }
+            }
+
+            input.setSelectionRange(pos, pos);
         }
 
         var currencyInputs = document.querySelectorAll('.currency-input');
 
         currencyInputs.forEach(function (input) {
-            input.addEventListener('focus', function () {
-                this.value = this.value.replace(/[^\d]/g, '');
-            });
-
-            input.addEventListener('blur', function () {
-                this.value = formatVndValue(this.value);
-            });
+            input.setAttribute('inputmode', 'numeric');
 
             if (input.value) {
                 input.value = formatVndValue(input.value);
             }
+
+            input.addEventListener('input', function () {
+                var digitPosition = getCaretDigitPosition(this);
+                this.value = formatVndValue(this.value);
+                setCaretByDigitPosition(this, digitPosition);
+            });
+
+            input.addEventListener('paste', function () {
+                var self = this;
+
+                setTimeout(function () {
+                    self.value = formatVndValue(self.value);
+                }, 0);
+            });
         });
     });
 </script>

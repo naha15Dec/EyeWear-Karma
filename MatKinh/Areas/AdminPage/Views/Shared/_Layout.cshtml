@@ -373,8 +373,8 @@
                                 </ul>
                             </li>
 
-                            <li class="nav-item @menuOpen(new[] { "ListTypeProduct", "ListBrand" })">
-                                <a href="#" class="nav-link @activeAnyController(new[] { "ListTypeProduct", "ListBrand" })">
+                            <li class="nav-item @menuOpen(new[] { "ListTypeProduct", "ListBrand", "FrameType", "FaceShapeRule" })">
+                                <a href="#" class="nav-link @activeAnyController(new[] { "ListTypeProduct", "ListBrand", "FrameType", "FaceShapeRule" })">
                                     <i class="nav-icon fas fa-tags"></i>
                                     <p>
                                         Danh mục hệ thống
@@ -396,6 +396,21 @@
                                             <p>Thương hiệu</p>
                                         </a>
                                     </li>
+
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("Index","FrameType")" class="nav-link @activeController("FrameType")">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Kiểu gọng</p>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a href="@Url.Action("Index","FaceShapeRule")" class="nav-link @activeController("FaceShapeRule")">
+                                            <i class="far fa-circle nav-icon"></i>
+                                            <p>Rule gợi ý kính</p>
+                                        </a>
+                                    </li>
+
                                 </ul>
                             </li>
 

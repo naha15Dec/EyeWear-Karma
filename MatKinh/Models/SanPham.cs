@@ -38,6 +38,7 @@ namespace MatKinh.Models
         public bool IsFeatured { get; set; }
         public System.DateTime CreatedAt { get; set; }
         public Nullable<System.DateTime> UpdatedAt { get; set; }
+        public Nullable<int> KieuGongId { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ChiTietDonHang> ChiTietDonHangs { get; set; }
@@ -48,5 +49,6 @@ namespace MatKinh.Models
         public virtual ICollection<HanhViNguoiDung> HanhViNguoiDungs { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<GioHangChiTiet> GioHangChiTiets { get; set; }
+        public virtual KieuGong KieuGong { get; set; }
     }
 }

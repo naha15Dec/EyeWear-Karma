@@ -30,7 +30,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("LoginAccount", "Account", new { area = "" });
             }
 
-            var model = BuildProductListViewModel(currentUser.TaiKhoanId, keyword, page);
+            var model = BuildProductListViewModel(currentUser, keyword, page);
             return View(model);
         }
 
@@ -58,12 +58,12 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("LoginAccount", "Account", new { area = "" });
             }
 
+            NormalizeCreateModel(model);
             ValidateProductCreateModel(model, null);
 
             if (!ModelState.IsValid)
             {
-                model.Brands = GetBrandOptions();
-                model.Categories = GetCategoryOptions();
+                LoadCreateDropdowns(model);
                 return View(model);
             }
 
@@ -72,28 +72,31 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 var product = new SanPham
                 {
                     MaSanPham = GenerateProductCode(),
-                    TenSanPham = (model.TenSanPham ?? string.Empty).Trim(),
-                    MoTaNgan = string.IsNullOrWhiteSpace(model.MoTaNgan) ? null : model.MoTaNgan.Trim(),
-                    MoTaChiTiet = string.IsNullOrWhiteSpace(model.MoTaChiTiet) ? null : model.MoTaChiTiet.Trim(),
+                    TenSanPham = model.TenSanPham,
+                    MoTaNgan = model.MoTaNgan,
+                    MoTaChiTiet = model.MoTaChiTiet,
+
                     GiaGoc = model.GiaGoc,
                     GiaBan = model.GiaBan,
                     SoLuongTon = model.SoLuongTon,
+
                     ThuongHieuId = model.ThuongHieuId,
                     LoaiSanPhamId = model.LoaiSanPhamId,
+                    KieuGongId = model.KieuGongId.Value,
+
                     TrangThai = model.TrangThai,
                     IsFeatured = model.IsFeatured,
+
                     CreatedById = currentUser.TaiKhoanId,
                     CreatedAt = DateTime.Now,
-                    UpdatedAt = null
+                    UpdatedAt = null,
+
+                    HinhAnhChinh = string.Empty
                 };
 
                 if (imageAvatar != null && imageAvatar.ContentLength > 0)
                 {
                     product.HinhAnhChinh = SaveProductImage(imageAvatar);
-                }
-                else
-                {
-                    product.HinhAnhChinh = string.Empty;
                 }
 
                 db.SanPhams.Add(product);
@@ -105,8 +108,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Thêm sản phẩm thất bại: " + ex.Message);
-                model.Brands = GetBrandOptions();
-                model.Categories = GetCategoryOptions();
+                LoadCreateDropdowns(model);
                 return View(model);
             }
         }
@@ -134,6 +136,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return Redirect("~/Error/Index");
             }
 
+            NormalizeCreateModel(model);
             ValidateProductCreateModel(model, id);
 
             if (!ModelState.IsValid)
@@ -144,14 +147,18 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
             try
             {
-                product.TenSanPham = (model.TenSanPham ?? string.Empty).Trim();
-                product.MoTaNgan = string.IsNullOrWhiteSpace(model.MoTaNgan) ? null : model.MoTaNgan.Trim();
-                product.MoTaChiTiet = string.IsNullOrWhiteSpace(model.MoTaChiTiet) ? null : model.MoTaChiTiet.Trim();
+                product.TenSanPham = model.TenSanPham;
+                product.MoTaNgan = model.MoTaNgan;
+                product.MoTaChiTiet = model.MoTaChiTiet;
+
                 product.GiaGoc = model.GiaGoc;
                 product.GiaBan = model.GiaBan;
                 product.SoLuongTon = model.SoLuongTon;
+
                 product.ThuongHieuId = model.ThuongHieuId;
                 product.LoaiSanPhamId = model.LoaiSanPhamId;
+                product.KieuGongId = model.KieuGongId.Value;
+
                 product.TrangThai = model.TrangThai;
                 product.IsFeatured = model.IsFeatured;
                 product.UpdatedAt = DateTime.Now;
@@ -178,24 +185,33 @@ namespace MatKinh.Areas.AdminPage.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id)
         {
-            var category = db.LoaiSanPhams.FirstOrDefault(x => x.LoaiSanPhamId == id);
-
-            if (category == null)
+            var currentUser = GetCurrentAccount();
+            if (currentUser == null)
             {
-                TempData["ErrorMessage"] = "Không tìm thấy loại sản phẩm.";
-                return RedirectToAction("ProductType");
+                return RedirectToAction("LoginAccount", "Account", new { area = "" });
             }
 
-            category.IsActive = !category.IsActive;
-            category.UpdatedAt = DateTime.Now;
+            var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == id);
+
+            if (product == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
+                return RedirectToAction("ProductsList");
+            }
+
+            if (!CanManageProduct(currentUser, product))
+            {
+                return Redirect("~/Error/Index");
+            }
+
+            product.TrangThai = PRODUCT_STATUS_INACTIVE;
+            product.SoLuongTon = 0;
+            product.UpdatedAt = DateTime.Now;
 
             db.SaveChanges();
 
-            TempData["SuccessMessage"] = category.IsActive
-                ? "Đã kích hoạt lại loại sản phẩm."
-                : "Đã chuyển loại sản phẩm sang trạng thái ngừng sử dụng.";
-
-            return RedirectToAction("ProductType");
+            TempData["SuccessMessage"] = "Đã chuyển sản phẩm sang trạng thái ngừng bán.";
+            return RedirectToAction("ProductsList");
         }
 
         [HttpGet]
@@ -204,7 +220,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
             return RedirectToAction("ProductsList", new { keyword, page = 1 });
         }
 
-        private AdminProductListPageVm BuildProductListViewModel(int currentUserId, string keyword, int page)
+        private AdminProductListPageVm BuildProductListViewModel(TaiKhoan currentUser, string keyword, int page)
         {
             keyword = (keyword ?? string.Empty).Trim();
 
@@ -214,7 +230,15 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             var query = db.SanPhams
-                .Where(x => x.CreatedById == currentUserId);
+                .Include(x => x.ThuongHieu)
+                .Include(x => x.LoaiSanPham)
+                .Include(x => x.KieuGong)
+                .AsQueryable();
+
+            if (!IsAdmin(currentUser))
+            {
+                query = query.Where(x => x.CreatedById == currentUser.TaiKhoanId);
+            }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -245,22 +269,33 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     SanPhamId = x.SanPhamId,
                     MaSanPham = x.MaSanPham,
                     TenSanPham = x.TenSanPham,
+
                     MoTaNgan = x.MoTaNgan,
                     MoTaChiTiet = x.MoTaChiTiet,
                     HinhAnhChinh = x.HinhAnhChinh,
+
                     GiaGoc = x.GiaGoc,
                     GiaBan = x.GiaBan,
                     SoLuongTon = x.SoLuongTon,
+
                     ThuongHieuId = x.ThuongHieuId,
-                    ThuongHieuTen = x.ThuongHieu.TenThuongHieu,
+                    ThuongHieuTen = x.ThuongHieu != null ? x.ThuongHieu.TenThuongHieu : "Không xác định",
+
                     LoaiSanPhamId = x.LoaiSanPhamId,
-                    LoaiSanPhamTen = x.LoaiSanPham.TenLoaiSanPham,
+                    LoaiSanPhamTen = x.LoaiSanPham != null ? x.LoaiSanPham.TenLoaiSanPham : "Không xác định",
+
+                    KieuGongId = x.KieuGongId,
+                    MaKieuGong = x.KieuGong != null ? x.KieuGong.MaKieuGong : "",
+                    TenKieuGong = x.KieuGong != null ? x.KieuGong.TenKieuGong : "Chưa chọn kiểu gọng",
+
                     TrangThai = x.TrangThai,
                     IsFeatured = x.IsFeatured,
+
                     NguoiTao = db.TaiKhoans
                         .Where(tk => tk.TaiKhoanId == x.CreatedById)
                         .Select(tk => tk.HoTen)
                         .FirstOrDefault(),
+
                     CreatedAt = x.CreatedAt,
                     UpdatedAt = x.UpdatedAt
                 })
@@ -275,19 +310,37 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 TotalPages = totalPages,
                 Products = products,
                 Brands = GetBrandOptions(),
-                Categories = GetCategoryOptions()
+                Categories = GetCategoryOptions(),
+                FrameTypes = GetFrameTypeOptions()
             };
         }
 
         private AdminProductCreateVm BuildCreateViewModel()
         {
-            return new AdminProductCreateVm
+            var model = new AdminProductCreateVm
             {
                 TrangThai = PRODUCT_STATUS_ACTIVE,
                 IsFeatured = false,
-                Brands = GetBrandOptions(),
-                Categories = GetCategoryOptions()
+                GiaGoc = 0,
+                GiaBan = 0,
+                SoLuongTon = 0
             };
+
+            LoadCreateDropdowns(model);
+
+            return model;
+        }
+
+        private void LoadCreateDropdowns(AdminProductCreateVm model)
+        {
+            if (model == null)
+            {
+                return;
+            }
+
+            model.Brands = GetBrandOptions();
+            model.Categories = GetCategoryOptions();
+            model.FrameTypes = GetFrameTypeOptions();
         }
 
         private List<SelectListItem> GetBrandOptions()
@@ -316,6 +369,19 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 .ToList();
         }
 
+        private List<SelectListItem> GetFrameTypeOptions()
+        {
+            return db.KieuGongs
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.TenKieuGong)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.KieuGongId.ToString(),
+                    Text = x.TenKieuGong + " (#" + x.MaKieuGong + ")"
+                })
+                .ToList();
+        }
+
         private TaiKhoan GetCurrentAccount()
         {
             var sessionAccount = Session["LoginInformation"] as TaiKhoan;
@@ -329,6 +395,13 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 .FirstOrDefault(x => x.TaiKhoanId == sessionAccount.TaiKhoanId && x.IsActive);
         }
 
+        private bool IsAdmin(TaiKhoan currentUser)
+        {
+            return currentUser != null &&
+                   currentUser.VaiTro != null &&
+                   string.Equals(currentUser.VaiTro.MaVaiTro, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase);
+        }
+
         private bool CanManageProduct(TaiKhoan currentUser, SanPham product)
         {
             if (currentUser == null || product == null)
@@ -336,13 +409,38 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return false;
             }
 
-            if (currentUser.VaiTro != null &&
-                string.Equals(currentUser.VaiTro.MaVaiTro, RoleConstants.ADMIN, StringComparison.OrdinalIgnoreCase))
+            if (IsAdmin(currentUser))
             {
                 return true;
             }
 
             return product.CreatedById == currentUser.TaiKhoanId;
+        }
+
+        private void NormalizeCreateModel(AdminProductCreateVm model)
+        {
+            if (model == null)
+            {
+                return;
+            }
+
+            model.TenSanPham = string.IsNullOrWhiteSpace(model.TenSanPham)
+                ? string.Empty
+                : model.TenSanPham.Trim();
+
+            model.MoTaNgan = string.IsNullOrWhiteSpace(model.MoTaNgan)
+                ? null
+                : model.MoTaNgan.Trim();
+
+            model.MoTaChiTiet = string.IsNullOrWhiteSpace(model.MoTaChiTiet)
+                ? null
+                : model.MoTaChiTiet.Trim();
+
+            if (model.TrangThai != PRODUCT_STATUS_ACTIVE &&
+                model.TrangThai != PRODUCT_STATUS_INACTIVE)
+            {
+                model.TrangThai = PRODUCT_STATUS_ACTIVE;
+            }
         }
 
         private void ValidateProductCreateModel(AdminProductCreateVm model, int? currentProductId)
@@ -400,6 +498,22 @@ namespace MatKinh.Areas.AdminPage.Controllers
             if (!categoryExists)
             {
                 ModelState.AddModelError("LoaiSanPhamId", "Loại sản phẩm không hợp lệ.");
+            }
+
+            if (!model.KieuGongId.HasValue || model.KieuGongId.Value <= 0)
+            {
+                ModelState.AddModelError("KieuGongId", "Vui lòng chọn kiểu gọng.");
+            }
+            else
+            {
+                bool frameTypeExists = db.KieuGongs.Any(x =>
+                    x.KieuGongId == model.KieuGongId.Value &&
+                    x.IsActive);
+
+                if (!frameTypeExists)
+                {
+                    ModelState.AddModelError("KieuGongId", "Kiểu gọng không hợp lệ.");
+                }
             }
         }
 

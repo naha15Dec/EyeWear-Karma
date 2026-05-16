@@ -55,17 +55,79 @@
     box-shadow: 0 18px 55px rgba(17, 17, 17, 0.07);
 }
 
-.upload-card {
+.upload-card,
+.guide-card {
     padding: 30px;
 }
 
-.upload-zone {
+/* CAMERA AREA */
+
+.camera-zone {
     min-height: 390px;
     border: 1.5px dashed #b08d57;
     border-radius: 24px;
     background: #fbf8f3;
-    padding: 42px 28px;
+    padding: 26px;
     text-align: center;
+}
+
+.camera-frame {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 390px;
+    border-radius: 22px;
+    background: #111;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+#cameraVideo,
+#cameraCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    transform-origin: center center;
+}
+
+#cameraVideo {
+    z-index: 1;
+}
+
+#cameraCanvas {
+    z-index: 2;
+    pointer-events: none;
+}
+
+#previewImage {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+    margin: 0;
+    border: none;
+    border-radius: 22px;
+    box-shadow: none;
+    z-index: 4;
+}
+
+.camera-placeholder {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #fbf8f3, #f1e8dc);
+    color: #111;
+    padding: 32px;
 }
 
 .upload-icon {
@@ -82,54 +144,93 @@
     box-shadow: 0 12px 35px rgba(176, 141, 87, 0.18);
 }
 
-.upload-zone h3,
-.guide-card h3 {
+.camera-placeholder h3 {
     font-family: 'Playfair Display', serif;
-    color: #111;
     font-size: 30px;
-    font-weight: 700;
-    margin-bottom: 12px;
+    margin: 12px 0;
 }
 
-.upload-zone p {
+.camera-placeholder p {
     color: #6f6f6f;
-    margin-bottom: 22px;
+    max-width: 420px;
+    margin: 0 auto;
 }
+
+/* ACTION BUTTONS */
+
+.face-ai-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.ai-main-btn,
+.ai-outline-btn,
+.ai-upload-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: 999px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.25s ease;
+    border: none;
+    text-decoration: none;
+}
+
+.ai-main-btn {
+    background: #111;
+    color: #fff;
+}
+
+    .ai-main-btn:hover {
+        background: #b08d57;
+    }
+
+    .ai-main-btn.is-active {
+        background: #8f1d1d;
+        color: #fff;
+    }
+
+        .ai-main-btn.is-active:hover {
+            background: #b32626;
+        }
+
+.ai-outline-btn,
+.ai-upload-small {
+    background: #fff;
+    color: #111;
+    border: 1px solid #e0d6c7;
+}
+
+    .ai-outline-btn:hover,
+    .ai-upload-small:hover {
+        background: #111;
+        color: #fff;
+    }
+
+    .ai-outline-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        background: #f3f3f3;
+        color: #777;
+    }
+
+        .ai-outline-btn:disabled:hover {
+            background: #f3f3f3;
+            color: #777;
+        }
 
 #imageUpload {
     display: none;
 }
 
-.upload-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    height: 50px;
-    padding: 0 28px;
-    border-radius: 999px;
-    background: #111;
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.25s ease;
-}
-
-    .upload-label:hover {
-        background: #b08d57;
-        color: #fff;
-    }
-
-#previewImage {
-    display: none;
-    width: 100%;
-    max-width: 330px;
-    max-height: 330px;
-    object-fit: cover;
-    margin: 28px auto 0;
-    border-radius: 22px;
-    border: 8px solid #fff;
-    box-shadow: 0 18px 45px rgba(17, 17, 17, 0.16);
-}
+/* RESULT */
 
 .ai-result-box {
     margin-top: 24px;
@@ -162,9 +263,7 @@
     margin: 0;
 }
 
-.guide-card {
-    padding: 30px;
-}
+/* GUIDE */
 
 .guide-label {
     display: inline-block;
@@ -174,6 +273,14 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.guide-card h3 {
+    font-family: 'Playfair Display', serif;
+    color: #111;
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 12px;
 }
 
 .guide-list {
@@ -216,6 +323,8 @@
     margin: 0;
 }
 
+/* PRODUCT HEADING */
+
 .products-heading {
     text-align: center;
     margin: 30px 0 32px;
@@ -246,6 +355,8 @@
         margin: 0;
     }
 
+/* PRODUCTS */
+
 .recommended-products {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -257,6 +368,10 @@
     grid-column: 1 / -1;
     text-align: center;
     margin-bottom: 10px;
+    padding: 36px 20px;
+    background: #fff;
+    border: 1px dashed #e0d6c7;
+    border-radius: 24px;
 }
 
     .ai-products-status h3 {
@@ -355,6 +470,8 @@
     font-weight: 700;
 }
 
+/* RESPONSIVE */
+
 @media (max-width: 991px) {
     .face-ai-layout {
         grid-template-columns: 1fr;
@@ -387,8 +504,22 @@
         padding: 20px;
     }
 
-    .upload-zone {
-        padding: 32px 18px;
+    .camera-zone {
+        padding: 18px;
+    }
+
+    .camera-frame {
+        min-height: 320px;
+    }
+
+    .face-ai-actions {
+        flex-direction: column;
+    }
+
+    .ai-main-btn,
+    .ai-outline-btn,
+    .ai-upload-small {
+        width: 100%;
     }
 
     .recommended-products {

@@ -17,36 +17,55 @@
             <h1>AI tư vấn gọng kính phù hợp với khuôn mặt</h1>
 
             <p>
-                Tải ảnh khuôn mặt của bạn, hệ thống sẽ phân tích dáng mặt và gợi ý
-                những mẫu kính phù hợp với phong cách cá nhân.
+                Bật camera hoặc tải ảnh lên để AI phân tích dáng khuôn mặt
+                và gợi ý những mẫu gọng kính phù hợp với bạn.
             </p>
         </div>
 
         <div class="face-ai-layout">
             <div class="face-ai-left">
                 <div class="face-ai-card upload-card">
-                    <div class="upload-zone">
-                        <div class="upload-icon">
-                            <i class="fa fa-cloud-upload"></i>
+
+                    <div class="camera-zone">
+                        <div class="camera-frame">
+                            <video id="cameraVideo" autoplay muted playsinline></video>
+                            <canvas id="cameraCanvas"></canvas>
+
+                            <img id="previewImage" alt="Ảnh xem trước" />
+
+                            <div class="camera-placeholder" id="cameraPlaceholder">
+                                <div class="upload-icon">
+                                    <i class="fa fa-camera"></i>
+                                </div>
+                                <h3>Camera AI tư vấn kính</h3>
+                                <p>Bấm bật camera, nhìn thẳng khuôn mặt và chờ AI phân tích.</p>
+                            </div>
                         </div>
 
-                        <h3>Tải ảnh khuôn mặt</h3>
-                        <p>Chọn ảnh rõ mặt, nhìn thẳng, ánh sáng tốt để AI phân tích chính xác hơn.</p>
+                        <div class="face-ai-actions">
+                            <button type="button" id="btnStartCamera" class="ai-main-btn">
+                                <i class="fa fa-video-camera"></i>
+                                Bật camera
+                            </button>
 
-                        <label for="imageUpload" class="upload-label">
-                            <i class="fa fa-image"></i>
-                            Chọn ảnh
-                        </label>
+                            <button type="button" id="btnAnalyzeFace" class="ai-outline-btn" disabled>
+                                <i class="fa fa-magic"></i>
+                                Phân tích khuôn mặt
+                            </button>
 
-                        <input type="file" id="imageUpload" accept="image/*" />
+                            <label for="imageUpload" class="ai-upload-small">
+                                <i class="fa fa-image"></i>
+                                Chọn ảnh
+                            </label>
 
-                        <img id="previewImage" alt="Ảnh xem trước" />
+                            <input type="file" id="imageUpload" accept="image/*" />
+                        </div>
                     </div>
 
                     <div class="ai-result-box">
                         <span class="result-label">Kết quả phân tích</span>
                         <h3 id="result">Chưa có kết quả</h3>
-                        <p id="suggestion">Hãy tải ảnh khuôn mặt để AI bắt đầu tư vấn.</p>
+                        <p id="suggestion">Hãy bật camera hoặc chọn ảnh để AI bắt đầu tư vấn.</p>
                     </div>
                 </div>
             </div>
@@ -60,32 +79,32 @@
                         <div class="guide-item">
                             <div class="guide-number">1</div>
                             <div>
-                                <strong>Chọn ảnh rõ mặt</strong>
-                                <p>Nên dùng ảnh nhìn thẳng, không che mắt, không quá tối.</p>
+                                <strong>Bật camera hoặc chọn ảnh</strong>
+                                <p>Bạn có thể dùng camera trực tiếp hoặc tải ảnh khuôn mặt rõ nét.</p>
                             </div>
                         </div>
 
                         <div class="guide-item">
                             <div class="guide-number">2</div>
                             <div>
-                                <strong>Chờ AI phân tích</strong>
-                                <p>Hệ thống nhận diện dáng mặt như tròn, vuông, dài hoặc oval.</p>
+                                <strong>Nhìn thẳng khuôn mặt</strong>
+                                <p>Giữ mặt rõ, đủ sáng, không che mắt và không nghiêng quá nhiều.</p>
                             </div>
                         </div>
 
                         <div class="guide-item">
                             <div class="guide-number">3</div>
                             <div>
-                                <strong>Xem gợi ý sản phẩm</strong>
-                                <p>Các mẫu gọng kính phù hợp sẽ được hiển thị bên dưới.</p>
+                                <strong>AI phân tích dáng mặt</strong>
+                                <p>Hệ thống nhận diện mặt tròn, vuông, dài, oval hoặc trái tim.</p>
                             </div>
                         </div>
 
                         <div class="guide-item">
                             <div class="guide-number">4</div>
                             <div>
-                                <strong>Chọn mẫu yêu thích</strong>
-                                <p>Bấm xem chi tiết để kiểm tra giá, kiểu dáng và thông tin sản phẩm.</p>
+                                <strong>Xem sản phẩm phù hợp</strong>
+                                <p>Gọng kính được gợi ý dựa trên dáng mặt và kiểu gọng phù hợp.</p>
                             </div>
                         </div>
                     </div>
@@ -101,15 +120,24 @@
             </p>
         </div>
 
-        <div id="recommendedProducts" class="recommended-products"></div>
-
-        <div class="face-ai-layout">
+        <div id="recommendedProducts" class="recommended-products">
+            <div class="ai-products-status">
+                <h3>Chưa có sản phẩm gợi ý</h3>
+                <p>Hãy bật camera hoặc chọn ảnh để AI tư vấn mẫu kính phù hợp.</p>
+            </div>
+        </div>
+    </div>
 </section>
 
 @section Scripts {
-<script>
+    <script>
         var getProductsUrl = '@Url.Action("GetRecommendedProducts", "FaceAI")';
-</script>
+        var predictByModelUrl = '@Url.Action("PredictByModel", "FaceAI")';
+    </script>
 
-<script src="@Url.Content("~/Scripts/face-ai.js?v=999")"></script>
+    <script src="https://unpkg.com/%40mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://unpkg.com/%40mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://unpkg.com/%40mediapipe/face_mesh/face_mesh.js"></script>
+
+    <script src="@Url.Content("~/Content/js/face-ai.js?v=4001")"></script>
 }

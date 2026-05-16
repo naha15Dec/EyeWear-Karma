@@ -519,3 +519,100 @@
         align-items: flex-start;
     }
 }
+
+/* =========================================================
+   ADMIN SYSTEM PAGINATION
+   Premium eyewear boutique
+========================================================= */
+
+.admin-system-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 4px 4px;
+    border-top: 1px solid #f0ebe3;
+    margin-top: 18px;
+}
+
+.admin-system-pagination-info {
+    color: var(--asc-muted);
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.5;
+}
+
+.admin-system-pagination-links {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-system-page-link {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid #efe7dc;
+    background: #fbf8f3;
+    color: var(--asc-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13.5px;
+    font-weight: 850;
+    line-height: 1;
+    transition: all .2s ease;
+}
+
+    .admin-system-page-link:hover,
+    .admin-system-page-link.active {
+        text-decoration: none;
+        background: var(--asc-charcoal);
+        color: #ffffff;
+        border-color: var(--asc-charcoal);
+        box-shadow: 0 10px 22px rgba(31, 28, 24, 0.12);
+    }
+
+    .admin-system-page-link.disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none;
+    }
+
+.admin-system-page-dots {
+    color: var(--asc-muted);
+    font-weight: 850;
+    padding: 0 4px;
+}
+
+/* Responsive pagination */
+
+@media (max-width: 767.98px) {
+    .admin-system-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-system-pagination-links {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-system-pagination-links {
+        width: 100%;
+        gap: 6px;
+    }
+
+    .admin-system-page-link {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 11px;
+        font-size: 13px;
+    }
+}

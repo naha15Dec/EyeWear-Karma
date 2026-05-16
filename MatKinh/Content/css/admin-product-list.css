@@ -1001,3 +1001,204 @@
         min-height: 205px;
     }
 }
+
+/* ================================
+   FIX TABLE PRODUCT LIST - GỌN, KHÔNG DÀI CỨNG
+================================ */
+
+/* Cho bảng cuộn ngang nhẹ khi màn nhỏ, không làm vỡ layout */
+.admin-product-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Không để bảng quá dài như 1180px */
+.admin-product-table {
+    min-width: 1080px;
+    table-layout: fixed;
+}
+
+    /* Chia lại chiều rộng từng cột */
+    .admin-product-table th:nth-child(1),
+    .admin-product-table td:nth-child(1) {
+        width: 125px;
+    }
+
+    .admin-product-table th:nth-child(2),
+    .admin-product-table td:nth-child(2) {
+        width: 300px;
+    }
+
+    .admin-product-table th:nth-child(3),
+    .admin-product-table td:nth-child(3) {
+        width: 160px;
+        min-width: 0;
+    }
+
+    .admin-product-table th:nth-child(4),
+    .admin-product-table td:nth-child(4) {
+        width: 185px;
+        min-width: 0;
+    }
+
+    .admin-product-table th:nth-child(5),
+    .admin-product-table td:nth-child(5) {
+        width: 135px;
+    }
+
+    .admin-product-table th:nth-child(6),
+    .admin-product-table td:nth-child(6) {
+        width: 75px;
+    }
+
+    .admin-product-table th:nth-child(7),
+    .admin-product-table td:nth-child(7) {
+        width: 135px;
+    }
+
+    .admin-product-table th:nth-child(8),
+    .admin-product-table td:nth-child(8) {
+        width: 105px;
+        min-width: 0;
+    }
+
+/* Mã sản phẩm không cho tràn dài */
+.admin-product-code-link,
+.admin-product-code-text {
+    max-width: 105px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Cột sản phẩm gọn lại */
+.admin-product-info {
+    min-width: 0;
+    gap: 12px;
+}
+
+.admin-product-thumb {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 16px;
+}
+
+    .admin-product-thumb img {
+        object-fit: contain;
+        padding: 4px;
+        background: #ffffff;
+    }
+
+.admin-product-main {
+    min-width: 0;
+}
+
+.admin-product-name {
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.admin-product-desc {
+    max-width: 220px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Phân loại và ngày không làm bảng phình ngang */
+.admin-product-date {
+    white-space: normal;
+    align-items: flex-start;
+    line-height: 1.35;
+}
+
+    .admin-product-date span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+/* Giá giữ gọn */
+.admin-product-price strong,
+.admin-product-price span {
+    white-space: nowrap;
+}
+
+/* Nút sửa gọn hơn */
+.admin-product-action {
+    min-height: 38px;
+    padding: 0 13px;
+    border-radius: 13px;
+    font-size: 13.5px;
+}
+
+/* Desktop vừa phải */
+@media (max-width: 1199.98px) {
+    .admin-product-table {
+        min-width: 1040px;
+    }
+
+        .admin-product-table th:nth-child(2),
+        .admin-product-table td:nth-child(2) {
+            width: 285px;
+        }
+
+        .admin-product-table th:nth-child(4),
+        .admin-product-table td:nth-child(4) {
+            width: 175px;
+        }
+
+    .admin-product-desc {
+        max-width: 200px;
+    }
+}
+
+/* Tablet trở xuống: chuyển bảng thành card như CSS cũ */
+@media (max-width: 991.98px) {
+    .admin-product-table-wrap {
+        overflow: visible;
+        border: none;
+        border-radius: 0;
+    }
+
+    .admin-product-table {
+        min-width: 0 !important;
+        table-layout: auto;
+    }
+
+        .admin-product-table th,
+        .admin-product-table td {
+            width: auto !important;
+            min-width: 0 !important;
+        }
+
+    .admin-product-info {
+        min-width: 0;
+        justify-content: flex-end;
+    }
+
+    .admin-product-desc {
+        max-width: 320px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-product-info {
+        justify-content: flex-start;
+    }
+
+    .admin-product-desc {
+        max-width: 100%;
+    }
+
+    .admin-product-code-link,
+    .admin-product-code-text {
+        max-width: 100%;
+    }
+}

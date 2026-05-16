@@ -17,8 +17,6 @@ namespace MatKinh.Controllers
         private const int DefaultPageSize = 9;
         private const int MaxPageSize = 24;
 
-        // ========================= DANH SÁCH SẢN PHẨM =========================
-
         public ActionResult Index(ProductCatalogFilterVm filter)
         {
             if (filter == null)
@@ -26,26 +24,34 @@ namespace MatKinh.Controllers
                 filter = new ProductCatalogFilterVm();
             }
 
-            if (filter.Page <= 0) filter.Page = 1;
-            if (filter.PageSize <= 0) filter.PageSize = DefaultPageSize;
-            if (filter.PageSize > MaxPageSize) filter.PageSize = MaxPageSize;
+            if (filter.Page <= 0)
+            {
+                filter.Page = 1;
+            }
+
+            if (filter.PageSize <= 0)
+            {
+                filter.PageSize = DefaultPageSize;
+            }
+
+            if (filter.PageSize > MaxPageSize)
+            {
+                filter.PageSize = MaxPageSize;
+            }
 
             db.Database.CommandTimeout = 30;
 
             IQueryable<SanPham> query = BuildBaseProductQuery();
-
-            if (filter.CategoryId.HasValue && filter.CategoryId.Value > 0)
-            {
-                int categoryId = filter.CategoryId.Value;
-                query = query.Where(x => x.LoaiSanPhamId == categoryId);
-            }
 
             ApplyFilters(ref query, filter);
 
             int totalCount = query.Count();
 
             int totalPages = (int)Math.Ceiling((double)totalCount / filter.PageSize);
-            if (totalPages <= 0) totalPages = 1;
+            if (totalPages <= 0)
+            {
+                totalPages = 1;
+            }
 
             if (filter.Page > totalPages)
             {
@@ -68,8 +74,6 @@ namespace MatKinh.Controllers
             return View(filter);
         }
 
-        // ========================= CHI TIẾT SẢN PHẨM =========================
-
         public ActionResult DetailProduct(int? sanPhamId)
         {
             if (!sanPhamId.HasValue || sanPhamId.Value <= 0)
@@ -83,6 +87,7 @@ namespace MatKinh.Controllers
                 .AsNoTracking()
                 .Include(x => x.LoaiSanPham)
                 .Include(x => x.ThuongHieu)
+                .Include(x => x.KieuGong)
                 .FirstOrDefault(x =>
                     x.SanPhamId == sanPhamId.Value &&
                     x.TrangThai == ProductStatusActive &&
@@ -95,8 +100,6 @@ namespace MatKinh.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Ghi nhận hành vi xem sản phẩm.
-            // Nếu log lỗi thì không làm hỏng trải nghiệm xem chi tiết sản phẩm.
             try
             {
                 UserBehaviorLogger.Log(
@@ -129,8 +132,6 @@ namespace MatKinh.Controllers
             return RedirectToAction("DetailProduct", new { sanPhamId = id });
         }
 
-        // ========================= TÌM NHANH =========================
-
         public ActionResult FindProductById(int? sanPhamId)
         {
             if (!sanPhamId.HasValue || sanPhamId.Value <= 0)
@@ -140,8 +141,6 @@ namespace MatKinh.Controllers
 
             return RedirectToAction("DetailProduct", new { sanPhamId = sanPhamId.Value });
         }
-
-        // ========================= GỢI Ý RULE-BASED =========================
 
         private List<SanPham> GetRuleBasedRecommendedProducts(SanPham currentProduct, int take = 8)
         {
@@ -181,6 +180,7 @@ namespace MatKinh.Controllers
                     .AsNoTracking()
                     .Include(x => x.LoaiSanPham)
                     .Include(x => x.ThuongHieu)
+                    .Include(x => x.KieuGong)
                     .Where(x =>
                         behaviorProductIds.Contains(x.SanPhamId) &&
                         x.TrangThai == ProductStatusActive &&
@@ -205,6 +205,12 @@ namespace MatKinh.Controllers
                 .Distinct()
                 .ToList();
 
+            List<int> interestedFrameTypeIds = behaviorProducts
+                .Where(x => x.KieuGongId.HasValue)
+                .Select(x => x.KieuGongId.Value)
+                .Distinct()
+                .ToList();
+
             decimal avgBehaviorPrice = behaviorProducts.Any()
                 ? behaviorProducts.Average(x => x.GiaBan)
                 : currentProduct.GiaBan;
@@ -216,6 +222,7 @@ namespace MatKinh.Controllers
                 .AsNoTracking()
                 .Include(x => x.LoaiSanPham)
                 .Include(x => x.ThuongHieu)
+                .Include(x => x.KieuGong)
                 .Where(x =>
                     x.SanPhamId != currentProduct.SanPhamId &&
                     x.TrangThai == ProductStatusActive &&
@@ -230,9 +237,11 @@ namespace MatKinh.Controllers
                     Score =
                         (x.LoaiSanPhamId == currentProduct.LoaiSanPhamId ? 40 : 0)
                         + (x.ThuongHieuId == currentProduct.ThuongHieuId ? 30 : 0)
+                        + (x.KieuGongId.HasValue && currentProduct.KieuGongId.HasValue && x.KieuGongId.Value == currentProduct.KieuGongId.Value ? 35 : 0)
                         + (x.GiaBan >= minPrice && x.GiaBan <= maxPrice ? 20 : 0)
                         + (interestedCategoryIds.Contains(x.LoaiSanPhamId) ? 35 : 0)
                         + (interestedBrandIds.Contains(x.ThuongHieuId) ? 25 : 0)
+                        + (x.KieuGongId.HasValue && interestedFrameTypeIds.Contains(x.KieuGongId.Value) ? 25 : 0)
                         + (x.GiaBan >= minBehaviorPrice && x.GiaBan <= maxBehaviorPrice ? 15 : 0)
                         + (x.IsFeatured ? 10 : 0)
                 })
@@ -263,19 +272,13 @@ namespace MatKinh.Controllers
             }
         }
 
-        // ========================= PRIVATE METHODS =========================
-
-        /// <summary>
-        /// Query nền cho catalog.
-        /// Không lọc SoLuongTon > 0 vì sản phẩm hết hàng vẫn cần hiển thị,
-        /// nhưng view sẽ hiện "Hết hàng" và không cho thêm vào giỏ.
-        /// </summary>
         private IQueryable<SanPham> BuildBaseProductQuery()
         {
             return db.SanPhams
                 .AsNoTracking()
                 .Include(x => x.LoaiSanPham)
                 .Include(x => x.ThuongHieu)
+                .Include(x => x.KieuGong)
                 .Where(x =>
                     x.TrangThai == ProductStatusActive &&
                     x.LoaiSanPham.IsActive &&
@@ -297,10 +300,22 @@ namespace MatKinh.Controllers
                 query = query.Where(x => x.GiaBan <= max);
             }
 
+            if (filter.CategoryId.HasValue && filter.CategoryId.Value > 0)
+            {
+                int categoryId = filter.CategoryId.Value;
+                query = query.Where(x => x.LoaiSanPhamId == categoryId);
+            }
+
             if (filter.BrandId.HasValue && filter.BrandId.Value > 0)
             {
                 int brandId = filter.BrandId.Value;
                 query = query.Where(x => x.ThuongHieuId == brandId);
+            }
+
+            if (filter.KieuGongId.HasValue && filter.KieuGongId.Value > 0)
+            {
+                int frameTypeId = filter.KieuGongId.Value;
+                query = query.Where(x => x.KieuGongId == frameTypeId);
             }
 
             if (!string.IsNullOrWhiteSpace(filter.Keyword))
@@ -311,7 +326,8 @@ namespace MatKinh.Controllers
                     x.TenSanPham.Contains(keyword) ||
                     x.MaSanPham.Contains(keyword) ||
                     x.ThuongHieu.TenThuongHieu.Contains(keyword) ||
-                    x.LoaiSanPham.TenLoaiSanPham.Contains(keyword)
+                    x.LoaiSanPham.TenLoaiSanPham.Contains(keyword) ||
+                    (x.KieuGong != null && x.KieuGong.TenKieuGong.Contains(keyword))
                 );
             }
         }
@@ -351,7 +367,7 @@ namespace MatKinh.Controllers
                 minPrice = 5000000m;
                 maxPrice = 10000000m;
             }
-            else if (price > 10000000)
+            else if (price == 10000001 || price > 10000000)
             {
                 minPrice = 10000000m;
                 maxPrice = null;
@@ -361,7 +377,10 @@ namespace MatKinh.Controllers
         private void SetPagination(int page, int pageSize, int totalCount)
         {
             int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            if (totalPages <= 0) totalPages = 1;
+            if (totalPages <= 0)
+            {
+                totalPages = 1;
+            }
 
             int currentPage = page > totalPages ? totalPages : page;
 
@@ -395,6 +414,12 @@ namespace MatKinh.Controllers
                 .AsNoTracking()
                 .Where(x => x.IsActive)
                 .OrderBy(x => x.TenLoaiSanPham)
+                .ToList();
+
+            ViewData["frameTypeList"] = db.KieuGongs
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.TenKieuGong)
                 .ToList();
         }
 

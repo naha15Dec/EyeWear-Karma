@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -16,13 +18,8 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
         private const int PRODUCT_STATUS_ACTIVE = 1;
         private const int PRODUCT_STATUS_INACTIVE = 2;
-
-        // Muốn 18 sản phẩm/trang thì đổi dòng này thành 18
         private const int PAGE_SIZE = 10;
 
-        // stock      -> còn hàng
-        // outofstock -> hết hàng
-        // inactive   -> ngừng bán
         [HttpGet]
         public ActionResult Index(string statusProduct = "stock", string keyword = "", int page = 1)
         {
@@ -39,6 +36,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [ValidateInput(false)]
         public ActionResult Update(AdminProductEditVm model, HttpPostedFileBase imageAvatar)
         {
             if (model == null)
@@ -52,7 +50,10 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 model.Page = 1;
             }
 
+            NormalizeProductModel(model);
+
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == model.SanPhamId);
+
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
@@ -64,11 +65,11 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 });
             }
 
-            ValidateProductModel(model, product.SanPhamId);
+            ValidateProductModel(model, product.SanPhamId, imageAvatar);
 
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Dữ liệu cập nhật chưa hợp lệ.";
+                TempData["ErrorMessage"] = GetFirstModelError("Dữ liệu cập nhật chưa hợp lệ.");
                 return RedirectToAction("Index", new
                 {
                     statusProduct = model.StatusFilter,
@@ -77,27 +78,39 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 });
             }
 
-            product.MaSanPham = (model.MaSanPham ?? string.Empty).Trim();
-            product.TenSanPham = (model.TenSanPham ?? string.Empty).Trim();
-            product.MoTaNgan = model.MoTaNgan;
-            product.MoTaChiTiet = model.MoTaChiTiet;
-            product.GiaGoc = model.GiaGoc;
-            product.GiaBan = model.GiaBan;
-            product.SoLuongTon = model.SoLuongTon;
-            product.ThuongHieuId = model.ThuongHieuId;
-            product.LoaiSanPhamId = model.LoaiSanPhamId;
-            product.TrangThai = model.TrangThai;
-            product.IsFeatured = model.IsFeatured;
-            product.UpdatedAt = DateTime.Now;
-
-            if (imageAvatar != null && imageAvatar.ContentLength > 0)
+            try
             {
-                product.HinhAnhChinh = SaveProductImage(imageAvatar);
+                product.MaSanPham = model.MaSanPham;
+                product.TenSanPham = model.TenSanPham;
+                product.MoTaNgan = model.MoTaNgan;
+                product.MoTaChiTiet = model.MoTaChiTiet;
+
+                product.GiaGoc = model.GiaGoc;
+                product.GiaBan = model.GiaBan;
+                product.SoLuongTon = model.SoLuongTon;
+
+                product.ThuongHieuId = model.ThuongHieuId;
+                product.LoaiSanPhamId = model.LoaiSanPhamId;
+                product.KieuGongId = model.KieuGongId.Value;
+
+                product.TrangThai = model.TrangThai;
+                product.IsFeatured = model.IsFeatured;
+                product.UpdatedAt = DateTime.Now;
+
+                if (imageAvatar != null && imageAvatar.ContentLength > 0)
+                {
+                    product.HinhAnhChinh = SaveProductImage(imageAvatar);
+                }
+
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Cập nhật sản phẩm thất bại: " + ex.Message;
             }
 
-            db.SaveChanges();
-
-            TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công.";
             return RedirectToAction("Index", new
             {
                 statusProduct = model.StatusFilter,
@@ -116,13 +129,13 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == id);
+
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
                 return RedirectToAction("Index", new { statusProduct, keyword, page });
             }
 
-            // Không xóa cứng vì sản phẩm có thể đã nằm trong đơn hàng
             product.TrangThai = PRODUCT_STATUS_INACTIVE;
             product.SoLuongTon = 0;
             product.UpdatedAt = DateTime.Now;
@@ -143,6 +156,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             var product = db.SanPhams.FirstOrDefault(x => x.SanPhamId == id);
+
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy sản phẩm.";
@@ -168,7 +182,11 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 page = 1;
             }
 
-            var baseQuery = db.SanPhams.AsQueryable();
+            var baseQuery = db.SanPhams
+                .Include(x => x.ThuongHieu)
+                .Include(x => x.LoaiSanPham)
+                .Include(x => x.KieuGong)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -218,22 +236,33 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     SanPhamId = x.SanPhamId,
                     MaSanPham = x.MaSanPham,
                     TenSanPham = x.TenSanPham,
+
                     ThuongHieuId = x.ThuongHieuId,
-                    ThuongHieuTen = x.ThuongHieu.TenThuongHieu,
+                    ThuongHieuTen = x.ThuongHieu != null ? x.ThuongHieu.TenThuongHieu : "Không xác định",
+
                     LoaiSanPhamId = x.LoaiSanPhamId,
-                    LoaiSanPhamTen = x.LoaiSanPham.TenLoaiSanPham,
+                    LoaiSanPhamTen = x.LoaiSanPham != null ? x.LoaiSanPham.TenLoaiSanPham : "Không xác định",
+
+                    KieuGongId = x.KieuGongId,
+                    MaKieuGong = x.KieuGong != null ? x.KieuGong.MaKieuGong : "",
+                    TenKieuGong = x.KieuGong != null ? x.KieuGong.TenKieuGong : "Chưa chọn kiểu gọng",
+
                     GiaGoc = x.GiaGoc,
                     GiaBan = x.GiaBan,
                     SoLuongTon = x.SoLuongTon,
+
                     HinhAnhChinh = x.HinhAnhChinh,
                     MoTaNgan = x.MoTaNgan,
                     MoTaChiTiet = x.MoTaChiTiet,
+
                     TrangThai = x.TrangThai,
                     IsFeatured = x.IsFeatured,
+
                     NguoiTao = db.TaiKhoans
                         .Where(tk => tk.TaiKhoanId == x.CreatedById)
                         .Select(tk => tk.HoTen)
                         .FirstOrDefault(),
+
                     CreatedAt = x.CreatedAt,
                     UpdatedAt = x.UpdatedAt
                 })
@@ -272,6 +301,16 @@ namespace MatKinh.Areas.AdminPage.Controllers
                         Value = x.LoaiSanPhamId.ToString(),
                         Text = x.TenLoaiSanPham
                     })
+                    .ToList(),
+
+                FrameTypes = db.KieuGongs
+                    .Where(x => x.IsActive)
+                    .OrderBy(x => x.TenKieuGong)
+                    .Select(x => new SelectListItem
+                    {
+                        Value = x.KieuGongId.ToString(),
+                        Text = x.TenKieuGong + " (#" + x.MaKieuGong + ")"
+                    })
                     .ToList()
             };
 
@@ -293,8 +332,43 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
         }
 
-        private void ValidateProductModel(AdminProductEditVm model, int currentProductId)
+        private void NormalizeProductModel(AdminProductEditVm model)
         {
+            if (model == null)
+            {
+                return;
+            }
+
+            model.MaSanPham = string.IsNullOrWhiteSpace(model.MaSanPham)
+                ? string.Empty
+                : model.MaSanPham.Trim().ToUpperInvariant();
+
+            model.TenSanPham = string.IsNullOrWhiteSpace(model.TenSanPham)
+                ? string.Empty
+                : model.TenSanPham.Trim();
+
+            model.MoTaNgan = string.IsNullOrWhiteSpace(model.MoTaNgan)
+                ? null
+                : model.MoTaNgan.Trim();
+
+            model.MoTaChiTiet = string.IsNullOrWhiteSpace(model.MoTaChiTiet)
+                ? null
+                : model.MoTaChiTiet.Trim();
+
+            if (model.TrangThai != PRODUCT_STATUS_ACTIVE && model.TrangThai != PRODUCT_STATUS_INACTIVE)
+            {
+                model.TrangThai = PRODUCT_STATUS_ACTIVE;
+            }
+        }
+
+        private void ValidateProductModel(AdminProductEditVm model, int currentProductId, HttpPostedFileBase imageAvatar)
+        {
+            if (model == null)
+            {
+                ModelState.AddModelError("", "Dữ liệu sản phẩm không hợp lệ.");
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(model.MaSanPham))
             {
                 ModelState.AddModelError("MaSanPham", "Mã sản phẩm không được để trống.");
@@ -330,7 +404,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 ModelState.AddModelError("TrangThai", "Trạng thái sản phẩm không hợp lệ.");
             }
 
-            var duplicatedCode = db.SanPhams.Any(x =>
+            bool duplicatedCode = db.SanPhams.Any(x =>
                 x.SanPhamId != currentProductId &&
                 x.MaSanPham == model.MaSanPham);
 
@@ -339,7 +413,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 ModelState.AddModelError("MaSanPham", "Mã sản phẩm đã tồn tại.");
             }
 
-            var brandExists = db.ThuongHieux.Any(x =>
+            bool brandExists = db.ThuongHieux.Any(x =>
                 x.ThuongHieuId == model.ThuongHieuId &&
                 x.IsActive);
 
@@ -348,13 +422,60 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 ModelState.AddModelError("ThuongHieuId", "Thương hiệu không tồn tại hoặc đã bị khóa.");
             }
 
-            var categoryExists = db.LoaiSanPhams.Any(x =>
+            bool categoryExists = db.LoaiSanPhams.Any(x =>
                 x.LoaiSanPhamId == model.LoaiSanPhamId &&
                 x.IsActive);
 
             if (!categoryExists)
             {
                 ModelState.AddModelError("LoaiSanPhamId", "Loại sản phẩm không tồn tại hoặc đã bị khóa.");
+            }
+
+            if (!model.KieuGongId.HasValue || model.KieuGongId.Value <= 0)
+            {
+                ModelState.AddModelError("KieuGongId", "Vui lòng chọn kiểu gọng.");
+            }
+            else
+            {
+                bool frameExists = db.KieuGongs.Any(x =>
+                    x.KieuGongId == model.KieuGongId.Value &&
+                    x.IsActive);
+
+                if (!frameExists)
+                {
+                    ModelState.AddModelError("KieuGongId", "Kiểu gọng không tồn tại hoặc đã bị khóa.");
+                }
+            }
+
+            ValidateProductImage(imageAvatar);
+        }
+
+        private void ValidateProductImage(HttpPostedFileBase imageAvatar)
+        {
+            if (imageAvatar == null || imageAvatar.ContentLength <= 0)
+            {
+                return;
+            }
+
+            const int maxSize = 3 * 1024 * 1024;
+
+            if (imageAvatar.ContentLength > maxSize)
+            {
+                ModelState.AddModelError("", "Ảnh đại diện không được vượt quá 3MB.");
+                return;
+            }
+
+            string extension = Path.GetExtension(imageAvatar.FileName);
+            string lowerExtension = (extension ?? string.Empty).ToLower();
+
+            var allowedExtensions = new HashSet<string>
+            {
+                ".jpg", ".jpeg", ".png", ".gif", ".webp"
+            };
+
+            if (!allowedExtensions.Contains(lowerExtension))
+            {
+                ModelState.AddModelError("", "Chỉ cho phép upload ảnh .jpg, .jpeg, .png, .gif hoặc .webp.");
             }
         }
 
@@ -368,12 +489,29 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 Directory.CreateDirectory(physicalFolder);
             }
 
-            string fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
+            string extension = Path.GetExtension(image.FileName);
+            string fileName = Guid.NewGuid().ToString("N") + extension;
             string fullPath = Path.Combine(physicalFolder, fileName);
 
             image.SaveAs(fullPath);
 
             return virtualFolder + fileName;
+        }
+
+        private string GetFirstModelError(string fallback)
+        {
+            foreach (var state in ModelState.Values)
+            {
+                foreach (var error in state.Errors)
+                {
+                    if (!string.IsNullOrWhiteSpace(error.ErrorMessage))
+                    {
+                        return error.ErrorMessage;
+                    }
+                }
+            }
+
+            return fallback;
         }
 
         protected override void Dispose(bool disposing)

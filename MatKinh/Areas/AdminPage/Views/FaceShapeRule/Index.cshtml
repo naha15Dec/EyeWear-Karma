@@ -1,0 +1,336 @@
+﻿@model MatKinh.ViewModel.AdminFaceShapeRuleIndexVm
+
+@{
+    ViewBag.Title = "Rule gợi ý kính";
+    bool isEdit = Model != null && Model.Form != null && Model.Form.RuleId.HasValue;
+
+    int startPage = Math.Max(1, Model.CurrentPage - 2);
+    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Rule gợi ý kính</h1>
+        <p class="admin-page-subtitle">
+            Quản lý luật phù hợp giữa dáng mặt và kiểu gọng để phục vụ AI tư vấn chọn kính.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Rule gợi ý kính</li>
+    </ol>
+</div>
+
+<section class="content admin-system-page">
+    <div class="container-fluid p-0">
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card admin-system-card">
+                    <div class="card-header border-0">
+                        <div class="admin-system-card-heading">
+                            <div class="admin-system-card-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="admin-system-card-title">Danh sách rule AI</h3>
+                                <p class="admin-system-card-subtitle">
+                                    Có <b>@((Model.Rules != null) ? Model.Rules.Count : 0)</b> rule gợi ý trong hệ thống.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        @if (Model.Rules != null && Model.Rules.Count > 0)
+                        {
+                            <div class="admin-system-table-wrap">
+                                <table class="table admin-system-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Dáng mặt</th>
+                                            <th>Kiểu gọng</th>
+                                            <th>Điểm</th>
+                                            <th>Giải thích</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-center">Thao tác</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach (var item in Model.Rules)
+                                        {
+                                            <tr>
+                                                <td data-label="Dáng mặt">
+                                                    <span class="admin-system-code">#@item.MaHinhDangMat</span>
+                                                    <div class="admin-system-name mt-1">@item.TenHinhDangMat</div>
+                                                </td>
+
+                                                <td data-label="Kiểu gọng">
+                                                    <div class="admin-system-name">@item.TenKieuGong</div>
+                                                    <span class="admin-system-desc">#@item.MaKieuGong</span>
+                                                </td>
+
+                                                <td data-label="Điểm">
+                                                    <span class="admin-system-count">@item.DiemPhuHop</span>
+                                                </td>
+
+                                                <td data-label="Giải thích">
+                                                    <span class="admin-system-desc">
+                                                        @(string.IsNullOrWhiteSpace(item.GiaiThich)
+                                                            ? "Chưa có giải thích"
+                                                            : (item.GiaiThich.Length > 80 ? item.GiaiThich.Substring(0, 80) + "..." : item.GiaiThich))
+                                                    </span>
+                                                </td>
+
+                                                <td data-label="Trạng thái">
+                                                    @if (item.IsActive)
+                                                    {
+                                                        <span class="admin-system-badge active">
+                                                            <span></span>
+                                                            Đang sử dụng
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="admin-system-badge inactive">
+                                                            <span></span>
+                                                            Ngừng sử dụng
+                                                        </span>
+                                                    }
+                                                </td>
+
+                                                <td data-label="Thao tác" class="text-center">
+                                                    <div class="admin-system-actions">
+                                                        @using (Html.BeginForm("Edit", "FaceShapeRule", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@item.RuleId" />
+
+                                                            <button type="submit" class="btn admin-system-action edit">
+                                                                <i class="fas fa-pen"></i>
+                                                                <span>Sửa</span>
+                                                            </button>
+                                                        }
+
+                                                        @using (Html.BeginForm("ToggleStatus", "FaceShapeRule", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
+                                                        {
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@item.RuleId" />
+
+                                                            if (item.IsActive)
+                                                            {
+                                                                <button type="submit"
+                                                                        class="btn admin-system-action disable"
+                                                                        data-confirm-title="Ngừng sử dụng rule?"
+                                                                        data-confirm="Rule này sẽ không còn được dùng khi AI tư vấn chọn kính."
+                                                                        data-confirm-ok="Ngừng sử dụng">
+                                                                    <i class="fas fa-ban"></i>
+                                                                    <span>Ngừng sử dụng</span>
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button type="submit"
+                                                                        class="btn admin-system-action activate"
+                                                                        data-confirm-title="Kích hoạt lại rule?"
+                                                                        data-confirm="Rule này sẽ được dùng lại trong AI tư vấn chọn kính."
+                                                                        data-confirm-ok="Kích hoạt lại">
+                                                                    <i class="fas fa-check"></i>
+                                                                    <span>Kích hoạt lại</span>
+                                                                </button>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+
+                                    <tfoot>
+                                        <tr>
+                                            <th>Dáng mặt</th>
+                                            <th>Kiểu gọng</th>
+                                            <th>Điểm</th>
+                                            <th>Giải thích</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-center">Thao tác</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="admin-system-empty">
+                                <div class="admin-system-empty-icon">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <h3>Chưa có rule gợi ý</h3>
+                                <p>Hãy thêm rule đầu tiên để AI có thể tư vấn kiểu gọng phù hợp.</p>
+                            </div>
+                        }
+                        @if (Model.TotalPages > 1)
+                        {
+                            <div class="admin-system-pagination">
+                                <div class="admin-system-pagination-info">
+                                    Trang @Model.CurrentPage / @Model.TotalPages —
+                                    hiển thị @Model.Rules.Count trên tổng @Model.TotalItems rule gợi ý
+                                </div>
+
+                                <div class="admin-system-pagination-links">
+                                    <a class="admin-system-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                                       href="@(Model.HasPreviousPage ? Url.Action("Index", new { page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+
+                                    @if (startPage > 1)
+                                    {
+                                        <a class="admin-system-page-link"
+                                           href="@Url.Action("Index", new { page = 1 })">
+                                            1
+                                        </a>
+
+                                        if (startPage > 2)
+                                        {
+                                            <span class="admin-system-page-dots">...</span>
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <a class="admin-system-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                           href="@Url.Action("Index", new { page = i })">
+                                            @i
+                                        </a>
+                                    }
+
+                                    @if (endPage < Model.TotalPages)
+                                    {
+                                        if (endPage < Model.TotalPages - 1)
+                                        {
+                                            <span class="admin-system-page-dots">...</span>
+                                        }
+
+                                        <a class="admin-system-page-link"
+                                           href="@Url.Action("Index", new { page = Model.TotalPages })">
+                                            @Model.TotalPages
+                                        </a>
+                                    }
+
+                                    <a class="admin-system-page-link @(Model.HasNextPage ? "" : "disabled")"
+                                       href="@(Model.HasNextPage ? Url.Action("Index", new { page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                @using (Html.BeginForm("Save", "FaceShapeRule", FormMethod.Post, new { autocomplete = "off" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="RuleId"
+                           value="@(Model.Form.RuleId.HasValue ? Model.Form.RuleId.Value.ToString() : "")" />
+
+                    <div class="card admin-system-form-card">
+                        <div class="card-header border-0">
+                            <div class="admin-system-form-heading">
+                                <div class="admin-system-card-icon">
+                                    <i class="fas fa-sliders-h"></i>
+                                </div>
+
+                                <div>
+                                    <h3>@(isEdit ? "Cập nhật rule" : "Thêm rule")</h3>
+                                    <p>
+                                        @(isEdit
+                                            ? "Chỉnh sửa luật gợi ý hiện có."
+                                            : "Tạo luật phù hợp giữa dáng mặt và kiểu gọng.")
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if (isEdit)
+                            {
+                                <a href="@Url.Action("Index", "FaceShapeRule")" class="btn admin-system-btn admin-system-btn-light">
+                                    Hủy sửa
+                                </a>
+                            }
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-group admin-system-form-group">
+                                <label>Dáng mặt</label>
+                                @Html.DropDownListFor(
+                                    model => model.Form.MaHinhDangMat,
+                                    Model.FaceShapeOptions,
+                                    "-- Chọn dáng mặt --",
+                                    new { @class = "form-control admin-system-input", autocomplete = "off" }
+                                )
+                                @Html.ValidationMessage("MaHinhDangMat", "", new { @class = "text-danger admin-system-validation" })
+                            </div>
+
+                            <div class="form-group admin-system-form-group">
+                                <label>Kiểu gọng</label>
+                                @Html.DropDownListFor(
+                                    model => model.Form.KieuGongId,
+                                    Model.FrameTypeOptions,
+                                    "-- Chọn kiểu gọng --",
+                                    new { @class = "form-control admin-system-input", autocomplete = "off" }
+                                )
+                                @Html.ValidationMessage("KieuGongId", "", new { @class = "text-danger admin-system-validation" })
+                            </div>
+
+                            <div class="form-group admin-system-form-group">
+                                <label>Điểm phù hợp</label>
+                                <input type="number"
+                                       name="DiemPhuHop"
+                                       class="form-control admin-system-input"
+                                       min="0"
+                                       max="100"
+                                       placeholder="Ví dụ: 95"
+                                       value="@Model.Form.DiemPhuHop"
+                                       autocomplete="off" />
+                                @Html.ValidationMessage("DiemPhuHop", "", new { @class = "text-danger admin-system-validation" })
+                            </div>
+
+                            <div class="form-group admin-system-form-group">
+                                <label>Giải thích</label>
+                                <textarea name="GiaiThich"
+                                          class="form-control admin-system-input admin-system-note"
+                                          placeholder="Ví dụ: Mặt tròn hợp gọng vuông để tạo đường nét góc cạnh hơn..."
+                                          autocomplete="off">@Model.Form.GiaiThich</textarea>
+                                @Html.ValidationMessage("GiaiThich", "", new { @class = "text-danger admin-system-validation" })
+                            </div>
+
+                            <div class="form-group admin-system-form-group">
+                                <label>Trạng thái</label>
+                                <select name="IsActive" class="form-control admin-system-input" autocomplete="off">
+                                    <option value="true" @(Model.Form.IsActive ? "selected" : "")>Đang sử dụng</option>
+                                    <option value="false" @(!Model.Form.IsActive ? "selected" : "")>Ngừng sử dụng</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-system-form-actions">
+                                <button type="submit" class="btn admin-system-btn admin-system-btn-save">
+                                    <i class="fas fa-save mr-1"></i>
+                                    @(isEdit ? "Cập nhật rule" : "Lưu rule")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</section>

@@ -89,6 +89,7 @@
           <Property Name="TrongSo" Type="decimal" Precision="5" Scale="2" Nullable="false" />
           <Property Name="GhiChu" Type="nvarchar" MaxLength="255" />
           <Property Name="CreatedAt" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="MaHinhDangMat" Type="varchar" MaxLength="30" />
         </EntityType>
         <EntityType Name="KhachHang">
           <Key>
@@ -103,6 +104,18 @@
           <Property Name="NgaySinh" Type="date" />
           <Property Name="DiaChi" Type="nvarchar" MaxLength="255" />
           <Property Name="GhiChu" Type="nvarchar" MaxLength="500" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="CreatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" />
+        </EntityType>
+        <EntityType Name="KieuGong">
+          <Key>
+            <PropertyRef Name="KieuGongId" />
+          </Key>
+          <Property Name="KieuGongId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MaKieuGong" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="TenKieuGong" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="MoTa" Type="nvarchar" MaxLength="500" />
           <Property Name="IsActive" Type="bit" Nullable="false" />
           <Property Name="CreatedAt" Type="datetime" Nullable="false" />
           <Property Name="UpdatedAt" Type="datetime" />
@@ -131,6 +144,19 @@
           <Property Name="CreatedAt" Type="datetime" Nullable="false" />
           <Property Name="UpdatedAt" Type="datetime" />
         </EntityType>
+        <EntityType Name="RuleGoiYKinhTheoMat">
+          <Key>
+            <PropertyRef Name="RuleId" />
+          </Key>
+          <Property Name="RuleId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MaHinhDangMat" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="KieuGongId" Type="int" Nullable="false" />
+          <Property Name="DiemPhuHop" Type="int" Nullable="false" />
+          <Property Name="GiaiThich" Type="nvarchar" MaxLength="500" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="CreatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" />
+        </EntityType>
         <EntityType Name="SanPham">
           <Key>
             <PropertyRef Name="SanPhamId" />
@@ -151,6 +177,7 @@
           <Property Name="IsFeatured" Type="bit" Nullable="false" />
           <Property Name="CreatedAt" Type="datetime" Nullable="false" />
           <Property Name="UpdatedAt" Type="datetime" />
+          <Property Name="KieuGongId" Type="int" />
         </EntityType>
         <EntityType Name="TaiKhoan">
           <Key>
@@ -385,6 +412,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_RuleGoiY_KieuGong">
+          <End Role="KieuGong" Type="Self.KieuGong" Multiplicity="1" />
+          <End Role="RuleGoiYKinhTheoMat" Type="Self.RuleGoiYKinhTheoMat" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KieuGong">
+              <PropertyRef Name="KieuGongId" />
+            </Principal>
+            <Dependent Role="RuleGoiYKinhTheoMat">
+              <PropertyRef Name="KieuGongId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_SanPham_CreatedBy">
           <End Role="TaiKhoan" Type="Self.TaiKhoan" Multiplicity="0..1" />
           <End Role="SanPham" Type="Self.SanPham" Multiplicity="*" />
@@ -394,6 +433,18 @@
             </Principal>
             <Dependent Role="SanPham">
               <PropertyRef Name="CreatedById" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_SanPham_KieuGong">
+          <End Role="KieuGong" Type="Self.KieuGong" Multiplicity="0..1" />
+          <End Role="SanPham" Type="Self.SanPham" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KieuGong">
+              <PropertyRef Name="KieuGongId" />
+            </Principal>
+            <Dependent Role="SanPham">
+              <PropertyRef Name="KieuGongId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -464,8 +515,10 @@
           <EntitySet Name="GioHangChiTiet" EntityType="Self.GioHangChiTiet" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="HanhViNguoiDung" EntityType="Self.HanhViNguoiDung" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KhachHang" EntityType="Self.KhachHang" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="KieuGong" EntityType="Self.KieuGong" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LichSuTrangThaiDonHang" EntityType="Self.LichSuTrangThaiDonHang" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="LoaiSanPham" EntityType="Self.LoaiSanPham" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RuleGoiYKinhTheoMat" EntityType="Self.RuleGoiYKinhTheoMat" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SanPham" EntityType="Self.SanPham" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TaiKhoan" EntityType="Self.TaiKhoan" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TaiKhoanRememberToken" EntityType="Self.TaiKhoanRememberToken" Schema="dbo" store:Type="Tables" />
@@ -524,8 +577,16 @@
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
             <End Role="LichSuTrangThaiDonHang" EntitySet="LichSuTrangThaiDonHang" />
           </AssociationSet>
+          <AssociationSet Name="FK_RuleGoiY_KieuGong" Association="Self.FK_RuleGoiY_KieuGong">
+            <End Role="KieuGong" EntitySet="KieuGong" />
+            <End Role="RuleGoiYKinhTheoMat" EntitySet="RuleGoiYKinhTheoMat" />
+          </AssociationSet>
           <AssociationSet Name="FK_SanPham_CreatedBy" Association="Self.FK_SanPham_CreatedBy">
             <End Role="TaiKhoan" EntitySet="TaiKhoan" />
+            <End Role="SanPham" EntitySet="SanPham" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SanPham_KieuGong" Association="Self.FK_SanPham_KieuGong">
+            <End Role="KieuGong" EntitySet="KieuGong" />
             <End Role="SanPham" EntitySet="SanPham" />
           </AssociationSet>
           <AssociationSet Name="FK_SanPham_LoaiSanPham" Association="Self.FK_SanPham_LoaiSanPham">
@@ -695,6 +756,8 @@
           <NavigationProperty Name="ThuongHieu" Relationship="Self.FK_SanPham_ThuongHieu" FromRole="SanPham" ToRole="ThuongHieu" />
           <NavigationProperty Name="HanhViNguoiDungs" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" FromRole="SanPham" ToRole="HanhViNguoiDung" />
           <NavigationProperty Name="GioHangChiTiets" Relationship="BanMatKinhModel.FK_GioHangChiTiet_SanPham" FromRole="SanPham" ToRole="GioHangChiTiet" />
+          <Property Name="KieuGongId" Type="Int32" />
+          <NavigationProperty Name="KieuGong" Relationship="BanMatKinhModel.FK_SanPham_KieuGong" FromRole="SanPham" ToRole="KieuGong" />
         </EntityType>
         <EntityType Name="TaiKhoan">
           <Key>
@@ -1031,6 +1094,16 @@
             <End Role="TaiKhoan" EntitySet="TaiKhoans" />
             <End Role="TaiKhoanRememberToken" EntitySet="TaiKhoanRememberTokens" />
           </AssociationSet>
+          <EntitySet Name="KieuGongs" EntityType="BanMatKinhModel.KieuGong" />
+          <EntitySet Name="RuleGoiYKinhTheoMats" EntityType="BanMatKinhModel.RuleGoiYKinhTheoMat" />
+          <AssociationSet Name="FK_RuleGoiY_KieuGong" Association="BanMatKinhModel.FK_RuleGoiY_KieuGong">
+            <End Role="KieuGong" EntitySet="KieuGongs" />
+            <End Role="RuleGoiYKinhTheoMat" EntitySet="RuleGoiYKinhTheoMats" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SanPham_KieuGong" Association="BanMatKinhModel.FK_SanPham_KieuGong">
+            <End Role="KieuGong" EntitySet="KieuGongs" />
+            <End Role="SanPham" EntitySet="SanPhams" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="HanhViNguoiDung">
           <Key>
@@ -1047,6 +1120,7 @@
           <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="KhachHang" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_KhachHang" FromRole="HanhViNguoiDung" ToRole="KhachHang" />
           <NavigationProperty Name="SanPham" Relationship="BanMatKinhModel.FK_HanhViNguoiDung_SanPham" FromRole="HanhViNguoiDung" ToRole="SanPham" />
+          <Property Name="MaHinhDangMat" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
         </EntityType>
         <Association Name="FK_HanhViNguoiDung_KhachHang">
           <End Type="BanMatKinhModel.KhachHang" Role="KhachHang" Multiplicity="0..1" />
@@ -1132,6 +1206,58 @@
             </Principal>
             <Dependent Role="TaiKhoanRememberToken">
               <PropertyRef Name="TaiKhoanId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="KieuGong">
+          <Key>
+            <PropertyRef Name="KieuGongId" />
+          </Key>
+          <Property Name="KieuGongId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MaKieuGong" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="TenKieuGong" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="MoTa" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedAt" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="RuleGoiYKinhTheoMats" Relationship="BanMatKinhModel.FK_RuleGoiY_KieuGong" FromRole="KieuGong" ToRole="RuleGoiYKinhTheoMat" />
+          <NavigationProperty Name="SanPhams" Relationship="BanMatKinhModel.FK_SanPham_KieuGong" FromRole="KieuGong" ToRole="SanPham" />
+        </EntityType>
+        <EntityType Name="RuleGoiYKinhTheoMat">
+          <Key>
+            <PropertyRef Name="RuleId" />
+          </Key>
+          <Property Name="RuleId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MaHinhDangMat" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="KieuGongId" Type="Int32" Nullable="false" />
+          <Property Name="DiemPhuHop" Type="Int32" Nullable="false" />
+          <Property Name="GiaiThich" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedAt" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="KieuGong" Relationship="BanMatKinhModel.FK_RuleGoiY_KieuGong" FromRole="RuleGoiYKinhTheoMat" ToRole="KieuGong" />
+        </EntityType>
+        <Association Name="FK_RuleGoiY_KieuGong">
+          <End Type="BanMatKinhModel.KieuGong" Role="KieuGong" Multiplicity="1" />
+          <End Type="BanMatKinhModel.RuleGoiYKinhTheoMat" Role="RuleGoiYKinhTheoMat" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KieuGong">
+              <PropertyRef Name="KieuGongId" />
+            </Principal>
+            <Dependent Role="RuleGoiYKinhTheoMat">
+              <PropertyRef Name="KieuGongId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_SanPham_KieuGong">
+          <End Type="BanMatKinhModel.KieuGong" Role="KieuGong" Multiplicity="0..1" />
+          <End Type="BanMatKinhModel.SanPham" Role="SanPham" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="KieuGong">
+              <PropertyRef Name="KieuGongId" />
+            </Principal>
+            <Dependent Role="SanPham">
+              <PropertyRef Name="KieuGongId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1251,6 +1377,7 @@
           <EntitySetMapping Name="SanPhams">
             <EntityTypeMapping TypeName="BanMatKinhModel.SanPham">
               <MappingFragment StoreEntitySet="SanPham">
+                <ScalarProperty Name="KieuGongId" ColumnName="KieuGongId" />
                 <ScalarProperty Name="SanPhamId" ColumnName="SanPhamId" />
                 <ScalarProperty Name="MaSanPham" ColumnName="MaSanPham" />
                 <ScalarProperty Name="ThuongHieuId" ColumnName="ThuongHieuId" />
@@ -1341,6 +1468,7 @@
           <EntitySetMapping Name="HanhViNguoiDungs">
             <EntityTypeMapping TypeName="BanMatKinhModel.HanhViNguoiDung">
               <MappingFragment StoreEntitySet="HanhViNguoiDung">
+                <ScalarProperty Name="MaHinhDangMat" ColumnName="MaHinhDangMat" />
                 <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
                 <ScalarProperty Name="GhiChu" ColumnName="GhiChu" />
                 <ScalarProperty Name="TrongSo" ColumnName="TrongSo" />
@@ -1376,6 +1504,33 @@
                 <ScalarProperty Name="TokenHash" ColumnName="TokenHash" />
                 <ScalarProperty Name="TaiKhoanId" ColumnName="TaiKhoanId" />
                 <ScalarProperty Name="RememberTokenId" ColumnName="RememberTokenId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="KieuGongs">
+            <EntityTypeMapping TypeName="BanMatKinhModel.KieuGong">
+              <MappingFragment StoreEntitySet="KieuGong">
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="MoTa" ColumnName="MoTa" />
+                <ScalarProperty Name="TenKieuGong" ColumnName="TenKieuGong" />
+                <ScalarProperty Name="MaKieuGong" ColumnName="MaKieuGong" />
+                <ScalarProperty Name="KieuGongId" ColumnName="KieuGongId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RuleGoiYKinhTheoMats">
+            <EntityTypeMapping TypeName="BanMatKinhModel.RuleGoiYKinhTheoMat">
+              <MappingFragment StoreEntitySet="RuleGoiYKinhTheoMat">
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="GiaiThich" ColumnName="GiaiThich" />
+                <ScalarProperty Name="DiemPhuHop" ColumnName="DiemPhuHop" />
+                <ScalarProperty Name="KieuGongId" ColumnName="KieuGongId" />
+                <ScalarProperty Name="MaHinhDangMat" ColumnName="MaHinhDangMat" />
+                <ScalarProperty Name="RuleId" ColumnName="RuleId" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

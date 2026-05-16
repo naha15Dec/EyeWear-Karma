@@ -12,20 +12,17 @@ namespace MatKinh.Models
     using System;
     using System.Collections.Generic;
     
-    public partial class HanhViNguoiDung
+    public partial class RuleGoiYKinhTheoMat
     {
-        public long HanhViId { get; set; }
-        public Nullable<int> KhachHangId { get; set; }
-        public int SanPhamId { get; set; }
-        public string LoaiHanhVi { get; set; }
-        public string Nguon { get; set; }
-        public string SessionId { get; set; }
-        public decimal TrongSo { get; set; }
-        public string GhiChu { get; set; }
-        public System.DateTime CreatedAt { get; set; }
+        public int RuleId { get; set; }
         public string MaHinhDangMat { get; set; }
+        public int KieuGongId { get; set; }
+        public int DiemPhuHop { get; set; }
+        public string GiaiThich { get; set; }
+        public bool IsActive { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+        public Nullable<System.DateTime> UpdatedAt { get; set; }
     
-        public virtual KhachHang KhachHang { get; set; }
-        public virtual SanPham SanPham { get; set; }
+        public virtual KieuGong KieuGong { get; set; }
     }
 }

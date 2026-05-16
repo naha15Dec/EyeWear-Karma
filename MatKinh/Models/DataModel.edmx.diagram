@@ -39,6 +39,10 @@
         <AssociationConnector Association="BanMatKinhModel.FK_GioHangChiTiet_SanPham" />
         <EntityTypeShape EntityType="BanMatKinhModel.TaiKhoanRememberToken" Width="1.5" PointX="5.25" PointY="19.125" />
         <AssociationConnector Association="BanMatKinhModel.FK_TaiKhoanRememberToken_TaiKhoan" />
+        <EntityTypeShape EntityType="BanMatKinhModel.KieuGong" Width="1.5" PointX="0.75" PointY="15.375" />
+        <EntityTypeShape EntityType="BanMatKinhModel.RuleGoiYKinhTheoMat" Width="1.5" PointX="3" PointY="23.375" />
+        <AssociationConnector Association="BanMatKinhModel.FK_RuleGoiY_KieuGong" />
+        <AssociationConnector Association="BanMatKinhModel.FK_SanPham_KieuGong" />
         </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

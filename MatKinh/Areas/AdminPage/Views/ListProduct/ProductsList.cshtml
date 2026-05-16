@@ -58,6 +58,7 @@
                                        value="@Model.Keyword"
                                        placeholder="Tìm theo tên hoặc mã sản phẩm..."
                                        autocomplete="off" />
+
                                 <button class="btn admin-product-search-btn" type="submit">
                                     Tìm
                                 </button>
@@ -91,6 +92,7 @@
                                 <tr>
                                     <th>Mã</th>
                                     <th>Sản phẩm</th>
+                                    <th>Phân loại</th>
                                     <th>Ngày tạo / cập nhật</th>
                                     <th class="text-right">Giá</th>
                                     <th class="text-center">Tồn</th>
@@ -123,6 +125,10 @@
                                         }
                                     }
 
+                                    string frameText = string.IsNullOrWhiteSpace(item.TenKieuGong)
+                                        ? "Chưa chọn kiểu gọng"
+                                        : item.TenKieuGong;
+
                                     <tr>
                                         <td data-label="Mã">
                                             @if (item.TrangThai == 1)
@@ -153,6 +159,23 @@
                                                             : (item.MoTaNgan.Length > 90 ? item.MoTaNgan.Substring(0, 90) + "..." : item.MoTaNgan))
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Phân loại">
+                                            <div class="admin-product-date">
+                                                <i class="fas fa-layer-group"></i>
+                                                <span>@item.LoaiSanPhamTen</span>
+                                            </div>
+
+                                            <div class="admin-product-date admin-product-date--muted">
+                                                <i class="fas fa-copyright"></i>
+                                                <span>@item.ThuongHieuTen</span>
+                                            </div>
+
+                                            <div class="admin-product-date admin-product-date--muted">
+                                                <i class="fas fa-glasses"></i>
+                                                <span>@frameText</span>
                                             </div>
                                         </td>
 
@@ -319,12 +342,16 @@
 
                                                                                         <div class="col-md-4">
                                                                                             <div class="form-group admin-product-form-group">
-                                                                                                <label>Trạng thái</label>
-                                                                                                <input type="text"
-                                                                                                       class="form-control admin-product-input"
-                                                                                                       value="@statusText"
-                                                                                                       disabled="disabled"
-                                                                                                       autocomplete="off" />
+                                                                                                <label>Kiểu gọng</label>
+                                                                                                <select class="form-control admin-product-input" name="KieuGongId" autocomplete="off">
+                                                                                                    <option value="">-- Chọn kiểu gọng --</option>
+                                                                                                    @foreach (var frame in Model.FrameTypes)
+                                                                                                    {
+                                                                                                        <option value="@frame.Value" @(item.KieuGongId.HasValue && item.KieuGongId.Value.ToString() == frame.Value ? "selected" : "")>
+                                                                                                            @frame.Text
+                                                                                                        </option>
+                                                                                                    }
+                                                                                                </select>
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
@@ -368,6 +395,19 @@
                                                                                                 <input name="GiaBan"
                                                                                                        class="form-control admin-product-input text-right currency-input"
                                                                                                        value="@item.GiaBan"
+                                                                                                       autocomplete="off" />
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div class="row">
+                                                                                        <div class="col-md-12">
+                                                                                            <div class="form-group admin-product-form-group mb-0">
+                                                                                                <label>Trạng thái</label>
+                                                                                                <input type="text"
+                                                                                                       class="form-control admin-product-input"
+                                                                                                       value="@statusText"
+                                                                                                       disabled="disabled"
                                                                                                        autocomplete="off" />
                                                                                             </div>
                                                                                         </div>
@@ -438,6 +478,7 @@
                                 <tr>
                                     <th>Mã</th>
                                     <th>Sản phẩm</th>
+                                    <th>Phân loại</th>
                                     <th>Ngày tạo / cập nhật</th>
                                     <th class="text-right">Giá</th>
                                     <th class="text-center">Tồn</th>
@@ -548,6 +589,13 @@
             var file = input.files && input.files[0] ? input.files[0] : null;
 
             if (file) {
+                if (file.size > 3 * 1024 * 1024) {
+                    alert('Ảnh đại diện không được vượt quá 3MB.');
+                    input.value = '';
+                    $(this).next('.custom-file-label').text('Chọn ảnh đại diện');
+                    return;
+                }
+
                 $(this).next('.custom-file-label').text(file.name);
 
                 var reader = new FileReader();
@@ -574,25 +622,57 @@
         }
 
         function formatVndValue(value) {
-            var numeric = value.replace(/[^\d]/g, '');
-            if (!numeric) return '';
-            var number = parseInt(numeric, 10);
-            if (isNaN(number)) return '';
-            return number.toLocaleString('vi-VN');
+            var numeric = String(value || '').replace(/[^\d]/g, '');
+
+            if (!numeric) {
+                return '';
+            }
+
+            numeric = numeric.replace(/^0+(?=\d)/, '');
+
+            return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function getCaretDigitPosition(input) {
+            var valueBeforeCaret = input.value.slice(0, input.selectionStart);
+            return valueBeforeCaret.replace(/[^\d]/g, '').length;
+        }
+
+        function setCaretByDigitPosition(input, digitPosition) {
+            var count = 0;
+            var pos = input.value.length;
+
+            if (digitPosition <= 0) {
+                input.setSelectionRange(0, 0);
+                return;
+            }
+
+            for (var i = 0; i < input.value.length; i++) {
+                if (/\d/.test(input.value[i])) {
+                    count++;
+                }
+
+                if (count >= digitPosition) {
+                    pos = i + 1;
+                    break;
+                }
+            }
+
+            input.setSelectionRange(pos, pos);
         }
 
         $('.currency-input').each(function () {
             if (this.value) {
                 this.value = formatVndValue(this.value);
             }
+
+            $(this).attr('inputmode', 'numeric');
         });
 
-        $(document).on('focus', '.currency-input', function () {
-            this.value = this.value.replace(/[^\d]/g, '');
-        });
-
-        $(document).on('blur', '.currency-input', function () {
+        $(document).on('input', '.currency-input', function () {
+            var digitPosition = getCaretDigitPosition(this);
             this.value = formatVndValue(this.value);
+            setCaretByDigitPosition(this, digitPosition);
         });
 
         $(document).on('submit', 'form', function () {

@@ -1,15 +1,19 @@
-﻿@model MatKinh.ViewModel.AdminCategoryIndexVm
+﻿
+@model MatKinh.ViewModel.AdminFrameTypeIndexVm
 
 @{
-    ViewBag.Title = "Loại sản phẩm";
-    bool isEdit = Model != null && Model.Form != null && Model.Form.LoaiSanPhamId.HasValue;
+    ViewBag.Title = "Kiểu gọng";
+    bool isEdit = Model != null && Model.Form != null && Model.Form.KieuGongId.HasValue;
+
+    int startPage = Math.Max(1, Model.CurrentPage - 2);
+    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
 }
 
 <div class="admin-page-header">
     <div>
-        <h1 class="admin-page-title">Loại sản phẩm</h1>
+        <h1 class="admin-page-title">Kiểu gọng</h1>
         <p class="admin-page-subtitle">
-            Quản lý danh mục loại kính trong hệ thống, phục vụ phân loại và hiển thị sản phẩm.
+            Quản lý các kiểu gọng kính dùng cho sản phẩm và AI tư vấn chọn kính.
         </p>
     </div>
 
@@ -17,7 +21,7 @@
         <li class="breadcrumb-item">
             <a href='@Url.Action("Index","Dashboard")'>Dashboard</a>
         </li>
-        <li class="breadcrumb-item active">Loại sản phẩm</li>
+        <li class="breadcrumb-item active">Kiểu gọng</li>
     </ol>
 </div>
 
@@ -30,44 +34,45 @@
                     <div class="card-header border-0">
                         <div class="admin-system-card-heading">
                             <div class="admin-system-card-icon">
-                                <i class="fas fa-layer-group"></i>
+                                <i class="fas fa-glasses"></i>
                             </div>
 
                             <div>
-                                <h3 class="admin-system-card-title">Danh sách loại sản phẩm</h3>
+                                <h3 class="admin-system-card-title">Danh sách kiểu gọng</h3>
                                 <p class="admin-system-card-subtitle">
-                                    Có <b>@((Model.Categories != null) ? Model.Categories.Count : 0)</b> loại sản phẩm trong hệ thống.
+                                    Có <b>@((Model.FrameTypes != null) ? Model.FrameTypes.Count : 0)</b> kiểu gọng trong hệ thống.
                                 </p>
                             </div>
                         </div>
                     </div>
 
                     <div class="card-body">
-                        @if (Model.Categories != null && Model.Categories.Count > 0)
+                        @if (Model.FrameTypes != null && Model.FrameTypes.Count > 0)
                         {
                             <div class="admin-system-table-wrap">
                                 <table class="table admin-system-table">
                                     <thead>
                                         <tr>
-                                            <th>Mã loại</th>
-                                            <th>Tên loại</th>
+                                            <th>Mã kiểu gọng</th>
+                                            <th>Tên</th>
                                             <th>Mô tả</th>
                                             <th>Trạng thái</th>
                                             <th>Sản phẩm</th>
+                                            <th>Rule AI</th>
                                             <th class="text-center">Thao tác</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
-                                        @foreach (var item in Model.Categories)
+                                        @foreach (var item in Model.FrameTypes)
                                         {
                                             <tr>
-                                                <td data-label="Mã loại">
-                                                    <span class="admin-system-code">#@item.MaLoaiSanPham</span>
+                                                <td data-label="Mã kiểu gọng">
+                                                    <span class="admin-system-code">#@item.MaKieuGong</span>
                                                 </td>
 
-                                                <td data-label="Tên loại">
-                                                    <div class="admin-system-name">@item.TenLoaiSanPham</div>
+                                                <td data-label="Tên">
+                                                    <div class="admin-system-name">@item.TenKieuGong</div>
                                                 </td>
 
                                                 <td data-label="Mô tả">
@@ -99,12 +104,16 @@
                                                     <span class="admin-system-count">@item.SoSanPham</span>
                                                 </td>
 
+                                                <td data-label="Rule AI">
+                                                    <span class="admin-system-count">@item.SoRule</span>
+                                                </td>
+
                                                 <td data-label="Thao tác" class="text-center">
                                                     <div class="admin-system-actions">
-                                                        @using (Html.BeginForm("Update", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
+                                                        @using (Html.BeginForm("Edit", "FrameType", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
                                                         {
                                                             @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="id" value="@item.LoaiSanPhamId" />
+                                                            <input type="hidden" name="id" value="@item.KieuGongId" />
 
                                                             <button type="submit" class="btn admin-system-action edit">
                                                                 <i class="fas fa-pen"></i>
@@ -112,17 +121,17 @@
                                                             </button>
                                                         }
 
-                                                        @using (Html.BeginForm("Delete", "ListTypeProduct", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
+                                                        @using (Html.BeginForm("ToggleStatus", "FrameType", FormMethod.Post, new { @class = "d-inline admin-system-inline-form", autocomplete = "off" }))
                                                         {
                                                             @Html.AntiForgeryToken()
-                                                            <input type="hidden" name="id" value="@item.LoaiSanPhamId" />
+                                                            <input type="hidden" name="id" value="@item.KieuGongId" />
 
                                                             if (item.IsActive)
                                                             {
                                                                 <button type="submit"
                                                                         class="btn admin-system-action disable"
-                                                                        data-confirm-title="Ngừng sử dụng loại sản phẩm?"
-                                                                        data-confirm="Loại sản phẩm này sẽ được chuyển sang trạng thái ngừng sử dụng. Các sản phẩm liên quan có thể bị ảnh hưởng khi hiển thị hoặc phân loại."
+                                                                        data-confirm-title="Ngừng sử dụng kiểu gọng?"
+                                                                        data-confirm="Kiểu gọng này sẽ được chuyển sang trạng thái ngừng sử dụng. Các sản phẩm và rule AI liên quan có thể bị ảnh hưởng."
                                                                         data-confirm-ok="Ngừng sử dụng">
                                                                     <i class="fas fa-ban"></i>
                                                                     <span>Ngừng sử dụng</span>
@@ -132,8 +141,8 @@
                                                             {
                                                                 <button type="submit"
                                                                         class="btn admin-system-action activate"
-                                                                        data-confirm-title="Kích hoạt lại loại sản phẩm?"
-                                                                        data-confirm="Loại sản phẩm này sẽ được kích hoạt lại và có thể tiếp tục sử dụng trong hệ thống."
+                                                                        data-confirm-title="Kích hoạt lại kiểu gọng?"
+                                                                        data-confirm="Kiểu gọng này sẽ được kích hoạt lại và có thể tiếp tục sử dụng trong sản phẩm và AI tư vấn."
                                                                         data-confirm-ok="Kích hoạt lại">
                                                                     <i class="fas fa-check"></i>
                                                                     <span>Kích hoạt lại</span>
@@ -148,11 +157,12 @@
 
                                     <tfoot>
                                         <tr>
-                                            <th>Mã loại</th>
-                                            <th>Tên loại</th>
+                                            <th>Mã kiểu gọng</th>
+                                            <th>Tên</th>
                                             <th>Mô tả</th>
                                             <th>Trạng thái</th>
                                             <th>Sản phẩm</th>
+                                            <th>Rule AI</th>
                                             <th class="text-center">Thao tác</th>
                                         </tr>
                                     </tfoot>
@@ -163,10 +173,66 @@
                         {
                             <div class="admin-system-empty">
                                 <div class="admin-system-empty-icon">
-                                    <i class="fas fa-layer-group"></i>
+                                    <i class="fas fa-glasses"></i>
                                 </div>
-                                <h3>Chưa có loại sản phẩm</h3>
-                                <p>Hãy thêm loại sản phẩm đầu tiên cho hệ thống.</p>
+                                <h3>Chưa có kiểu gọng</h3>
+                                <p>Hãy thêm kiểu gọng đầu tiên cho hệ thống AI tư vấn kính.</p>
+                            </div>
+                        }
+
+                        @if (Model.TotalPages > 1)
+                        {
+                            <div class="admin-system-pagination">
+                                <div class="admin-system-pagination-info">
+                                    Trang @Model.CurrentPage / @Model.TotalPages —
+                                    hiển thị @Model.FrameTypes.Count trên tổng @Model.TotalItems kiểu gọng
+                                </div>
+
+                                <div class="admin-system-pagination-links">
+                                    <a class="admin-system-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                                       href="@(Model.HasPreviousPage ? Url.Action("Index", new { page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+
+                                    @if (startPage > 1)
+                                    {
+                                        <a class="admin-system-page-link"
+                                           href="@Url.Action("Index", new { page = 1 })">
+                                            1
+                                        </a>
+
+                                        if (startPage > 2)
+                                        {
+                                            <span class="admin-system-page-dots">...</span>
+                                        }
+                                    }
+
+                                    @for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <a class="admin-system-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                           href="@Url.Action("Index", new { page = i })">
+                                            @i
+                                        </a>
+                                    }
+
+                                    @if (endPage < Model.TotalPages)
+                                    {
+                                        if (endPage < Model.TotalPages - 1)
+                                        {
+                                            <span class="admin-system-page-dots">...</span>
+                                        }
+
+                                        <a class="admin-system-page-link"
+                                           href="@Url.Action("Index", new { page = Model.TotalPages })">
+                                            @Model.TotalPages
+                                        </a>
+                                    }
+
+                                    <a class="admin-system-page-link @(Model.HasNextPage ? "" : "disabled")"
+                                       href="@(Model.HasNextPage ? Url.Action("Index", new { page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
                             </div>
                         }
                     </div>
@@ -174,13 +240,13 @@
             </div>
 
             <div class="col-lg-4">
-                @using (Html.BeginForm("AddTypeProduct", "ListTypeProduct", FormMethod.Post, new { autocomplete = "off" }))
+                @using (Html.BeginForm("Save", "FrameType", FormMethod.Post, new { autocomplete = "off" }))
                 {
                     @Html.AntiForgeryToken()
 
                     <input type="hidden"
-                           name="LoaiSanPhamId"
-                           value="@(Model.Form.LoaiSanPhamId.HasValue ? Model.Form.LoaiSanPhamId.Value.ToString() : "")" />
+                           name="KieuGongId"
+                           value="@(Model.Form.KieuGongId.HasValue ? Model.Form.KieuGongId.Value.ToString() : "")" />
 
                     <div class="card admin-system-form-card">
                         <div class="card-header border-0">
@@ -190,16 +256,18 @@
                                 </div>
 
                                 <div>
-                                    <h3>@(isEdit ? "Cập nhật loại sản phẩm" : "Thêm loại sản phẩm")</h3>
+                                    <h3>@(isEdit ? "Cập nhật kiểu gọng" : "Thêm kiểu gọng")</h3>
                                     <p>
-                                        @(isEdit ? "Chỉnh sửa thông tin loại sản phẩm hiện có." : "Tạo loại sản phẩm mới để phân nhóm sản phẩm kính.")
+                                        @(isEdit
+                                            ? "Chỉnh sửa thông tin kiểu gọng hiện có."
+                                            : "Tạo kiểu gọng mới để phân loại sản phẩm và phục vụ AI tư vấn.")
                                     </p>
                                 </div>
                             </div>
 
                             @if (isEdit)
                             {
-                                <a href="@Url.Action("ProductType", "ListTypeProduct")" class="btn admin-system-btn admin-system-btn-light">
+                                <a href="@Url.Action("Index", "FrameType")" class="btn admin-system-btn admin-system-btn-light">
                                     Hủy sửa
                                 </a>
                             }
@@ -207,32 +275,32 @@
 
                         <div class="card-body">
                             <div class="form-group admin-system-form-group">
-                                <label>Mã loại sản phẩm</label>
+                                <label>Mã kiểu gọng</label>
                                 <input type="text"
-                                       name="MaLoaiSanPham"
+                                       name="MaKieuGong"
                                        class="form-control admin-system-input"
-                                       placeholder="Ví dụ: KINH-MAT"
-                                       value="@Model.Form.MaLoaiSanPham"
+                                       placeholder="Ví dụ: SQUARE"
+                                       value="@Model.Form.MaKieuGong"
                                        autocomplete="off" />
-                                @Html.ValidationMessage("MaLoaiSanPham", "", new { @class = "text-danger admin-system-validation" })
+                                @Html.ValidationMessage("MaKieuGong", "", new { @class = "text-danger admin-system-validation" })
                             </div>
 
                             <div class="form-group admin-system-form-group">
-                                <label>Tên loại sản phẩm</label>
+                                <label>Tên kiểu gọng</label>
                                 <input type="text"
-                                       name="TenLoaiSanPham"
+                                       name="TenKieuGong"
                                        class="form-control admin-system-input"
-                                       placeholder="Tên loại sản phẩm"
-                                       value="@Model.Form.TenLoaiSanPham"
+                                       placeholder="Ví dụ: Gọng vuông"
+                                       value="@Model.Form.TenKieuGong"
                                        autocomplete="off" />
-                                @Html.ValidationMessage("TenLoaiSanPham", "", new { @class = "text-danger admin-system-validation" })
+                                @Html.ValidationMessage("TenKieuGong", "", new { @class = "text-danger admin-system-validation" })
                             </div>
 
                             <div class="form-group admin-system-form-group">
                                 <label>Mô tả</label>
                                 <textarea name="MoTa"
                                           class="form-control admin-system-input admin-system-note"
-                                          placeholder="Mô tả loại sản phẩm..."
+                                          placeholder="Mô tả kiểu gọng..."
                                           autocomplete="off">@Model.Form.MoTa</textarea>
                                 @Html.ValidationMessage("MoTa", "", new { @class = "text-danger admin-system-validation" })
                             </div>
@@ -248,7 +316,7 @@
                             <div class="admin-system-form-actions">
                                 <button type="submit" class="btn admin-system-btn admin-system-btn-save">
                                     <i class="fas fa-save mr-1"></i>
-                                    @(isEdit ? "Cập nhật loại sản phẩm" : "Lưu loại sản phẩm")
+                                    @(isEdit ? "Cập nhật kiểu gọng" : "Lưu kiểu gọng")
                                 </button>
                             </div>
                         </div>

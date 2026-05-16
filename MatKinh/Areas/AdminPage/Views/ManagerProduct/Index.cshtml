@@ -32,7 +32,7 @@
     <div>
         <h1 class="admin-page-title">@Model.HeaderTitle</h1>
         <p class="admin-page-subtitle">
-            Quản lý sản phẩm theo trạng thái, tồn kho, thương hiệu và loại kính trong toàn hệ thống.
+            Quản lý sản phẩm theo trạng thái, tồn kho, thương hiệu, loại kính và kiểu gọng trong toàn hệ thống.
         </p>
     </div>
 
@@ -131,7 +131,7 @@
                     <div>
                         <h3 class="admin-manager-product-card-title">Danh sách sản phẩm</h3>
                         <p class="admin-manager-product-card-subtitle">
-                            Theo dõi, cập nhật thông tin, trạng thái và hiển thị nổi bật của sản phẩm.
+                            Theo dõi, cập nhật thông tin, kiểu gọng, trạng thái và hiển thị nổi bật của sản phẩm.
                         </p>
                     </div>
                 </div>
@@ -165,6 +165,10 @@
                                     string stockClass = stockBadgeClass(item.TrangThai, item.SoLuongTon);
                                     string currentStockText = stockText(item.TrangThai, item.SoLuongTon);
 
+                                    string frameTypeText = string.IsNullOrWhiteSpace(item.TenKieuGong)
+                                        ? "Chưa chọn kiểu gọng"
+                                        : item.TenKieuGong;
+
                                     <tr>
                                         <td data-label="Sản phẩm">
                                             <div class="admin-manager-product-info">
@@ -188,6 +192,7 @@
                                             <div class="admin-manager-product-meta">
                                                 <strong>@item.LoaiSanPhamTen</strong>
                                                 <span>@item.ThuongHieuTen</span>
+                                                <span>@frameTypeText</span>
                                             </div>
                                         </td>
 
@@ -424,13 +429,13 @@
                                                        name="imageAvatar"
                                                        class="admin-manager-product-file-input"
                                                        data-productid="@item.SanPhamId"
-                                                       accept="image/*" />
+                                                       accept=".jpg,.jpeg,.png,.gif,.webp" />
                                             </label>
                                         </div>
 
                                         <div class="admin-manager-product-upload-note">
                                             <i class="fas fa-info-circle"></i>
-                                            <span>Nếu không chọn ảnh mới, hệ thống sẽ giữ ảnh hiện tại.</span>
+                                            <span>Nếu không chọn ảnh mới, hệ thống sẽ giữ ảnh hiện tại. Ảnh tối đa 3MB.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -474,7 +479,7 @@
                                         </div>
 
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group admin-manager-product-form-group">
                                                     <label>Thương hiệu</label>
                                                     <select name="ThuongHieuId" class="form-control admin-manager-product-input" autocomplete="off">
@@ -488,7 +493,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group admin-manager-product-form-group">
                                                     <label>Loại sản phẩm</label>
                                                     <select name="LoaiSanPhamId" class="form-control admin-manager-product-input" autocomplete="off">
@@ -496,6 +501,21 @@
                                                         {
                                                             <option value="@category.Value" @(category.Value == item.LoaiSanPhamId.ToString() ? "selected" : "")>
                                                                 @category.Text
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group admin-manager-product-form-group">
+                                                    <label>Kiểu gọng</label>
+                                                    <select name="KieuGongId" class="form-control admin-manager-product-input" autocomplete="off">
+                                                        <option value="">-- Chọn kiểu gọng --</option>
+                                                        @foreach (var frame in Model.FrameTypes)
+                                                        {
+                                                            <option value="@frame.Value" @(item.KieuGongId.HasValue && frame.Value == item.KieuGongId.Value.ToString() ? "selected" : "")>
+                                                                @frame.Text
                                                             </option>
                                                         }
                                                     </select>
@@ -514,10 +534,11 @@
                                             <div class="col-md-4">
                                                 <div class="form-group admin-manager-product-form-group">
                                                     <label>Giá gốc</label>
-                                                    <input type="number"
+                                                    <input type="text"
                                                            name="GiaGoc"
                                                            value="@item.GiaGoc"
-                                                           class="form-control admin-manager-product-input text-right"
+                                                           class="form-control admin-manager-product-input text-right currency-input"
+                                                           inputmode="numeric"
                                                            autocomplete="off" />
                                                 </div>
                                             </div>
@@ -525,10 +546,11 @@
                                             <div class="col-md-4">
                                                 <div class="form-group admin-manager-product-form-group">
                                                     <label>Giá bán</label>
-                                                    <input type="number"
+                                                    <input type="text"
                                                            name="GiaBan"
                                                            value="@item.GiaBan"
-                                                           class="form-control admin-manager-product-input text-right"
+                                                           class="form-control admin-manager-product-input text-right currency-input"
+                                                           inputmode="numeric"
                                                            autocomplete="off" />
                                                 </div>
                                             </div>
@@ -539,6 +561,7 @@
                                                     <input type="number"
                                                            name="SoLuongTon"
                                                            value="@item.SoLuongTon"
+                                                           min="0"
                                                            class="form-control admin-manager-product-input text-right"
                                                            autocomplete="off" />
                                                 </div>
@@ -630,6 +653,12 @@
             var file = input.files && input.files[0] ? input.files[0] : null;
 
             if (file) {
+                if (file.size > 3 * 1024 * 1024) {
+                    alert('Ảnh đại diện không được vượt quá 3MB.');
+                    input.value = '';
+                    return;
+                }
+
                 var reader = new FileReader();
 
                 reader.onload = function (e) {
@@ -653,10 +682,68 @@
             });
         }
 
+        function formatVndValue(value) {
+            var numeric = String(value || '').replace(/[^\d]/g, '');
+
+            if (!numeric) {
+                return '';
+            }
+
+            numeric = numeric.replace(/^0+(?=\d)/, '');
+
+            return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function getCaretDigitPosition(input) {
+            var valueBeforeCaret = input.value.slice(0, input.selectionStart);
+            return valueBeforeCaret.replace(/[^\d]/g, '').length;
+        }
+
+        function setCaretByDigitPosition(input, digitPosition) {
+            var count = 0;
+            var pos = input.value.length;
+
+            if (digitPosition <= 0) {
+                input.setSelectionRange(0, 0);
+                return;
+            }
+
+            for (var i = 0; i < input.value.length; i++) {
+                if (/\d/.test(input.value[i])) {
+                    count++;
+                }
+
+                if (count >= digitPosition) {
+                    pos = i + 1;
+                    break;
+                }
+            }
+
+            input.setSelectionRange(pos, pos);
+        }
+
+        $('.currency-input').each(function () {
+            if (this.value) {
+                this.value = formatVndValue(this.value);
+            }
+
+            $(this).attr('inputmode', 'numeric');
+        });
+
+        $(document).on('input', '.currency-input', function () {
+            var digitPosition = getCaretDigitPosition(this);
+            this.value = formatVndValue(this.value);
+            setCaretByDigitPosition(this, digitPosition);
+        });
+
         $(document).on('submit', '.admin-manager-product-update-form', function () {
             if (typeof tinymce !== 'undefined') {
                 tinymce.triggerSave();
             }
+
+            $(this).find('.currency-input').each(function () {
+                this.value = this.value.replace(/[^\d]/g, '');
+            });
         });
     });
 </script>

@@ -35,8 +35,14 @@ namespace MatKinh.ViewModel
 
         public int TrangThai { get; set; }
         public bool IsFeatured { get; set; }
+        
+        [Required(ErrorMessage = "Vui lòng chọn kiểu gọng.")]
+        public int? KieuGongId { get; set; }
+
+        public List<SelectListItem> FrameTypes { get; set; } = new List<SelectListItem>();
 
         public List<SelectListItem> Brands { get; set; } = new List<SelectListItem>();
+
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
     }
 }

@@ -10,6 +10,8 @@
     List<SanPham> products = ViewData["listProduct"] as List<SanPham> ?? new List<SanPham>();
     List<LoaiSanPham> categories = ViewData["typeProductList"] as List<LoaiSanPham> ?? new List<LoaiSanPham>();
     List<ThuongHieu> brands = ViewData["brandList"] as List<ThuongHieu> ?? new List<ThuongHieu>();
+    List<KieuGong> frameTypes = ViewData["frameTypeList"] as List<KieuGong> ?? new List<KieuGong>();
+
     ProductCatalogFilterVm filter = ViewBag.Filter as ProductCatalogFilterVm ?? Model ?? new ProductCatalogFilterVm();
 
     var vi = CultureInfo.GetCultureInfo("vi-VN");
@@ -30,9 +32,10 @@
 
     bool hasCategoryFilter = filter.CategoryId != null;
     bool hasBrandFilter = filter.BrandId != null;
+    bool hasFrameTypeFilter = filter.KieuGongId != null;
     bool hasKeywordFilter = !string.IsNullOrWhiteSpace(filter.Keyword);
     bool hasPriceFilter = !string.IsNullOrWhiteSpace(filter.PriceRange);
-    bool hasAnyFilter = hasCategoryFilter || hasBrandFilter || hasKeywordFilter || hasPriceFilter;
+    bool hasAnyFilter = hasCategoryFilter || hasBrandFilter || hasFrameTypeFilter || hasKeywordFilter || hasPriceFilter;
 
     string currentCategoryName = "Tất cả danh mục";
     if (hasCategoryFilter)
@@ -46,6 +49,13 @@
     {
         var currentBrand = brands.FirstOrDefault(x => x.ThuongHieuId == filter.BrandId);
         currentBrandName = currentBrand != null ? currentBrand.TenThuongHieu : "Thương hiệu đã chọn";
+    }
+
+    string currentFrameTypeName = "Tất cả kiểu gọng";
+    if (hasFrameTypeFilter)
+    {
+        var currentFrameType = frameTypes.FirstOrDefault(x => x.KieuGongId == filter.KieuGongId);
+        currentFrameTypeName = currentFrameType != null ? currentFrameType.TenKieuGong : "Kiểu gọng đã chọn";
     }
 
     string currentPriceName = "Tất cả mức giá";
@@ -105,6 +115,7 @@
     {
         CategoryId = filter.CategoryId,
         BrandId = filter.BrandId,
+        KieuGongId = filter.KieuGongId,
         Keyword = filter.Keyword,
         PriceRange = filter.PriceRange,
         Page = pageNumber,
@@ -119,7 +130,7 @@
                 <span class="optical-breadcrumb__eyebrow">Karma Eyewear Collection</span>
                 <h1>Khám phá bộ sưu tập mắt kính</h1>
                 <p class="optical-breadcrumb__desc">
-                    Lọc theo danh mục, thương hiệu, mức giá hoặc tìm kiếm nhanh để chọn mẫu kính phù hợp với phong cách của bạn.
+                    Lọc theo danh mục, thương hiệu, kiểu gọng, mức giá hoặc tìm kiếm nhanh để chọn mẫu kính phù hợp với phong cách của bạn.
                 </p>
                 <nav>
                     <a href="@Url.Action("Index", "Home")">Trang chủ</a>
@@ -141,7 +152,15 @@
                             <ul class="optical-category-list">
                                 <li>
                                     <a class="@(filter.CategoryId == null ? "active" : "")"
-                                       href="@Url.Action("Index", "Product", new { Page = 1, PageSize = filter.PageSize })">
+                                       href="@Url.Action("Index", "Product", new
+                                       {
+                                           BrandId = filter.BrandId,
+                                           KieuGongId = filter.KieuGongId,
+                                           Keyword = filter.Keyword,
+                                           PriceRange = filter.PriceRange,
+                                           Page = 1,
+                                           PageSize = filter.PageSize
+                                       })">
                                         Tất cả sản phẩm
                                     </a>
                                 </li>
@@ -156,6 +175,7 @@
                                            {
                                                CategoryId = category.LoaiSanPhamId,
                                                BrandId = filter.BrandId,
+                                               KieuGongId = filter.KieuGongId,
                                                Keyword = filter.Keyword,
                                                PriceRange = filter.PriceRange,
                                                Page = 1,
@@ -202,6 +222,36 @@
                                                        value="@brand.ThuongHieuId"
                                                        @(isChecked ? "checked" : "") />
                                                 <span>@brand.TenThuongHieu</span>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="filter-group">
+                                    <div class="filter-group__title">Kiểu gọng</div>
+
+                                    <div class="filter-options">
+                                        <label class="filter-option" for="frame-all">
+                                            <input id="frame-all"
+                                                   type="radio"
+                                                   name="KieuGongId"
+                                                   value=""
+                                                   @(filter.KieuGongId == null ? "checked" : "") />
+                                            <span>Tất cả kiểu gọng</span>
+                                        </label>
+
+                                        @foreach (var frame in frameTypes)
+                                        {
+                                            string inputId = "frame-" + frame.KieuGongId;
+                                            bool isChecked = filter.KieuGongId == frame.KieuGongId;
+
+                                            <label class="filter-option" for="@inputId">
+                                                <input id="@inputId"
+                                                       type="radio"
+                                                       name="KieuGongId"
+                                                       value="@frame.KieuGongId"
+                                                       @(isChecked ? "checked" : "") />
+                                                <span>@frame.TenKieuGong</span>
                                             </label>
                                         }
                                     </div>
@@ -304,6 +354,7 @@
                             {
                                 <input type="hidden" name="CategoryId" value="@filter.CategoryId" />
                                 <input type="hidden" name="BrandId" value="@filter.BrandId" />
+                                <input type="hidden" name="KieuGongId" value="@filter.KieuGongId" />
                                 <input type="hidden" name="PriceRange" value="@filter.PriceRange" />
                                 <input type="hidden" name="Page" value="1" />
                                 <input type="hidden" name="PageSize" value="@filter.PageSize" />
@@ -335,6 +386,11 @@
                             @if (hasBrandFilter)
                             {
                                 <span class="filter-chip">@currentBrandName</span>
+                            }
+
+                            @if (hasFrameTypeFilter)
+                            {
+                                <span class="filter-chip">@currentFrameTypeName</span>
                             }
 
                             @if (hasPriceFilter)
@@ -387,6 +443,10 @@
                                     ? item.LoaiSanPham.TenLoaiSanPham
                                     : "Mắt kính";
 
+                                string frameTypeName = item.KieuGong != null
+                                    ? item.KieuGong.TenKieuGong
+                                    : "Kiểu gọng";
+
                                 string stockText = "Hết hàng";
                                 string stockClass = "stock-status--out";
 
@@ -428,6 +488,7 @@
                                             <div class="product-card-meta">
                                                 <span>@brandName</span>
                                                 <span>@categoryName</span>
+                                                <span>@frameTypeName</span>
                                             </div>
 
                                             <h3 class="product-name">
