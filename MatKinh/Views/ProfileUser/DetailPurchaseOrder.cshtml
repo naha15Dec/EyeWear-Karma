@@ -1,4 +1,5 @@
 ﻿@using System
+@using System.Collections.Generic
 @using MatKinh.Models
 @model MatKinh.Models.DonHang
 
@@ -7,8 +8,10 @@
 
     List<ChiTietDonHang> details = ViewData["listOfProductInOrder"] as List<ChiTietDonHang> ?? new List<ChiTietDonHang>();
     List<LichSuTrangThaiDonHang> histories = ViewData["orderHistories"] as List<LichSuTrangThaiDonHang> ?? new List<LichSuTrangThaiDonHang>();
+    Dictionary<int, DanhGiaSanPham> reviewMap = ViewData["reviewMap"] as Dictionary<int, DanhGiaSanPham> ?? new Dictionary<int, DanhGiaSanPham>();
 
     bool canCancelOrder = ViewBag.CanCancelOrder != null && (bool)ViewBag.CanCancelOrder;
+    bool canReviewOrder = ViewBag.CanReviewOrder != null && (bool)ViewBag.CanReviewOrder;
 
     string fallbackImg = Url.Content("~/Asset/img/no-image.png");
 
@@ -277,6 +280,7 @@
                                     <th>Đơn giá</th>
                                     <th>Giảm</th>
                                     <th>Thành tiền</th>
+                                    <th>Đánh giá</th>
                                 </tr>
                             </thead>
 
@@ -289,14 +293,24 @@
                                     <tr>
                                         <td>
                                             <div class="order-product">
-                                                <div class="order-product__image">
+                                                @{
+                                                    string productDetailUrl = item.SanPham != null
+                                                        ? Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })
+                                                        : "javascript:void(0)";
+                                                }
+
+                                                <a href="@productDetailUrl" class="order-product__image">
                                                     <img src="@imageUrl"
                                                          alt="@item.TenSanPhamSnapshot"
                                                          onerror="this.onerror=null;this.src='@fallbackImg';" />
-                                                </div>
+                                                </a>
 
                                                 <div class="order-product__info">
-                                                    <h4>@item.TenSanPhamSnapshot</h4>
+                                                    <h4>
+                                                        <a href="@productDetailUrl" class="order-product-name-link">
+                                                            @item.TenSanPhamSnapshot
+                                                        </a>
+                                                    </h4>
                                                     <span>Mã SP: @productCode</span>
                                                 </div>
                                             </div>
@@ -308,6 +322,38 @@
 
                                         <td class="order-total-line">
                                             @string.Format("{0:N0}", item.ThanhTien) ₫
+                                        </td>
+
+                                        <td>
+                                            @{
+                                                DanhGiaSanPham review = reviewMap.ContainsKey(item.ChiTietDonHangId)
+                                                    ? reviewMap[item.ChiTietDonHangId]
+                                                    : null;
+                                            }
+
+                                            @if (review != null)
+                                            {
+                                                <span class="status-badge @(review.TrangThai == ReviewStatusConstants.APPROVED ? "success" : (review.TrangThai == ReviewStatusConstants.HIDDEN ? "danger" : "processing"))">
+                                                    @ReviewStatusConstants.GetName(review.TrangThai)
+                                                </span>
+
+                                                <div style="margin-top:6px;font-size:13px;color:#8d8376;">
+                                                    @review.SoSao sao
+                                                </div>
+                                            }
+                                            else if (canReviewOrder)
+                                            {
+                                                <button type="button"
+                                                        class="optical-btn optical-btn--light"
+                                                        data-toggle="modal"
+                                                        data-target="#reviewModal_@item.ChiTietDonHangId">
+                                                    Đánh giá
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span style="font-size:13px;color:#8d8376;">Chưa thể đánh giá</span>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -322,13 +368,25 @@
                             string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
 
                             <div class="order-mobile-item">
+                                @{
+                                    string productDetailUrl = item.SanPham != null
+                                        ? Url.Action("DetailProduct", "Product", new { sanPhamId = item.SanPhamId })
+                                        : "javascript:void(0)";
+                                }
+
                                 <div class="order-mobile-product">
-                                    <img src="@imageUrl"
-                                         alt="@item.TenSanPhamSnapshot"
-                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                    <a href="@productDetailUrl" class="order-mobile-product-image-link">
+                                        <img src="@imageUrl"
+                                             alt="@item.TenSanPhamSnapshot"
+                                             onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                    </a>
 
                                     <div>
-                                        <h4>@item.TenSanPhamSnapshot</h4>
+                                        <h4>
+                                            <a href="@productDetailUrl" class="order-product-name-link">
+                                                @item.TenSanPhamSnapshot
+                                            </a>
+                                        </h4>
                                         <p>Mã SP: @productCode</p>
                                     </div>
                                 </div>
@@ -352,6 +410,37 @@
                                     <span>Thành tiền</span>
                                     <strong>@string.Format("{0:N0}", item.ThanhTien) ₫</strong>
                                 </div>
+
+                                <div class="order-mobile-row">
+                                    <span>Đánh giá</span>
+                                    <strong>
+                                        @{
+                                            DanhGiaSanPham mobileReview = reviewMap.ContainsKey(item.ChiTietDonHangId)
+                                                ? reviewMap[item.ChiTietDonHangId]
+                                                : null;
+                                        }
+
+                                        @if (mobileReview != null)
+                                        {
+                                            <span class="status-badge @(mobileReview.TrangThai == ReviewStatusConstants.APPROVED ? "success" : (mobileReview.TrangThai == ReviewStatusConstants.HIDDEN ? "danger" : "processing"))">
+                                                @ReviewStatusConstants.GetName(mobileReview.TrangThai)
+                                            </span>
+                                        }
+                                        else if (canReviewOrder)
+                                        {
+                                            <button type="button"
+                                                    class="optical-btn optical-btn--light"
+                                                    data-toggle="modal"
+                                                    data-target="#reviewModal_@item.ChiTietDonHangId">
+                                                Đánh giá
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span>Chưa thể đánh giá</span>
+                                        }
+                                    </strong>
+                                </div>
                             </div>
                         }
                     </div>
@@ -364,6 +453,105 @@
                     </div>
                 }
             </div>
+
+            @if (details.Any() && canReviewOrder)
+            {
+                foreach (var item in details)
+                {
+                    bool hasReview = reviewMap.ContainsKey(item.ChiTietDonHangId);
+
+                    if (!hasReview)
+                    {
+                        string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                        string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
+                        <div class="modal fade order-review-modal"
+                             id="reviewModal_@item.ChiTietDonHangId"
+                             tabindex="-1"
+                             role="dialog"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content order-review-modal-content">
+                                    @using (Html.BeginForm("SubmitProductReview", "ProfileUser", FormMethod.Post, new { autocomplete = "off" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden" name="maDonHang" value="@Model.MaDonHang" />
+                                        <input type="hidden" name="chiTietDonHangId" value="@item.ChiTietDonHangId" />
+
+                                        <div class="modal-header order-review-modal-header">
+                                            <div>
+                                                <h5 class="modal-title">Đánh giá sản phẩm</h5>
+                                                <p>
+                                                    Chia sẻ trải nghiệm của bạn để khách hàng khác có thêm thông tin khi chọn sản phẩm.
+                                                </p>
+                                            </div>
+
+                                            <button type="button" class="close order-review-modal-close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <div class="order-review-product-box">
+                                                <div class="order-review-product-image">
+                                                    <img src="@imageUrl"
+                                                         alt="@item.TenSanPhamSnapshot"
+                                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                </div>
+
+                                                <div class="order-review-product-info">
+                                                    <div class="order-review-product-name">
+                                                        @item.TenSanPhamSnapshot
+                                                    </div>
+
+                                                    <div class="order-review-product-code">
+                                                        Mã SP: @productCode
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group order-review-form-group">
+                                                <label class="order-review-label">Số sao</label>
+
+                                                <select name="soSao"
+                                                        class="form-control order-review-input order-review-native-select"
+                                                        required>
+                                                    <option value="5">5 sao - Rất hài lòng</option>
+                                                    <option value="4">4 sao - Hài lòng</option>
+                                                    <option value="3">3 sao - Bình thường</option>
+                                                    <option value="2">2 sao - Chưa hài lòng</option>
+                                                    <option value="1">1 sao - Không hài lòng</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group order-review-form-group mb-0">
+                                                <label class="order-review-label">Nội dung đánh giá</label>
+
+                                                <textarea name="noiDung"
+                                                          class="form-control order-review-textarea"
+                                                          rows="4"
+                                                          maxlength="1000"
+                                                          placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer order-review-modal-footer">
+                                            <button type="button" class="optical-btn optical-btn--light" data-dismiss="modal">
+                                                Hủy
+                                            </button>
+
+                                            <button type="submit" class="optical-btn optical-btn--dark">
+                                                Gửi đánh giá
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
 
             <div class="order-summary-card">
                 <div class="order-summary-left">

@@ -43,6 +43,11 @@
         <EntityTypeShape EntityType="BanMatKinhModel.RuleGoiYKinhTheoMat" Width="1.5" PointX="3" PointY="23.375" />
         <AssociationConnector Association="BanMatKinhModel.FK_RuleGoiY_KieuGong" />
         <AssociationConnector Association="BanMatKinhModel.FK_SanPham_KieuGong" />
+        <EntityTypeShape EntityType="BanMatKinhModel.DanhGiaSanPham" Width="1.5" PointX="12.75" PointY="9.125" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_ChiTietDonHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_DuyetBoi" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_KhachHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_SanPham" />
         </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

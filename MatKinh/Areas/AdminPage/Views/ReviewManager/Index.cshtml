@@ -1,0 +1,389 @@
+﻿@model MatKinh.ViewModel.AdminReviewIndexVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Quản lý đánh giá";
+
+    int startPage = Math.Max(1, Model.CurrentPage - 2);
+    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+    Func<int, string> statusClass = status =>
+    {
+        if (status == ReviewStatusConstants.APPROVED)
+        {
+            return "admin-review-status--visible";
+        }
+
+        if (status == ReviewStatusConstants.HIDDEN)
+        {
+            return "admin-review-status--hidden";
+        }
+
+        return "admin-review-status--pending";
+    };
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "/Asset/img/no-image.png";
+        }
+
+        return path;
+    };
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Quản lý đánh giá</h1>
+        <p class="admin-page-subtitle">
+            Theo dõi đánh giá sản phẩm từ khách hàng, lọc theo số sao, sản phẩm và trạng thái hiển thị.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href='@Url.Action("Index", "Dashboard")'>Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Đánh giá</li>
+    </ol>
+</div>
+
+<section class="content admin-review-page">
+    <div class="container-fluid p-0">
+
+        <div class="card admin-review-filter-card">
+            <div class="card-body">
+                @using (Html.BeginForm("Index", "ReviewManager", FormMethod.Get, new { @class = "admin-review-filter-form", autocomplete = "off" }))
+                {
+                    <input type="hidden" name="page" value="1" />
+
+                    <div class="row">
+                        <div class="col-lg-5 col-md-12">
+                            <div class="form-group admin-review-form-group">
+                                <label>Tìm kiếm</label>
+                                <div class="admin-review-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           name="keyword"
+                                           value="@Model.Keyword"
+                                           class="form-control admin-review-input"
+                                           placeholder="Tên sản phẩm / mã sản phẩm / khách hàng / nội dung..."
+                                           autocomplete="off" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="form-group admin-review-form-group">
+                                <label>Số sao</label>
+                                <select name="rating" class="form-control admin-review-input">
+                                    <option value="">Tất cả số sao</option>
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <option value="@i" @(Model.Rating == i ? "selected" : "")>
+                                            @i sao
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6">
+                            <div class="form-group admin-review-form-group">
+                                <label>Trạng thái</label>
+                                <select name="status" class="form-control admin-review-input">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="@ReviewStatusConstants.APPROVED" @(Model.Status == ReviewStatusConstants.APPROVED ? "selected" : "")>
+                                        Đang hiển thị
+                                    </option>
+                                    <option value="@ReviewStatusConstants.HIDDEN" @(Model.Status == ReviewStatusConstants.HIDDEN ? "selected" : "")>
+                                        Đã ẩn
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-1 col-md-12 d-flex align-items-end">
+                            <div class="form-group admin-review-form-group w-100">
+                                <button type="submit" class="btn admin-review-btn admin-review-btn-save w-100">
+                                    Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="admin-review-stats">
+            <div class="admin-review-stat-card">
+                <div class="admin-review-stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <span>Tổng đánh giá</span>
+                    <strong>@Model.TotalReviews</strong>
+                </div>
+            </div>
+
+            <div class="admin-review-stat-card">
+                <div class="admin-review-stat-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div>
+                    <span>Đang hiển thị</span>
+                    <strong>@Model.VisibleReviews</strong>
+                </div>
+            </div>
+
+            <div class="admin-review-stat-card">
+                <div class="admin-review-stat-icon">
+                    <i class="fas fa-eye-slash"></i>
+                </div>
+                <div>
+                    <span>Đã ẩn</span>
+                    <strong>@Model.HiddenReviews</strong>
+                </div>
+            </div>
+
+            <div class="admin-review-stat-card">
+                <div class="admin-review-stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div>
+                    <span>Điểm trung bình</span>
+                    <strong>@Model.AverageRating.ToString("0.0")/5</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card admin-review-card">
+            <div class="card-header border-0">
+                <div class="admin-review-card-heading">
+                    <div>
+                        <h3 class="admin-review-card-title">Danh sách đánh giá</h3>
+                        <p class="admin-review-card-subtitle">
+                            Hiển thị <b>@Model.Reviews.Count</b> / <b>@Model.TotalItems</b> đánh giá phù hợp với bộ lọc.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Reviews != null && Model.Reviews.Any())
+                {
+                    <div class="admin-review-table-wrap">
+                        <table class="table admin-review-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Khách hàng</th>
+                                    <th>Số sao</th>
+                                    <th>Nội dung</th>
+                                    <th>Ngày đánh giá</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Reviews)
+                                {
+                                    string imageUrl = normalizeImage(item.HinhAnhChinh);
+
+                                    <tr>
+                                        <td data-label="Sản phẩm">
+                                            <div class="admin-review-product">
+                                                <div class="admin-review-product-image">
+                                                    <img src="@imageUrl" alt="@item.TenSanPham" />
+                                                </div>
+
+                                                <div>
+                                                    <div class="admin-review-product-code">#@item.MaSanPham</div>
+                                                    <div class="admin-review-product-name">@item.TenSanPham</div>
+
+                                                    <a class="admin-review-product-link"
+                                                       target="_blank"
+                                                       href="@Url.Action("DetailProduct", "Product", new { area = "", sanPhamId = item.SanPhamId })">
+                                                        Xem sản phẩm
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Khách hàng">
+                                            <div class="admin-review-customer">
+                                                <strong>@item.TenKhachHang</strong>
+                                                <span>@(string.IsNullOrWhiteSpace(item.EmailKhachHang) ? "—" : item.EmailKhachHang)</span>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Số sao">
+                                            <div class="admin-review-stars">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= item.SoSao)
+                                                    {
+                                                        <span>★</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="muted">★</span>
+                                                    }
+                                                }
+                                            </div>
+                                            <div class="admin-review-star-text">@item.SoSao/5</div>
+                                        </td>
+
+                                        <td data-label="Nội dung">
+                                            <div class="admin-review-content">
+                                                @(string.IsNullOrWhiteSpace(item.NoiDung)
+                                                    ? "Khách hàng không để lại nội dung nhận xét."
+                                                    : item.NoiDung)
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(item.PhanHoiAdmin))
+                                            {
+                                                <div class="admin-review-admin-note">
+                                                    @item.PhanHoiAdmin
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td data-label="Ngày đánh giá">
+                                            <div class="admin-review-date">
+                                                <strong>@item.CreatedAt.ToString("dd/MM/yyyy")</strong>
+                                                <span>@item.CreatedAt.ToString("HH:mm")</span>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Trạng thái">
+                                            <span class="admin-review-status @statusClass(item.TrangThai)">
+                                                <span></span>
+                                                @ReviewStatusConstants.GetAdminName(item.TrangThai)
+                                            </span>
+                                        </td>
+
+                                        <td data-label="Thao tác" class="text-right">
+                                            <div class="admin-review-actions">
+                                                @if (item.TrangThai == ReviewStatusConstants.APPROVED)
+                                                {
+                                                    using (Html.BeginForm("Hide", "ReviewManager", FormMethod.Post, new { @class = "d-inline admin-review-inline-form", autocomplete = "off" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        @Html.Hidden("id", item.DanhGiaId)
+                                                        @Html.Hidden("keyword", Model.Keyword)
+                                                        @Html.Hidden("rating", Model.Rating)
+                                                        @Html.Hidden("status", Model.Status)
+                                                        @Html.Hidden("page", Model.CurrentPage)
+
+                                                        <button type="submit"
+                                                                class="btn admin-review-action admin-review-action--hide"
+                                                                data-confirm-title="Ẩn đánh giá?"
+                                                                data-confirm="Đánh giá này sẽ không còn hiển thị ở trang chi tiết sản phẩm. Bạn chắc chắn muốn tiếp tục?"
+                                                                data-confirm-ok="Ẩn đánh giá">
+                                                            <i class="fas fa-eye-slash"></i>
+                                                            <span>Ẩn</span>
+                                                        </button>
+                                                    }
+                                                }
+                                                else if (item.TrangThai == ReviewStatusConstants.HIDDEN)
+                                                {
+                                                    using (Html.BeginForm("Restore", "ReviewManager", FormMethod.Post, new { @class = "d-inline admin-review-inline-form", autocomplete = "off" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        @Html.Hidden("id", item.DanhGiaId)
+                                                        @Html.Hidden("keyword", Model.Keyword)
+                                                        @Html.Hidden("rating", Model.Rating)
+                                                        @Html.Hidden("status", Model.Status)
+                                                        @Html.Hidden("page", Model.CurrentPage)
+
+                                                        <button type="submit"
+                                                                class="btn admin-review-action admin-review-action--restore"
+                                                                data-confirm-title="Khôi phục đánh giá?"
+                                                                data-confirm="Đánh giá này sẽ được hiển thị lại ở trang chi tiết sản phẩm."
+                                                                data-confirm-ok="Khôi phục">
+                                                            <i class="fas fa-undo"></i>
+                                                            <span>Khôi phục</span>
+                                                        </button>
+                                                    }
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    if (Model.TotalPages > 1)
+                    {
+                        <div class="admin-review-pagination">
+                            <div class="admin-review-pagination-info">
+                                Hiển thị @Model.Reviews.Count đánh giá trên tổng @Model.TotalItems đánh giá
+                            </div>
+
+                            <div class="admin-review-pagination-links">
+                                <a class="admin-review-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                                   href="@(Model.HasPreviousPage ? Url.Action("Index", new { keyword = Model.Keyword, rating = Model.Rating, status = Model.Status, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+
+                                @if (startPage > 1)
+                                {
+                                    <a class="admin-review-page-link"
+                                       href="@Url.Action("Index", new { keyword = Model.Keyword, rating = Model.Rating, status = Model.Status, page = 1 })">
+                                        1
+                                    </a>
+
+                                    if (startPage > 2)
+                                    {
+                                        <span class="admin-review-page-dots">...</span>
+                                    }
+                                }
+
+                                @for (int i = startPage; i <= endPage; i++)
+                                {
+                                    <a class="admin-review-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                       href="@Url.Action("Index", new { keyword = Model.Keyword, rating = Model.Rating, status = Model.Status, page = i })">
+                                        @i
+                                    </a>
+                                }
+
+                                @if (endPage < Model.TotalPages)
+                                {
+                                    if (endPage < Model.TotalPages - 1)
+                                    {
+                                        <span class="admin-review-page-dots">...</span>
+                                    }
+
+                                    <a class="admin-review-page-link"
+                                       href="@Url.Action("Index", new { keyword = Model.Keyword, rating = Model.Rating, status = Model.Status, page = Model.TotalPages })">
+                                        @Model.TotalPages
+                                    </a>
+                                }
+
+                                <a class="admin-review-page-link @(Model.HasNextPage ? "" : "disabled")"
+                                   href="@(Model.HasNextPage ? Url.Action("Index", new { keyword = Model.Keyword, rating = Model.Rating, status = Model.Status, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="admin-review-empty">
+                        <div class="admin-review-empty-icon">
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+
+                        <h3>Không có đánh giá</h3>
+                        <p>Không tìm thấy đánh giá phù hợp với bộ lọc hiện tại.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -23,7 +23,7 @@ namespace MatKinh.Models
         public int TrangThai { get; set; }
         public Nullable<int> DuyetBoiId { get; set; }
         public Nullable<System.DateTime> NgayDuyet { get; set; }
-        public string LyDoTuChoi { get; set; }
+        public string PhanHoiAdmin { get; set; }
         public System.DateTime CreatedAt { get; set; }
         public Nullable<System.DateTime> UpdatedAt { get; set; }
     

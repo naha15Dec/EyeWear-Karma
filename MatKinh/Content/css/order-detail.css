@@ -681,3 +681,236 @@
             text-align: left;
         }
 }
+
+.order-product__image {
+    display: block;
+    text-decoration: none;
+}
+
+.order-product-name-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.order-product-name-link:hover {
+    color: #b8893d;
+    text-decoration: none;
+}
+
+.order-mobile-product-image-link {
+    display: block;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+/* =========================================================
+   ORDER REVIEW MODAL
+========================================================= */
+
+.order-review-modal-content {
+    overflow: hidden;
+    border: 1px solid #e8ded1;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 22px 60px rgba(31, 28, 24, 0.18);
+}
+
+.order-review-modal-header {
+    align-items: flex-start;
+    padding: 22px 24px 16px;
+    background: radial-gradient(circle at top right, rgba(184, 137, 61, 0.14), transparent 34%), #fbf8f3;
+    border-bottom: 1px solid #e8ded1;
+}
+
+    .order-review-modal-header .modal-title {
+        margin: 0;
+        color: #1f1c18;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+    }
+
+    .order-review-modal-header p {
+        margin: 6px 0 0;
+        color: #8d8376;
+        font-size: 14.5px;
+        line-height: 1.5;
+    }
+
+.order-review-modal-close {
+    color: #5f5a53;
+    opacity: 1;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.order-review-modal .modal-body {
+    display: block;
+    padding: 22px 24px 20px;
+}
+
+.order-review-product-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #e8ded1;
+    border-radius: 20px;
+    background: #fbf8f3;
+}
+
+.order-review-product-image {
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(232, 222, 209, 0.95);
+    flex-shrink: 0;
+}
+
+    .order-review-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.order-review-product-info {
+    min-width: 0;
+    padding-top: 3px;
+}
+
+.order-review-product-name {
+    color: #1f1c18;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.35;
+}
+
+.order-review-product-code {
+    margin-top: 7px;
+    color: #8d8376;
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.order-review-form-group {
+    display: block;
+    width: 100%;
+    float: none;
+    clear: both;
+    margin-bottom: 18px;
+}
+
+.order-review-label {
+    display: block;
+    width: 100%;
+    float: none;
+    clear: both;
+    margin: 0 0 9px;
+    color: #1f1c18;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.35;
+}
+
+.order-review-input {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    height: 48px;
+    padding: 10px 14px;
+    color: #1f1c18;
+    background: #ffffff;
+    border: 1px solid #e4d8ca;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: none;
+    float: none;
+    clear: both;
+    box-sizing: border-box;
+}
+
+.order-review-textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 136px;
+    padding: 14px 16px;
+    color: #1f1c18;
+    background: #ffffff;
+    border: 1px solid #e4d8ca;
+    border-radius: 16px;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.6;
+    resize: vertical;
+    box-shadow: none;
+    float: none;
+    clear: both;
+    box-sizing: border-box;
+}
+
+    .order-review-input:focus,
+    .order-review-textarea:focus {
+        border-color: rgba(184, 137, 61, 0.78);
+        box-shadow: 0 0 0 4px rgba(184, 137, 61, 0.13);
+    }
+
+.order-review-modal-footer {
+    padding: 18px 24px 20px;
+    border-top: 1px solid #e8ded1;
+    background: #ffffff;
+    gap: 10px;
+}
+
+    .order-review-modal-footer .optical-btn {
+        min-width: 112px;
+    }
+
+/* Fix duplicate custom select plugin */
+.order-review-modal select.order-review-native-select {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 450px !important;
+    height: 48px !important;
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+}
+
+.order-review-modal .nice-select,
+.order-review-modal .bootstrap-select,
+.order-review-modal .select2,
+.order-review-modal .select2-container {
+    display: none !important;
+}
+
+@media (max-width: 575.98px) {
+    .order-review-modal .modal-dialog {
+        margin: 12px;
+    }
+
+    .order-review-product-box {
+        flex-direction: column;
+    }
+
+    .order-review-input,
+    .order-review-modal select.order-review-native-select {
+        max-width: 100% !important;
+    }
+
+    .order-review-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+        .order-review-modal-footer .optical-btn {
+            width: 100%;
+        }
+}

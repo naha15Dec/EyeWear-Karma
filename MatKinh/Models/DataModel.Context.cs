@@ -41,5 +41,6 @@ namespace MatKinh.Models
         public virtual DbSet<TaiKhoanRememberToken> TaiKhoanRememberTokens { get; set; }
         public virtual DbSet<KieuGong> KieuGongs { get; set; }
         public virtual DbSet<RuleGoiYKinhTheoMat> RuleGoiYKinhTheoMats { get; set; }
+        public virtual DbSet<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
     }
 }

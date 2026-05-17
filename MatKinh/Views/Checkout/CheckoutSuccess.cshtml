@@ -365,15 +365,23 @@
                     </div>
                 }
 
-                <div class="success-actions">
-                    <a href="@Url.Action("Index", "Home")" class="optical-btn optical-btn--dark">
-                        Quay lại trang chủ
-                    </a>
+            <div class="success-actions">
+                <a href="@Url.Action("Index", "Home")" class="optical-btn optical-btn--dark">
+                    Quay lại trang chủ
+                </a>
 
-                    <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
-                        Tiếp tục mua sắm
+                @if (order != null)
+                {
+                    <a href="@Url.Action("DetailPurchaseOrder", "ProfileUser", new { maDonHang = order.MaDonHang })"
+                       class="optical-btn optical-btn--light">
+                        Xem chi tiết đơn hàng
                     </a>
-                </div>
+                }
+
+                <a href="@Url.Action("Index", "Product")" class="optical-btn optical-btn--light">
+                    Tiếp tục mua sắm
+                </a>
+            </div>
             </div>
         </div>
     </section>

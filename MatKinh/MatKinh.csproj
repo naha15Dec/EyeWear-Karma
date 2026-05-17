@@ -617,6 +617,7 @@
     <Content Include="Content\css\admin-product-list.css" />
     <Content Include="Content\css\admin-profile.css" />
     <Content Include="Content\css\admin-revenue.css" />
+    <Content Include="Content\css\admin-review.css" />
     <Content Include="Content\css\admin-setting.css" />
     <Content Include="Content\css\admin-system-category.css" />
     <Content Include="Content\css\auth.css" />
@@ -756,6 +757,7 @@
     <Compile Include="Areas\AdminPage\Controllers\ManagerProductController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ManagerRevenueController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ProfileController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ReviewManagerController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\SettingInformationWebsiteController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BlogController.cs" />
@@ -779,6 +781,9 @@
     </Compile>
     <Compile Include="Models\CustomAuthenticationAttribute.cs" />
     <Compile Include="Models\CustomAuthorizeAttribute.cs" />
+    <Compile Include="Models\DanhGiaSanPham.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\DataModel.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -820,6 +825,7 @@
     <Compile Include="Models\OrderStatusConstants.cs" />
     <Compile Include="Models\PaymentConstants.cs" />
     <Compile Include="Models\Payments\VnPayLibrary.cs" />
+    <Compile Include="Models\ReviewStatusConstants.cs" />
     <Compile Include="Models\RoleConstants.cs" />
     <Compile Include="Models\RuleGoiYKinhTheoMat.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
@@ -859,6 +865,7 @@
     <Compile Include="ViewModel\AdminProductListPageVm.cs" />
     <Compile Include="ViewModel\AdminProductViewModels.cs" />
     <Compile Include="ViewModel\AdminRevenueVm.cs" />
+    <Compile Include="ViewModel\AdminReviewVm.cs" />
     <Compile Include="ViewModel\AdminWebsiteSettingVm.cs" />
     <Compile Include="ViewModel\Cart.cs" />
     <Compile Include="ViewModel\FiltersProduct.cs" />
@@ -945,6 +952,7 @@
     <Content Include="Areas\AdminPage\Views\ManagerOrder\Detail.cshtml" />
     <Content Include="Areas\AdminPage\Views\FrameType\Index.cshtml" />
     <Content Include="Areas\AdminPage\Views\FaceShapeRule\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ReviewManager\Index.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />

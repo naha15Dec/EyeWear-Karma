@@ -9,6 +9,9 @@
 
     var vi = CultureInfo.GetCultureInfo("vi-VN");
     var recommendedProducts = ViewBag.RecommendedProducts as List<SanPham> ?? new List<SanPham>();
+    var productReviews = ViewBag.ProductReviews as List<DanhGiaSanPham> ?? new List<DanhGiaSanPham>();
+    int reviewCount = ViewBag.ReviewCount != null ? (int)ViewBag.ReviewCount : productReviews.Count;
+    decimal averageRating = ViewBag.AverageRating != null ? Convert.ToDecimal(ViewBag.AverageRating) : 0m;
 
     string fallbackImg = Url.Content("~/Asset/img/no-image.png");
 
@@ -83,6 +86,10 @@
         ? Model.ThuongHieu.TenThuongHieu
         : "—";
 
+    string tenKieuGong = Model != null && Model.KieuGong != null
+    ? Model.KieuGong.TenKieuGong
+    : "—";
+
     string moTaNgan = Model != null ? Model.MoTaNgan : null;
     string moTaChiTiet = Model != null ? Model.MoTaChiTiet : null;
 }
@@ -150,9 +157,39 @@
 
                             <h2 class="detail-title">@tenSP</h2>
 
+                            <div class="detail-rating-summary">
+                                @if (reviewCount > 0)
+                                {
+                                    <div class="detail-rating-stars">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(averageRating))
+                                            {
+                                                <span>★</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="muted">★</span>
+                                            }
+                                        }
+                                    </div>
+
+                                    <span class="detail-rating-text">
+                                        @averageRating.ToString("0.0")/5 từ @reviewCount đánh giá
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="detail-rating-text muted">
+                                        Chưa có đánh giá
+                                    </span>
+                                }
+                            </div>
+
                             <div class="detail-meta">
                                 <span><strong>Mã sản phẩm:</strong> @maSP</span>
                                 <span><strong>Thương hiệu:</strong> @tenThuongHieu</span>
+                                <span><strong>Kiểu gọng:</strong> @tenKieuGong</span>
                                 <span><strong>Tình trạng:</strong> @stockText</span>
                             </div>
 
@@ -231,28 +268,6 @@
                                     Sản phẩm hiện đã hết hàng. Bạn có thể xem thêm các mẫu kính tương tự hoặc quay lại danh sách sản phẩm để lựa chọn mẫu khác.
                                 </div>
                             }
-
-                            <div class="detail-extra-grid">
-                                <div class="detail-extra-item">
-                                    <span class="label">Loại sản phẩm</span>
-                                    <span class="value">@tenLoai</span>
-                                </div>
-
-                                <div class="detail-extra-item">
-                                    <span class="label">Thương hiệu</span>
-                                    <span class="value">@tenThuongHieu</span>
-                                </div>
-
-                                <div class="detail-extra-item">
-                                    <span class="label">Tình trạng</span>
-                                    <span class="value">@stockText</span>
-                                </div>
-
-                                <div class="detail-extra-item">
-                                    <span class="label">Mã sản phẩm</span>
-                                    <span class="value">@maSP</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,6 +300,18 @@
                            aria-controls="info"
                            aria-selected="false">
                             Thông tin sản phẩm
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           id="review-tab"
+                           data-toggle="tab"
+                           href="#review"
+                           role="tab"
+                           aria-controls="review"
+                           aria-selected="false">
+                            Đánh giá (@reviewCount)
                         </a>
                     </li>
                 </ul>
@@ -328,6 +355,10 @@
                                         <td>@tenThuongHieu</td>
                                     </tr>
                                     <tr>
+                                        <td>Kiểu gọng</td>
+                                        <td>@tenKieuGong</td>
+                                    </tr>
+                                    <tr>
                                         <td>Giá gốc</td>
                                         <td>@money(giaGoc) ₫</td>
                                     </tr>
@@ -345,6 +376,93 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade"
+                         id="review"
+                         role="tabpanel"
+                         aria-labelledby="review-tab">
+
+                        <div class="detail-review-section">
+                            <div class="detail-review-head">
+                                <div>
+                                    <h3>Đánh giá sản phẩm</h3>
+                                    <p>
+                                        Các đánh giá từ khách hàng đã mua sản phẩm này.
+                                    </p>
+                                </div>
+
+                                <div class="detail-review-score">
+                                    <strong>@averageRating.ToString("0.0")</strong>
+                                    <span>/5</span>
+                                    <small>@reviewCount đánh giá</small>
+                                </div>
+                            </div>
+
+                            @if (productReviews.Any())
+                            {
+                                <div class="detail-review-list">
+                                    @foreach (var review in productReviews)
+                                    {
+                                        string customerName = review.KhachHang != null && !string.IsNullOrWhiteSpace(review.KhachHang.HoTen)
+                                            ? review.KhachHang.HoTen
+                                            : "Khách hàng";
+
+                                        <div class="detail-review-item">
+                                            <div class="detail-review-avatar">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+
+                                            <div class="detail-review-content">
+                                                <div class="detail-review-top">
+                                                    <div>
+                                                        <strong>@customerName</strong>
+                                                        <span>@review.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                                    </div>
+
+                                                    <div class="detail-review-stars">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            if (i <= review.SoSao)
+                                                            {
+                                                                <span>★</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="muted">★</span>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+
+                                                @if (!string.IsNullOrWhiteSpace(review.NoiDung))
+                                                {
+                                                    <p>@review.NoiDung</p>
+                                                }
+                                                else
+                                                {
+                                                    <p class="muted">Khách hàng không để lại nội dung nhận xét.</p>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="catalog-empty">
+                                    <div class="catalog-empty-icon">
+                                        <i class="fa fa-star-o"></i>
+                                    </div>
+
+                                    <h3>Chưa có đánh giá</h3>
+                                    <p>
+                                        Sản phẩm này chưa có đánh giá từ khách hàng.
+                                        Sau khi mua hàng và đơn được giao thành công, khách hàng có thể để lại đánh giá.
+                                    </p>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

@@ -14,6 +14,12 @@ namespace MatKinh.Models
     
     public partial class ChiTietDonHang
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public ChiTietDonHang()
+        {
+            this.DanhGiaSanPhams = new HashSet<DanhGiaSanPham>();
+        }
+    
         public int ChiTietDonHangId { get; set; }
         public int DonHangId { get; set; }
         public int SanPhamId { get; set; }
@@ -25,5 +31,7 @@ namespace MatKinh.Models
     
         public virtual DonHang DonHang { get; set; }
         public virtual SanPham SanPham { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
     }
 }

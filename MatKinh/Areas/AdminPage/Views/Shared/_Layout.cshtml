@@ -119,6 +119,7 @@
     <link href="~/Content/css/admin-profile.css" rel="stylesheet" />
     <link href="~/Content/css/admin-product-create.css" rel="stylesheet" />
     <link href="~/Content/css/admin-product-list.css" rel="stylesheet" />
+    <link href="~/Content/css/admin-review.css" rel="stylesheet" />
     <link href="~/Content/css/admin-manager-product.css" rel="stylesheet" />
     <link href="~/Content/css/admin-addblog.css" rel="stylesheet" />
     <link href="~/Content/css/admin-blog.css" rel="stylesheet" />
@@ -418,6 +419,14 @@
                                 <a href="@Url.Action("AccountManager","ManagerAccount")" class="nav-link @activeController("ManagerAccount")">
                                     <i class="nav-icon fas fa-users-cog"></i>
                                     <p>Quản lý tài khoản</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="@Url.Action("Index", "ReviewManager")"
+                                   class="nav-link @activeController("ReviewManager")">
+                                    <i class="nav-icon fas fa-star-half-alt"></i>
+                                    <p>Quản lý đánh giá</p>
                                 </a>
                             </li>
 

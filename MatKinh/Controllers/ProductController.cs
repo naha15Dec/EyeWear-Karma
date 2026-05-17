@@ -119,7 +119,26 @@ namespace MatKinh.Controllers
                 System.Diagnostics.Debug.WriteLine(ex.Message);
             }
 
+            List<DanhGiaSanPham> reviews = db.DanhGiaSanPhams
+                .AsNoTracking()
+                .Include(x => x.KhachHang)
+                .Where(x =>
+                    x.SanPhamId == product.SanPhamId &&
+                    x.TrangThai == ReviewStatusConstants.APPROVED)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToList();
+
+            int reviewCount = reviews.Count;
+
+            decimal averageRating = reviewCount > 0
+                ? Math.Round((decimal)reviews.Average(x => x.SoSao), 1)
+                : 0m;
+
             List<SanPham> recommendedProducts = GetRuleBasedRecommendedProducts(product, 8);
+
+            ViewBag.ProductReviews = reviews;
+            ViewBag.ReviewCount = reviewCount;
+            ViewBag.AverageRating = averageRating;
 
             ViewBag.RecommendedProducts = recommendedProducts;
             ViewBag.HienThiSanPhamGoiY = recommendedProducts.Any();

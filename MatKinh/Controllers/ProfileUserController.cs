@@ -161,6 +161,9 @@ namespace MatKinh.Controllers
         /// <summary>
         /// Chi tiết đơn hàng của user hiện tại.
         /// </summary>
+        /// <summary>
+        /// Chi tiết đơn hàng của user hiện tại.
+        /// </summary>
         public ActionResult DetailPurchaseOrder(string maDonHang)
         {
             TaiKhoan currentAccount = GetCurrentAccount();
@@ -189,11 +192,24 @@ namespace MatKinh.Controllers
                 return RedirectToAction("Profile");
             }
 
-            ViewData["listOfProductInOrder"] = db.ChiTietDonHangs
+            List<ChiTietDonHang> details = db.ChiTietDonHangs
                 .Include(x => x.SanPham)
                 .Where(x => x.DonHangId == order.DonHangId)
                 .OrderBy(x => x.ChiTietDonHangId)
                 .ToList();
+
+            List<int> detailIds = details
+                .Select(x => x.ChiTietDonHangId)
+                .ToList();
+
+            Dictionary<int, DanhGiaSanPham> reviewMap = db.DanhGiaSanPhams
+                .Where(x => detailIds.Contains(x.ChiTietDonHangId))
+                .ToList()
+                .ToDictionary(x => x.ChiTietDonHangId, x => x);
+
+            ViewData["listOfProductInOrder"] = details;
+
+            ViewData["reviewMap"] = reviewMap;
 
             ViewData["orderHistories"] = db.LichSuTrangThaiDonHangs
                 .Include(x => x.TaiKhoan)
@@ -202,8 +218,115 @@ namespace MatKinh.Controllers
                 .ToList();
 
             ViewBag.CanCancelOrder = CanCustomerCancelOrder(order);
+            ViewBag.CanReviewOrder = order.TrangThai == OrderStatusConstants.DELIVERED;
 
             return View(order);
+        }
+
+        /// <summary>
+        /// Khách hàng đánh giá sản phẩm trong đơn đã giao thành công.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SubmitProductReview(
+            string maDonHang,
+            int chiTietDonHangId,
+            int soSao,
+            string noiDung)
+        {
+            TaiKhoan currentAccount = GetCurrentAccount();
+            if (currentAccount == null)
+            {
+                return RedirectToAction("LoginAccount", "Account");
+            }
+
+            if (string.IsNullOrWhiteSpace(maDonHang))
+            {
+                TempData["ProfileError"] = "Mã đơn hàng không hợp lệ.";
+                return RedirectToAction("Profile");
+            }
+
+            maDonHang = maDonHang.Trim();
+
+            DonHang order = db.DonHangs
+                .Include(x => x.KhachHang)
+                .FirstOrDefault(x =>
+                    x.MaDonHang == maDonHang &&
+                    x.CreatedById == currentAccount.TaiKhoanId);
+
+            if (order == null)
+            {
+                TempData["ProfileError"] = "Không tìm thấy đơn hàng phù hợp.";
+                return RedirectToAction("Profile");
+            }
+
+            if (order.TrangThai != OrderStatusConstants.DELIVERED)
+            {
+                TempData["ProfileError"] = "Bạn chỉ có thể đánh giá khi đơn hàng đã giao thành công.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            ChiTietDonHang detail = db.ChiTietDonHangs
+                .FirstOrDefault(x =>
+                    x.ChiTietDonHangId == chiTietDonHangId &&
+                    x.DonHangId == order.DonHangId);
+
+            if (detail == null)
+            {
+                TempData["ProfileError"] = "Không tìm thấy sản phẩm cần đánh giá trong đơn hàng.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            bool alreadyReviewed = db.DanhGiaSanPhams.Any(x =>
+                x.ChiTietDonHangId == detail.ChiTietDonHangId);
+
+            if (alreadyReviewed)
+            {
+                TempData["ProfileError"] = "Sản phẩm này đã được gửi đánh giá trước đó.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            if (soSao < 1 || soSao > 5)
+            {
+                TempData["ProfileError"] = "Số sao đánh giá không hợp lệ.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            noiDung = string.IsNullOrWhiteSpace(noiDung) ? null : noiDung.Trim();
+
+            if (!string.IsNullOrWhiteSpace(noiDung) && noiDung.Length > 1000)
+            {
+                TempData["ProfileError"] = "Nội dung đánh giá không được vượt quá 1000 ký tự.";
+                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+            }
+
+            int khachHangId = order.KhachHangId;
+
+            var review = new DanhGiaSanPham
+            {
+                ChiTietDonHangId = detail.ChiTietDonHangId,
+                KhachHangId = khachHangId,
+                SanPhamId = detail.SanPhamId,
+                SoSao = (byte)soSao,
+                NoiDung = noiDung,
+
+                // Khách gửi là hiển thị luôn
+                TrangThai = ReviewStatusConstants.APPROVED,
+
+                // Không cần admin duyệt
+                DuyetBoiId = null,
+                NgayDuyet = DateTime.Now,
+                PhanHoiAdmin = null,
+
+                CreatedAt = DateTime.Now,
+                UpdatedAt = null
+            };
+
+            db.DanhGiaSanPhams.Add(review);
+            db.SaveChanges();
+
+            TempData["ProfileSuccess"] = "Đã gửi đánh giá thành công. Cảm ơn bạn đã chia sẻ trải nghiệm về sản phẩm.";
+            return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
         }
 
         /// <summary>
