@@ -1,0 +1,562 @@
+﻿@model MatKinh.ViewModel.AdminReturnRequestIndexVm
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Quản lý trả hàng";
+
+    int startPage = Math.Max(1, Model.CurrentPage - 2);
+    int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+
+    Func<int, string> returnStatusClass = status =>
+    {
+        switch (status)
+        {
+            case ReturnRequestStatusConstants.PENDING:
+                return "warning";
+
+            case ReturnRequestStatusConstants.APPROVED:
+            case ReturnRequestStatusConstants.ASSIGNED_TO_SHIPPER:
+            case ReturnRequestStatusConstants.PICKING_UP:
+            case ReturnRequestStatusConstants.PICKED_UP:
+            case ReturnRequestStatusConstants.HANDED_OVER:
+                return "processing";
+
+            case ReturnRequestStatusConstants.RECEIVED:
+                return "info";
+
+            case ReturnRequestStatusConstants.REFUNDED:
+                return "success";
+
+            case ReturnRequestStatusConstants.REJECTED:
+            case ReturnRequestStatusConstants.CANCELLED:
+                return "danger";
+
+            default:
+                return "default";
+        }
+    };
+
+    Func<int, string> refundStatusClass = status =>
+    {
+        switch (status)
+        {
+            case RefundStatusConstants.REFUNDED:
+                return "success";
+
+            case RefundStatusConstants.MANUAL_REQUIRED:
+                return "warning";
+
+            case RefundStatusConstants.NO_REFUND:
+                return "danger";
+
+            default:
+                return "muted";
+        }
+    };
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Quản lý trả hàng</h1>
+        <p class="admin-page-subtitle">
+            Theo dõi yêu cầu trả hàng, duyệt xử lý, gán shipper, hoàn kho và xác nhận hoàn tiền.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">Quản lý trả hàng</li>
+    </ol>
+</div>
+
+<section class="content admin-return-page">
+    <div class="container-fluid p-0">
+
+        <div class="admin-return-kpi-grid">
+            <div class="admin-return-kpi-card">
+                <span>Tổng yêu cầu</span>
+                <strong>@Model.TotalRequests</strong>
+            </div>
+
+            <div class="admin-return-kpi-card warning">
+                <span>Chờ xử lý</span>
+                <strong>@Model.PendingRequests</strong>
+            </div>
+
+            <div class="admin-return-kpi-card processing">
+                <span>Đang xử lý</span>
+                <strong>@Model.ProcessingRequests</strong>
+            </div>
+
+            <div class="admin-return-kpi-card success">
+                <span>Hoàn tất</span>
+                <strong>@Model.CompletedRequests</strong>
+            </div>
+
+            <div class="admin-return-kpi-card danger">
+                <span>Từ chối / hủy</span>
+                <strong>@Model.RejectedRequests</strong>
+            </div>
+        </div>
+
+        <div class="card admin-return-filter-card">
+            <div class="card-header border-0">
+                <div class="admin-return-card-heading">
+                    <div class="admin-return-heading-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="admin-return-card-title">Bộ lọc yêu cầu trả hàng</h3>
+                        <p class="admin-return-card-subtitle">
+                            Có <b>@Model.TotalItems</b> yêu cầu phù hợp với điều kiện hiện tại.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @using (Html.BeginForm("Index", "ReturnRequestManager", FormMethod.Get, new { @class = "admin-return-filter-form", autocomplete = "off" }))
+                {
+                    <input type="hidden" name="page" value="1" />
+
+                    <div class="row">
+                        <div class="col-lg-5 col-md-6">
+                            <div class="form-group admin-return-form-group">
+                                <label>Tìm kiếm</label>
+                                <div class="admin-return-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           name="keyword"
+                                           value="@Model.Keyword"
+                                           class="form-control admin-return-input"
+                                           placeholder="Mã yêu cầu / mã đơn / khách hàng / SĐT"
+                                           autocomplete="off" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group admin-return-form-group">
+                                <label>Trạng thái</label>
+                                <select name="status" class="form-control admin-return-input" autocomplete="off">
+                                    <option value="">Tất cả trạng thái</option>
+                                    @foreach (var item in Model.StatusOptions)
+                                    {
+                                        <option value="@item.Value" @(item.Selected ? "selected" : "")>
+                                            @item.Text
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-12 d-flex align-items-end">
+                            <div class="form-group admin-return-form-group w-100">
+                                <button type="submit" class="btn admin-return-btn admin-return-btn-save w-100">
+                                    <i class="fas fa-search mr-1"></i>
+                                    Lọc yêu cầu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card admin-return-list-card">
+            <div class="card-header border-0">
+                <div class="admin-return-list-header">
+                    <div class="admin-return-card-heading">
+                        <div class="admin-return-heading-icon">
+                            <i class="fas fa-undo-alt"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="admin-return-card-title">Danh sách yêu cầu trả hàng</h3>
+                            <p class="admin-return-card-subtitle">
+                                Hiển thị <b>@Model.Requests.Count</b> / <b>@Model.TotalItems</b> yêu cầu.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Requests != null && Model.Requests.Count > 0)
+                {
+                    <div class="admin-return-table-wrap">
+                        <table class="table admin-return-table">
+                            <thead>
+                                <tr>
+                                    <th>Yêu cầu / Đơn hàng</th>
+                                    <th>Khách hàng</th>
+                                    <th>Sản phẩm trả</th>
+                                    <th class="text-right">Hoàn tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Shipper</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Requests)
+                                {
+                                    string statusClass = returnStatusClass(item.TrangThai);
+                                    string payClass = refundStatusClass(item.TrangThaiHoanTien);
+
+                                    <tr>
+                                        <td data-label="Yêu cầu / Đơn hàng">
+                                            <div class="admin-return-code">#@item.MaYeuCau</div>
+                                            <div class="admin-return-subtext">
+                                                Đơn: #@item.MaDonHang
+                                            </div>
+                                            <div class="admin-return-subtext">
+                                                @item.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Khách hàng">
+                                            <div class="admin-return-customer">
+                                                <div class="admin-return-avatar">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+
+                                                <div>
+                                                    <div class="admin-return-name">@item.TenKhachHang</div>
+                                                    <div class="admin-return-subtext">@item.SoDienThoaiKhachHang</div>
+                                                    <div class="admin-return-subtext">@item.EmailKhachHang</div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Sản phẩm trả">
+                                            <div class="admin-return-product-summary">
+                                                @item.ProductSummary
+                                            </div>
+                                            <div class="admin-return-subtext">
+                                                @item.TotalProductLines dòng sản phẩm · @item.TotalReturnQuantity sản phẩm
+                                            </div>
+                                            <div class="admin-return-reason">
+                                                @item.LyDo
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Hoàn tiền" class="text-right">
+                                            <div class="admin-return-money">
+                                                @item.TongTienHoanDuKien.ToString("N0") đ
+                                            </div>
+
+                                            <div class="admin-return-subtext">
+                                                Thực tế:
+                                                @(item.TongTienHoanThucTe.HasValue ? item.TongTienHoanThucTe.Value.ToString("N0") + " đ" : "Chưa cập nhật")
+                                            </div>
+
+                                            <span class="admin-return-status-badge @payClass">
+                                                @RefundStatusConstants.GetName(item.TrangThaiHoanTien)
+                                            </span>
+                                        </td>
+
+                                        <td data-label="Trạng thái">
+                                            <span class="admin-return-status-badge @statusClass">
+                                                @ReturnRequestStatusConstants.GetName(item.TrangThai)
+                                            </span>
+
+                                            @if (!string.IsNullOrWhiteSpace(item.GhiChuAdmin))
+                                            {
+                                                <div class="admin-return-note">
+                                                    @item.GhiChuAdmin
+                                                </div>
+                                            }
+                                        </td>
+
+                                        <td data-label="Shipper">
+                                            @if (!string.IsNullOrWhiteSpace(item.ShipperName))
+                                            {
+                                                <span class="admin-return-role-badge">@item.ShipperName</span>
+
+                                                if (item.NgayGanShipper.HasValue)
+                                                {
+                                                    <div class="admin-return-subtext">
+                                                        Gán: @item.NgayGanShipper.Value.ToString("dd/MM HH:mm")
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-return-subtext">Chưa gán</span>
+                                            }
+                                        </td>
+
+                                        <td data-label="Thao tác" class="text-center">
+                                            <div class="admin-return-actions">
+
+                                                @if (item.CanApprove)
+                                                {
+                                                    using (Html.BeginForm("Approve", "ReturnRequestManager", FormMethod.Post, new { @class = "admin-return-inline-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.YeuCauTraHangId" />
+                                                        <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                                        <input type="hidden" name="status" value="@Model.Status" />
+                                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
+
+                                                        <button type="submit"
+                                                                class="btn admin-return-action approve"
+                                                                data-confirm-title="Duyệt yêu cầu trả hàng?"
+                                                                data-confirm="Yêu cầu sẽ được duyệt và chờ admin gán shipper lấy hàng trả."
+                                                                data-confirm-ok="Duyệt">
+                                                            <i class="fas fa-check"></i>
+                                                            <span>Duyệt</span>
+                                                        </button>
+                                                    }
+                                                }
+
+                                                @if (item.CanReject)
+                                                {
+                                                    using (Html.BeginForm("Reject", "ReturnRequestManager", FormMethod.Post, new { @class = "admin-return-inline-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.YeuCauTraHangId" />
+                                                        <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                                        <input type="hidden" name="status" value="@Model.Status" />
+                                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
+
+                                                        <button type="submit"
+                                                                class="btn admin-return-action reject"
+                                                                data-confirm-title="Từ chối yêu cầu trả hàng?"
+                                                                data-confirm="Yêu cầu sẽ bị từ chối và không phát sinh hoàn tiền."
+                                                                data-confirm-ok="Từ chối">
+                                                            <i class="fas fa-times"></i>
+                                                            <span>Từ chối</span>
+                                                        </button>
+                                                    }
+                                                }
+
+                                                @if (item.CanAssignShipper)
+                                                {
+                                                    using (Html.BeginForm("AssignShipper", "ReturnRequestManager", FormMethod.Post, new { @class = "admin-return-assign-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.YeuCauTraHangId" />
+                                                        <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                                        <input type="hidden" name="status" value="@Model.Status" />
+                                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
+
+                                                        <select name="shipperId" class="form-control admin-return-shipper-select" required>
+                                                            <option value="">Chọn shipper</option>
+                                                            @foreach (var shipper in Model.ShipperOptions)
+                                                            {
+                                                                <option value="@shipper.Value">@shipper.Text</option>
+                                                            }
+                                                        </select>
+
+                                                        <button type="submit"
+                                                                class="btn admin-return-action assign"
+                                                                data-confirm-title="Giao shipper lấy hàng?"
+                                                                data-confirm="Sau khi giao shipper, admin chỉ theo dõi trạng thái vận chuyển và không tự đổi trạng thái shipper."
+                                                                data-confirm-ok="Giao shipper">
+                                                            <i class="fas fa-shipping-fast"></i>
+                                                            <span>Giao shipper</span>
+                                                        </button>
+                                                    }
+                                                }
+
+                                                @if (item.CanReceive)
+                                                {
+                                                    using (Html.BeginForm("ConfirmReceived", "ReturnRequestManager", FormMethod.Post, new { @class = "admin-return-inline-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.YeuCauTraHangId" />
+                                                        <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                                        <input type="hidden" name="status" value="@Model.Status" />
+                                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
+
+                                                        <button type="submit"
+                                                                class="btn admin-return-action receive"
+                                                                data-confirm-title="Xác nhận đã nhận hàng trả về?"
+                                                                data-confirm="Hệ thống sẽ cộng lại tồn kho theo số lượng sản phẩm khách trả."
+                                                                data-confirm-ok="Xác nhận">
+                                                            <i class="fas fa-box"></i>
+                                                            <span>Nhận hàng</span>
+                                                        </button>
+                                                    }
+                                                }
+
+                                                @if (item.CanRefund)
+                                                {
+                                                    using (Html.BeginForm("ConfirmRefund", "ReturnRequestManager", FormMethod.Post, new { @class = "admin-return-refund-form" }))
+                                                    {
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.YeuCauTraHangId" />
+                                                        <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                                        <input type="hidden" name="status" value="@Model.Status" />
+                                                        <input type="hidden" name="page" value="@Model.CurrentPage" />
+
+                                                        <input type="text"
+                                                               name="tongTienHoanThucTe"
+                                                               class="form-control admin-return-refund-input currency-input"
+                                                               value="@item.TongTienHoanDuKien.ToString("N0")"
+                                                               autocomplete="off" />
+
+                                                        <button type="submit"
+                                                                class="btn admin-return-action refund"
+                                                                data-confirm-title="Xác nhận đã hoàn tiền?"
+                                                                data-confirm="Hệ thống sẽ ghi nhận yêu cầu trả hàng đã hoàn tiền. Đây là xác nhận thủ công, không tự gọi API ngân hàng."
+                                                                data-confirm-ok="Đã hoàn tiền">
+                                                            <i class="fas fa-money-check-alt"></i>
+                                                            <span>Hoàn tiền</span>
+                                                        </button>
+                                                    }
+                                                }
+
+                                                @if (!item.CanApprove &&
+                                                    !item.CanReject &&
+                                                    !item.CanAssignShipper &&
+                                                    !item.CanReceive &&
+                                                    !item.CanRefund)
+                                                    {
+                                                        <span class="admin-return-locked">
+                                                            <i class="fas fa-lock"></i>
+                                                            Theo dõi
+                                                        </span>
+                                                    }
+
+                                                <a href="@Url.Action("Detail", "ReturnRequestManager", new { id = item.YeuCauTraHangId, keyword = Model.Keyword, status = Model.Status, page = Model.CurrentPage })"
+                                                   class="btn admin-return-action detail">
+                                                    <i class="fas fa-eye"></i>
+                                                    <span>Chi tiết</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th>Yêu cầu / Đơn hàng</th>
+                                    <th>Khách hàng</th>
+                                    <th>Sản phẩm trả</th>
+                                    <th class="text-right">Hoàn tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Shipper</th>
+                                    <th class="text-center">Thao tác</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-return-empty">
+                        <div class="admin-return-empty-icon">
+                            <i class="fas fa-undo-alt"></i>
+                        </div>
+                        <h3>Không có yêu cầu trả hàng</h3>
+                        <p>Không tìm thấy yêu cầu trả hàng phù hợp với điều kiện lọc hiện tại.</p>
+                    </div>
+                }
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="admin-return-pagination">
+                        <div class="admin-return-pagination-info">
+                            Trang @Model.CurrentPage / @Model.TotalPages —
+                            hiển thị @Model.Requests.Count trên tổng @Model.TotalItems yêu cầu
+                        </div>
+
+                        <div class="admin-return-pagination-links">
+                            <a class="admin-return-page-link @(Model.HasPreviousPage ? "" : "disabled")"
+                               href="@(Model.HasPreviousPage ? Url.Action("Index", new { keyword = Model.Keyword, status = Model.Status, page = Model.CurrentPage - 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+
+                            @if (startPage > 1)
+                            {
+                                <a class="admin-return-page-link"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.Status, page = 1 })">
+                                    1
+                                </a>
+
+                                if (startPage > 2)
+                                {
+                                    <span class="admin-return-page-dots">...</span>
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <a class="admin-return-page-link @(i == Model.CurrentPage ? "active" : "")"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.Status, page = i })">
+                                    @i
+                                </a>
+                            }
+
+                            @if (endPage < Model.TotalPages)
+                            {
+                                if (endPage < Model.TotalPages - 1)
+                                {
+                                    <span class="admin-return-page-dots">...</span>
+                                }
+
+                                <a class="admin-return-page-link"
+                                   href="@Url.Action("Index", new { keyword = Model.Keyword, status = Model.Status, page = Model.TotalPages })">
+                                    @Model.TotalPages
+                                </a>
+                            }
+
+                            <a class="admin-return-page-link @(Model.HasNextPage ? "" : "disabled")"
+                               href="@(Model.HasNextPage ? Url.Action("Index", new { keyword = Model.Keyword, status = Model.Status, page = Model.CurrentPage + 1 }) : "javascript:void(0)")">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function formatVndValue(value) {
+                var numeric = String(value || '').replace(/[^\d]/g, '');
+
+                if (!numeric) {
+                    return '';
+                }
+
+                numeric = numeric.replace(/^0+(?=\d)/, '');
+
+                return numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            var currencyInputs = document.querySelectorAll('.currency-input');
+
+            currencyInputs.forEach(function (input) {
+                input.setAttribute('inputmode', 'numeric');
+
+                if (input.value) {
+                    input.value = formatVndValue(input.value);
+                }
+
+                input.addEventListener('input', function () {
+                    this.value = formatVndValue(this.value);
+                });
+
+                var form = input.closest('form');
+
+                if (form) {
+                    form.addEventListener('submit', function () {
+                        input.value = input.value.replace(/[^\d]/g, '');
+                    });
+                }
+            });
+        });
+    </script>
+}

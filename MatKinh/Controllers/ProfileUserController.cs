@@ -164,6 +164,9 @@ namespace MatKinh.Controllers
         /// <summary>
         /// Chi tiết đơn hàng của user hiện tại.
         /// </summary>
+        /// <summary>
+        /// Chi tiết đơn hàng của user hiện tại.
+        /// </summary>
         public ActionResult DetailPurchaseOrder(string maDonHang)
         {
             TaiKhoan currentAccount = GetCurrentAccount();
@@ -207,9 +210,18 @@ namespace MatKinh.Controllers
                 .ToList()
                 .ToDictionary(x => x.ChiTietDonHangId, x => x);
 
-            ViewData["listOfProductInOrder"] = details;
+            YeuCauTraHang returnRequest = db.YeuCauTraHangs
+                .Include(x => x.ChiTietTraHangs)
+                .FirstOrDefault(x => x.DonHangId == order.DonHangId);
 
+            bool hasActiveReturnRequest =
+                returnRequest != null &&
+                returnRequest.TrangThai != ReturnRequestStatusConstants.REJECTED &&
+                returnRequest.TrangThai != ReturnRequestStatusConstants.CANCELLED;
+
+            ViewData["listOfProductInOrder"] = details;
             ViewData["reviewMap"] = reviewMap;
+            ViewData["returnRequest"] = returnRequest;
 
             ViewData["orderHistories"] = db.LichSuTrangThaiDonHangs
                 .Include(x => x.TaiKhoan)
@@ -218,7 +230,14 @@ namespace MatKinh.Controllers
                 .ToList();
 
             ViewBag.CanCancelOrder = CanCustomerCancelOrder(order);
-            ViewBag.CanReviewOrder = order.TrangThai == OrderStatusConstants.DELIVERED;
+
+            ViewBag.CanReviewOrder =
+                order.TrangThai == OrderStatusConstants.DELIVERED &&
+                !hasActiveReturnRequest;
+
+            ViewBag.CanCreateReturnRequest =
+                order.TrangThai == OrderStatusConstants.DELIVERED &&
+                returnRequest == null;
 
             return View(order);
         }
@@ -229,105 +248,114 @@ namespace MatKinh.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SubmitProductReview(
-            string maDonHang,
-            int chiTietDonHangId,
-            int soSao,
-            string noiDung)
-        {
-            TaiKhoan currentAccount = GetCurrentAccount();
-            if (currentAccount == null)
+        string maDonHang,
+        int chiTietDonHangId,
+        int soSao,
+        string noiDung)
             {
-                return RedirectToAction("LoginAccount", "Account");
-            }
+                TaiKhoan currentAccount = GetCurrentAccount();
+                if (currentAccount == null)
+                {
+                    return RedirectToAction("LoginAccount", "Account");
+                }
 
-            if (string.IsNullOrWhiteSpace(maDonHang))
-            {
-                TempData["ProfileError"] = "Mã đơn hàng không hợp lệ.";
-                return RedirectToAction("Profile");
-            }
+                if (string.IsNullOrWhiteSpace(maDonHang))
+                {
+                    TempData["ProfileError"] = "Mã đơn hàng không hợp lệ.";
+                    return RedirectToAction("Profile");
+                }
 
-            maDonHang = maDonHang.Trim();
+                maDonHang = maDonHang.Trim();
 
-            DonHang order = db.DonHangs
-                .Include(x => x.KhachHang)
-                .FirstOrDefault(x =>
-                    x.MaDonHang == maDonHang &&
-                    x.CreatedById == currentAccount.TaiKhoanId);
+                DonHang order = db.DonHangs
+                    .Include(x => x.KhachHang)
+                    .FirstOrDefault(x =>
+                        x.MaDonHang == maDonHang &&
+                        x.CreatedById == currentAccount.TaiKhoanId);
 
-            if (order == null)
-            {
-                TempData["ProfileError"] = "Không tìm thấy đơn hàng phù hợp.";
-                return RedirectToAction("Profile");
-            }
+                if (order == null)
+                {
+                    TempData["ProfileError"] = "Không tìm thấy đơn hàng phù hợp.";
+                    return RedirectToAction("Profile");
+                }
 
-            if (order.TrangThai != OrderStatusConstants.DELIVERED)
-            {
-                TempData["ProfileError"] = "Bạn chỉ có thể đánh giá khi đơn hàng đã giao thành công.";
+                if (order.TrangThai != OrderStatusConstants.DELIVERED)
+                {
+                    TempData["ProfileError"] = "Bạn chỉ có thể đánh giá khi đơn hàng đã giao thành công.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                bool hasActiveReturnRequest = db.YeuCauTraHangs.Any(x =>
+                    x.DonHangId == order.DonHangId &&
+                    x.TrangThai != ReturnRequestStatusConstants.REJECTED &&
+                    x.TrangThai != ReturnRequestStatusConstants.CANCELLED);
+
+                if (hasActiveReturnRequest)
+                {
+                    TempData["ProfileError"] = "Đơn hàng đang có yêu cầu trả hàng nên chưa thể đánh giá sản phẩm.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                ChiTietDonHang detail = db.ChiTietDonHangs
+                    .FirstOrDefault(x =>
+                        x.ChiTietDonHangId == chiTietDonHangId &&
+                        x.DonHangId == order.DonHangId);
+
+                if (detail == null)
+                {
+                    TempData["ProfileError"] = "Không tìm thấy sản phẩm cần đánh giá trong đơn hàng.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                bool alreadyReviewed = db.DanhGiaSanPhams.Any(x =>
+                    x.ChiTietDonHangId == detail.ChiTietDonHangId);
+
+                if (alreadyReviewed)
+                {
+                    TempData["ProfileError"] = "Sản phẩm này đã được gửi đánh giá trước đó.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                if (soSao < 1 || soSao > 5)
+                {
+                    TempData["ProfileError"] = "Số sao đánh giá không hợp lệ.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                noiDung = string.IsNullOrWhiteSpace(noiDung) ? null : noiDung.Trim();
+
+                if (!string.IsNullOrWhiteSpace(noiDung) && noiDung.Length > 1000)
+                {
+                    TempData["ProfileError"] = "Nội dung đánh giá không được vượt quá 1000 ký tự.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                var review = new DanhGiaSanPham
+                {
+                    ChiTietDonHangId = detail.ChiTietDonHangId,
+                    KhachHangId = order.KhachHangId,
+                    SanPhamId = detail.SanPhamId,
+                    SoSao = (byte)soSao,
+                    NoiDung = noiDung,
+
+                    // Khách gửi là hiển thị luôn
+                    TrangThai = ReviewStatusConstants.APPROVED,
+
+                    // Không cần admin duyệt
+                    DuyetBoiId = null,
+                    NgayDuyet = DateTime.Now,
+                    PhanHoiAdmin = null,
+
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = null
+                };
+
+                db.DanhGiaSanPhams.Add(review);
+                db.SaveChanges();
+
+                TempData["ProfileSuccess"] = "Đã gửi đánh giá thành công. Cảm ơn bạn đã chia sẻ trải nghiệm về sản phẩm.";
                 return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
             }
-
-            ChiTietDonHang detail = db.ChiTietDonHangs
-                .FirstOrDefault(x =>
-                    x.ChiTietDonHangId == chiTietDonHangId &&
-                    x.DonHangId == order.DonHangId);
-
-            if (detail == null)
-            {
-                TempData["ProfileError"] = "Không tìm thấy sản phẩm cần đánh giá trong đơn hàng.";
-                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
-            }
-
-            bool alreadyReviewed = db.DanhGiaSanPhams.Any(x =>
-                x.ChiTietDonHangId == detail.ChiTietDonHangId);
-
-            if (alreadyReviewed)
-            {
-                TempData["ProfileError"] = "Sản phẩm này đã được gửi đánh giá trước đó.";
-                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
-            }
-
-            if (soSao < 1 || soSao > 5)
-            {
-                TempData["ProfileError"] = "Số sao đánh giá không hợp lệ.";
-                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
-            }
-
-            noiDung = string.IsNullOrWhiteSpace(noiDung) ? null : noiDung.Trim();
-
-            if (!string.IsNullOrWhiteSpace(noiDung) && noiDung.Length > 1000)
-            {
-                TempData["ProfileError"] = "Nội dung đánh giá không được vượt quá 1000 ký tự.";
-                return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
-            }
-
-            int khachHangId = order.KhachHangId;
-
-            var review = new DanhGiaSanPham
-            {
-                ChiTietDonHangId = detail.ChiTietDonHangId,
-                KhachHangId = khachHangId,
-                SanPhamId = detail.SanPhamId,
-                SoSao = (byte)soSao,
-                NoiDung = noiDung,
-
-                // Khách gửi là hiển thị luôn
-                TrangThai = ReviewStatusConstants.APPROVED,
-
-                // Không cần admin duyệt
-                DuyetBoiId = null,
-                NgayDuyet = DateTime.Now,
-                PhanHoiAdmin = null,
-
-                CreatedAt = DateTime.Now,
-                UpdatedAt = null
-            };
-
-            db.DanhGiaSanPhams.Add(review);
-            db.SaveChanges();
-
-            TempData["ProfileSuccess"] = "Đã gửi đánh giá thành công. Cảm ơn bạn đã chia sẻ trải nghiệm về sản phẩm.";
-            return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
-        }
 
         /// <summary>
         /// Khách hàng hủy đơn hàng của chính mình.
@@ -428,6 +456,254 @@ namespace MatKinh.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SubmitReturnRequest(
+        string maDonHang,
+        string lyDo,
+        string ghiChuKhachHang,
+        int[] selectedDetailIds,
+        int[] soLuongTra)
+            {
+                TaiKhoan currentAccount = GetCurrentAccount();
+                if (currentAccount == null)
+                {
+                    return RedirectToAction("LoginAccount", "Account");
+                }
+
+                if (string.IsNullOrWhiteSpace(maDonHang))
+                {
+                    TempData["ProfileError"] = "Mã đơn hàng không hợp lệ.";
+                    return RedirectToAction("Profile");
+                }
+
+                maDonHang = maDonHang.Trim();
+
+                DonHang order = db.DonHangs
+                    .Include(x => x.ChiTietDonHangs)
+                    .FirstOrDefault(x =>
+                        x.MaDonHang == maDonHang &&
+                        x.CreatedById == currentAccount.TaiKhoanId);
+
+                if (order == null)
+                {
+                    TempData["ProfileError"] = "Không tìm thấy đơn hàng phù hợp.";
+                    return RedirectToAction("Profile");
+                }
+
+                if (order.TrangThai != OrderStatusConstants.DELIVERED)
+                {
+                    TempData["ProfileError"] = "Chỉ có thể yêu cầu trả hàng khi đơn hàng đã giao thành công.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                bool hasReturnRequest = db.YeuCauTraHangs.Any(x => x.DonHangId == order.DonHangId);
+                if (hasReturnRequest)
+                {
+                    TempData["ProfileError"] = "Đơn hàng này đã có yêu cầu trả hàng.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                if (string.IsNullOrWhiteSpace(lyDo))
+                {
+                    TempData["ProfileError"] = "Vui lòng nhập lý do trả hàng.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                if (selectedDetailIds == null || selectedDetailIds.Length == 0)
+                {
+                    TempData["ProfileError"] = "Vui lòng chọn ít nhất một sản phẩm cần trả.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                if (soLuongTra == null || soLuongTra.Length == 0)
+                {
+                    TempData["ProfileError"] = "Số lượng trả không hợp lệ.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                var selectedIds = selectedDetailIds.Distinct().ToList();
+
+                var details = db.ChiTietDonHangs
+                    .Where(x =>
+                        x.DonHangId == order.DonHangId &&
+                        selectedIds.Contains(x.ChiTietDonHangId))
+                    .ToList();
+
+                if (!details.Any())
+                {
+                    TempData["ProfileError"] = "Không tìm thấy sản phẩm hợp lệ để trả hàng.";
+                    return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                }
+
+                using (var transaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        var request = new YeuCauTraHang
+                        {
+                            MaYeuCau = GenerateReturnRequestCode(),
+                            DonHangId = order.DonHangId,
+                            KhachHangId = order.KhachHangId,
+
+                            LyDo = lyDo.Trim(),
+                            GhiChuKhachHang = string.IsNullOrWhiteSpace(ghiChuKhachHang) ? null : ghiChuKhachHang.Trim(),
+
+                            TrangThai = ReturnRequestStatusConstants.PENDING,
+                            TrangThaiHoanTien = RefundStatusConstants.NOT_REFUNDED,
+
+                            TongTienHoanDuKien = 0,
+                            TongTienHoanThucTe = null,
+
+                            NgayYeuCau = DateTime.Now,
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = null
+                        };
+
+                        db.YeuCauTraHangs.Add(request);
+                        db.SaveChanges();
+
+                        decimal tongTienHoanDuKien = 0;
+
+                        foreach (var detail in details)
+                        {
+                            int index = Array.IndexOf(selectedDetailIds, detail.ChiTietDonHangId);
+
+                            if (index < 0 || index >= soLuongTra.Length)
+                            {
+                                continue;
+                            }
+
+                            int quantity = soLuongTra[index];
+
+                            if (quantity <= 0)
+                            {
+                                continue;
+                            }
+
+                            if (quantity > detail.SoLuong)
+                            {
+                                quantity = detail.SoLuong;
+                            }
+
+                            decimal donGiaHoan = detail.DonGiaSnapshot - detail.GiamGiaSnapshot;
+
+                            if (donGiaHoan < 0)
+                            {
+                                donGiaHoan = 0;
+                            }
+
+                            decimal thanhTienHoan = donGiaHoan * quantity;
+                            tongTienHoanDuKien += thanhTienHoan;
+
+                            db.ChiTietTraHangs.Add(new ChiTietTraHang
+                            {
+                                YeuCauTraHangId = request.YeuCauTraHangId,
+                                ChiTietDonHangId = detail.ChiTietDonHangId,
+                                SanPhamId = detail.SanPhamId,
+
+                                TenSanPhamSnapshot = detail.TenSanPhamSnapshot,
+                                SoLuongMua = detail.SoLuong,
+                                SoLuongTra = quantity,
+
+                                DonGiaSnapshot = detail.DonGiaSnapshot,
+                                GiamGiaSnapshot = detail.GiamGiaSnapshot,
+                                DonGiaHoan = donGiaHoan,
+                                ThanhTienHoan = thanhTienHoan,
+
+                                LyDoChiTiet = null,
+                                CreatedAt = DateTime.Now
+                            });
+                        }
+
+                        if (tongTienHoanDuKien <= 0)
+                        {
+                            transaction.Rollback();
+                            TempData["ProfileError"] = "Vui lòng chọn sản phẩm và số lượng trả hợp lệ.";
+                            return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                        }
+
+                        request.TongTienHoanDuKien = tongTienHoanDuKien;
+
+                        db.LichSuTrangThaiTraHangs.Add(new LichSuTrangThaiTraHang
+                        {
+                            YeuCauTraHangId = request.YeuCauTraHangId,
+                            TrangThaiCu = null,
+                            TrangThaiMoi = ReturnRequestStatusConstants.PENDING,
+                            ThayDoiBoiId = currentAccount.TaiKhoanId,
+                            GhiChu = "Khách hàng gửi yêu cầu trả hàng.",
+                            CreatedAt = DateTime.Now
+                        });
+
+                        db.SaveChanges();
+                        transaction.Commit();
+
+                        TempData["ProfileSuccess"] = "Đã gửi yêu cầu trả hàng thành công. Cửa hàng sẽ kiểm tra và phản hồi sớm.";
+                        return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        TempData["ProfileError"] = "Gửi yêu cầu trả hàng thất bại: " + ex.Message;
+                        return RedirectToAction("DetailPurchaseOrder", new { maDonHang = order.MaDonHang });
+                    }
+                }
+            }
+
+        /// <summary>
+        /// Chi tiết yêu cầu trả hàng của user hiện tại.
+        /// </summary>
+        public ActionResult DetailReturnRequest(string maYeuCau)
+        {
+            TaiKhoan currentAccount = GetCurrentAccount();
+            if (currentAccount == null)
+            {
+                return RedirectToAction("LoginAccount", "Account");
+            }
+
+            if (string.IsNullOrWhiteSpace(maYeuCau))
+            {
+                TempData["ProfileError"] = "Mã yêu cầu trả hàng không hợp lệ.";
+                return RedirectToAction("Profile");
+            }
+
+            maYeuCau = maYeuCau.Trim();
+
+            YeuCauTraHang request = db.YeuCauTraHangs
+                .Include(x => x.DonHang)
+                .Include(x => x.KhachHang)
+                .Include(x => x.ChiTietTraHangs.Select(ct => ct.SanPham))
+                .FirstOrDefault(x =>
+                    x.MaYeuCau == maYeuCau &&
+                    x.DonHang.CreatedById == currentAccount.TaiKhoanId);
+
+            if (request == null)
+            {
+                TempData["ProfileError"] = "Không tìm thấy yêu cầu trả hàng phù hợp.";
+                return RedirectToAction("Profile");
+            }
+
+            ViewData["returnHistories"] = db.LichSuTrangThaiTraHangs
+                .Include(x => x.TaiKhoan)
+                .Where(x => x.YeuCauTraHangId == request.YeuCauTraHangId)
+                .OrderBy(x => x.CreatedAt)
+                .ToList();
+
+            return View(request);
+        }
+
+        private string GenerateReturnRequestCode()
+        {
+            string code;
+
+            do
+            {
+                code = "TH" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
+            }
+            while (db.YeuCauTraHangs.Any(x => x.MaYeuCau == code));
+
+            return code;
+        }
         private bool CanCustomerCancelOrder(DonHang order)
         {
             if (order == null)

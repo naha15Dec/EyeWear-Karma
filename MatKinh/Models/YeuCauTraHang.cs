@@ -18,9 +18,10 @@ namespace MatKinh.Models
         public YeuCauTraHang()
         {
             this.ChiTietTraHangs = new HashSet<ChiTietTraHang>();
+            this.LichSuTrangThaiTraHangs = new HashSet<LichSuTrangThaiTraHang>();
         }
     
-        public int YeuCauId { get; set; }
+        public int YeuCauTraHangId { get; set; }
         public string MaYeuCau { get; set; }
         public int DonHangId { get; set; }
         public int KhachHangId { get; set; }
@@ -31,9 +32,17 @@ namespace MatKinh.Models
         public Nullable<int> DuyetBoiId { get; set; }
         public System.DateTime NgayYeuCau { get; set; }
         public Nullable<System.DateTime> NgayDuyet { get; set; }
-        public Nullable<System.DateTime> NgayShipperLay { get; set; }
-        public Nullable<System.DateTime> NgayNhanVe { get; set; }
+        public Nullable<System.DateTime> NgayGanShipper { get; set; }
+        public Nullable<System.DateTime> NgayShipperBatDauLay { get; set; }
+        public Nullable<System.DateTime> NgayShipperLayHang { get; set; }
+        public Nullable<System.DateTime> NgayBanGiaoVeCuaHang { get; set; }
+        public Nullable<System.DateTime> NgayNhanHangVe { get; set; }
+        public Nullable<System.DateTime> NgayHoanTien { get; set; }
+        public decimal TongTienHoanDuKien { get; set; }
+        public Nullable<decimal> TongTienHoanThucTe { get; set; }
+        public int TrangThaiHoanTien { get; set; }
         public string GhiChuAdmin { get; set; }
+        public string GhiChuShipper { get; set; }
         public System.DateTime CreatedAt { get; set; }
         public Nullable<System.DateTime> UpdatedAt { get; set; }
     
@@ -41,6 +50,8 @@ namespace MatKinh.Models
         public virtual ICollection<ChiTietTraHang> ChiTietTraHangs { get; set; }
         public virtual DonHang DonHang { get; set; }
         public virtual KhachHang KhachHang { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<LichSuTrangThaiTraHang> LichSuTrangThaiTraHangs { get; set; }
         public virtual TaiKhoan TaiKhoan { get; set; }
         public virtual TaiKhoan TaiKhoan1 { get; set; }
     }

@@ -616,6 +616,7 @@
     <Content Include="Content\css\admin-product-create.css" />
     <Content Include="Content\css\admin-product-list.css" />
     <Content Include="Content\css\admin-profile.css" />
+    <Content Include="Content\css\admin-return-request.css" />
     <Content Include="Content\css\admin-revenue.css" />
     <Content Include="Content\css\admin-review.css" />
     <Content Include="Content\css\admin-setting.css" />
@@ -634,6 +635,8 @@
     <Content Include="Content\css\premium-toast.css" />
     <Content Include="Content\css\product.css" />
     <Content Include="Content\css\profile.css" />
+    <Content Include="Content\css\return-request-detail.css" />
+    <Content Include="Content\css\shipper-return-request.css" />
     <Content Include="Content\css\success.css" />
     <Content Include="Content\dataTables.bootstrap4.min.css" />
     <Content Include="Content\daterangepicker.css" />
@@ -757,8 +760,10 @@
     <Compile Include="Areas\AdminPage\Controllers\ManagerProductController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ManagerRevenueController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ProfileController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ReturnRequestManagerController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ReviewManagerController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\SettingInformationWebsiteController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ShipperReturnRequestController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BlogController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
@@ -777,6 +782,9 @@
     </Compile>
     <Compile Include="Models\BlogStatusConstants.cs" />
     <Compile Include="Models\ChiTietDonHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ChiTietTraHang.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\CustomAuthenticationAttribute.cs" />
@@ -819,12 +827,17 @@
     <Compile Include="Models\LichSuTrangThaiDonHang.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\LichSuTrangThaiTraHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\LoaiSanPham.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\OrderStatusConstants.cs" />
     <Compile Include="Models\PaymentConstants.cs" />
     <Compile Include="Models\Payments\VnPayLibrary.cs" />
+    <Compile Include="Models\RefundStatusConstants.cs" />
+    <Compile Include="Models\ReturnRequestStatusConstants.cs" />
     <Compile Include="Models\ReviewStatusConstants.cs" />
     <Compile Include="Models\RoleConstants.cs" />
     <Compile Include="Models\RuleGoiYKinhTheoMat.cs">
@@ -850,6 +863,9 @@
     <Compile Include="Models\VaiTro.cs">
       <DependentUpon>DataModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\YeuCauTraHang.cs">
+      <DependentUpon>DataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\RecommendationService.cs" />
     <Compile Include="ViewModel\AdminAccountViewModels.cs" />
@@ -864,6 +880,7 @@
     <Compile Include="ViewModel\AdminProductCreateVm.cs" />
     <Compile Include="ViewModel\AdminProductListPageVm.cs" />
     <Compile Include="ViewModel\AdminProductViewModels.cs" />
+    <Compile Include="ViewModel\AdminReturnRequestVm.cs" />
     <Compile Include="ViewModel\AdminRevenueVm.cs" />
     <Compile Include="ViewModel\AdminReviewVm.cs" />
     <Compile Include="ViewModel\AdminWebsiteSettingVm.cs" />
@@ -874,6 +891,7 @@
     <Compile Include="ViewModel\AdminProfileViewModels.cs" />
     <Compile Include="ViewModel\PurchaseInformation.cs" />
     <Compile Include="ViewModel\Register.cs" />
+    <Compile Include="ViewModel\ShipperReturnRequestVm.cs" />
     <Compile Include="ViewModel\UpdateAccount.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -953,6 +971,10 @@
     <Content Include="Areas\AdminPage\Views\FrameType\Index.cshtml" />
     <Content Include="Areas\AdminPage\Views\FaceShapeRule\Index.cshtml" />
     <Content Include="Areas\AdminPage\Views\ReviewManager\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ReturnRequestManager\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ReturnRequestManager\Detail.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ShipperReturnRequest\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ShipperReturnRequest\Detail.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
@@ -981,6 +1003,7 @@
     <Content Include="Views\Shared\_FlashMessage.cshtml" />
     <Content Include="Views\ShoppingCart\_CartCount.cshtml" />
     <Content Include="Views\Shared\_PremiumConfirmModal.cshtml" />
+    <Content Include="Views\ProfileUser\DetailReturnRequest.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

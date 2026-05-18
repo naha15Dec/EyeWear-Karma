@@ -26,6 +26,9 @@ namespace MatKinh.Models
             this.ThongTinCuaHangs = new HashSet<ThongTinCuaHang>();
             this.TaiKhoanRememberTokens = new HashSet<TaiKhoanRememberToken>();
             this.DanhGiaSanPhams = new HashSet<DanhGiaSanPham>();
+            this.LichSuTrangThaiTraHangs = new HashSet<LichSuTrangThaiTraHang>();
+            this.YeuCauTraHangs = new HashSet<YeuCauTraHang>();
+            this.YeuCauTraHangs1 = new HashSet<YeuCauTraHang>();
         }
     
         public int TaiKhoanId { get; set; }
@@ -63,5 +66,11 @@ namespace MatKinh.Models
         public virtual ICollection<TaiKhoanRememberToken> TaiKhoanRememberTokens { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<LichSuTrangThaiTraHang> LichSuTrangThaiTraHangs { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<YeuCauTraHang> YeuCauTraHangs { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<YeuCauTraHang> YeuCauTraHangs1 { get; set; }
     }
 }

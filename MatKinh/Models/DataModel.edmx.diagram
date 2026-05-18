@@ -48,6 +48,18 @@
         <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_DuyetBoi" />
         <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_KhachHang" />
         <AssociationConnector Association="BanMatKinhModel.FK_DanhGiaSanPham_SanPham" />
+        <EntityTypeShape EntityType="BanMatKinhModel.ChiTietTraHang" Width="1.5" PointX="17.75" PointY="10.75" />
+        <EntityTypeShape EntityType="BanMatKinhModel.LichSuTrangThaiTraHang" Width="1.5" PointX="17.75" PointY="7" />
+        <EntityTypeShape EntityType="BanMatKinhModel.YeuCauTraHang" Width="1.5" PointX="15.5" PointY="6.625" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ChiTietTraHang_ChiTietDonHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ChiTietTraHang_SanPham" />
+        <AssociationConnector Association="BanMatKinhModel.FK_ChiTietTraHang_YeuCauTraHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_YeuCauTraHang_DonHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_YeuCauTraHang_KhachHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_LichSuTrangThaiTraHang_TaiKhoan" />
+        <AssociationConnector Association="BanMatKinhModel.FK_LichSuTrangThaiTraHang_YeuCauTraHang" />
+        <AssociationConnector Association="BanMatKinhModel.FK_YeuCauTraHang_DuyetBoi" />
+        <AssociationConnector Association="BanMatKinhModel.FK_YeuCauTraHang_Shipper" />
         </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

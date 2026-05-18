@@ -10,6 +10,9 @@
     List<LichSuTrangThaiDonHang> histories = ViewData["orderHistories"] as List<LichSuTrangThaiDonHang> ?? new List<LichSuTrangThaiDonHang>();
     Dictionary<int, DanhGiaSanPham> reviewMap = ViewData["reviewMap"] as Dictionary<int, DanhGiaSanPham> ?? new Dictionary<int, DanhGiaSanPham>();
 
+    YeuCauTraHang returnRequest = ViewData["returnRequest"] as YeuCauTraHang;
+    bool canCreateReturnRequest = ViewBag.CanCreateReturnRequest != null && (bool)ViewBag.CanCreateReturnRequest;
+
     bool canCancelOrder = ViewBag.CanCancelOrder != null && (bool)ViewBag.CanCancelOrder;
     bool canReviewOrder = ViewBag.CanReviewOrder != null && (bool)ViewBag.CanReviewOrder;
 
@@ -454,6 +457,51 @@
                 }
             </div>
 
+            @if (returnRequest != null)
+            {
+                <div class="order-return-card">
+                    <div class="order-return-card-main">
+                        <div class="order-return-card-icon">
+                            <i class="fa fa-refresh"></i>
+                        </div>
+
+                        <div>
+                            <span class="order-detail-eyebrow">Return request</span>
+                            <h3>Yêu cầu trả hàng</h3>
+
+                            <p>
+                                Yêu cầu trả hàng <strong>#@returnRequest.MaYeuCau</strong>
+                                đang ở trạng thái
+                                <strong>@ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)</strong>.
+                            </p>
+
+                            <div class="order-return-card-meta">
+                                <span>
+                                    <i class="fa fa-calendar"></i>
+                                    Ngày yêu cầu: @returnRequest.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+
+                                <span>
+                                    <i class="fa fa-money"></i>
+                                    Dự kiến hoàn: @string.Format("{0:N0}", returnRequest.TongTienHoanDuKien) ₫
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-return-card-side">
+                        <span class="status-badge processing">
+                            @ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)
+                        </span>
+
+                        <a href="@Url.Action("DetailReturnRequest", "ProfileUser", new { maYeuCau = returnRequest.MaYeuCau })"
+                           class="optical-btn optical-btn--light order-return-detail-btn">
+                            Xem chi tiết trả hàng
+                        </a>
+                    </div>
+                </div>
+            }
+
             @if (details.Any() && canReviewOrder)
             {
                 foreach (var item in details)
@@ -672,6 +720,16 @@
             }
 
             <div class="order-actions">
+                @if (canCreateReturnRequest)
+                {
+                    <button type="button"
+                            class="optical-btn optical-btn--light"
+                            data-toggle="modal"
+                            data-target="#returnRequestModal">
+                        Yêu cầu trả hàng
+                    </button>
+                }
+
                 <a href="@Url.Action("Profile", "ProfileUser")"
                    class="optical-btn optical-btn--light">
                     Quay lại tài khoản
@@ -684,4 +742,144 @@
             </div>
         </div>
     </section>
+    @if (canCreateReturnRequest && details.Any())
+    {
+        <div class="modal fade order-return-modal"
+             id="returnRequestModal"
+             tabindex="-1"
+             role="dialog"
+             aria-hidden="true">
+
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content order-return-modal-content">
+
+                    @using (Html.BeginForm("SubmitReturnRequest", "ProfileUser", FormMethod.Post, new { autocomplete = "off" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="maDonHang" value="@Model.MaDonHang" />
+
+                        <div class="modal-header order-return-modal-header">
+                            <div>
+                                <h5 class="modal-title">Yêu cầu trả hàng</h5>
+                                <p>
+                                    Chọn sản phẩm cần trả và nhập lý do để cửa hàng kiểm tra, xử lý.
+                                </p>
+                            </div>
+
+                            <button type="button" class="close order-return-modal-close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="order-return-form-group">
+                                <label>Lý do trả hàng</label>
+                                <input type="text"
+                                       name="lyDo"
+                                       class="form-control order-return-input"
+                                       maxlength="500"
+                                       required
+                                       placeholder="Ví dụ: Sản phẩm không phù hợp, lỗi sản phẩm, giao sai mẫu..." />
+                            </div>
+
+                            <div class="order-return-form-group">
+                                <label>Ghi chú thêm</label>
+                                <textarea name="ghiChuKhachHang"
+                                          class="form-control order-return-textarea"
+                                          rows="3"
+                                          maxlength="1000"
+                                          placeholder="Mô tả thêm tình trạng sản phẩm hoặc mong muốn xử lý..."></textarea>
+                            </div>
+
+                            <div class="order-return-products">
+                                <div class="order-return-products-head">
+                                    <strong>Chọn sản phẩm muốn trả</strong>
+                                    <span>Có thể chọn một hoặc nhiều sản phẩm trong đơn</span>
+                                </div>
+
+                                @foreach (var item in details)
+                                {
+                                    string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                                    string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
+                                    <div class="order-return-product-item">
+                                        <label class="order-return-check">
+                                            <input type="checkbox"
+                                                   name="selectedDetailIds"
+                                                   value="@item.ChiTietDonHangId"
+                                                   class="return-product-checkbox" />
+                                            <span></span>
+                                        </label>
+
+                                        <div class="order-return-product-image">
+                                            <img src="@imageUrl"
+                                                 alt="@item.TenSanPhamSnapshot"
+                                                 onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                        </div>
+
+                                        <div class="order-return-product-info">
+                                            <h4>@item.TenSanPhamSnapshot</h4>
+                                            <p>Mã SP: @productCode</p>
+                                            <small>Đã mua: @item.SoLuong</small>
+                                        </div>
+
+                                        <div class="order-return-quantity">
+                                            <label>Số lượng trả</label>
+                                            <input type="number"
+                                                   name="soLuongTra"
+                                                   class="form-control order-return-qty-input"
+                                                   min="1"
+                                                   max="@item.SoLuong"
+                                                   value="1"
+                                                   disabled />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="order-return-note">
+                                Sau khi gửi yêu cầu, cửa hàng sẽ kiểm tra và phản hồi. Nếu được duyệt, shipper sẽ được phân công lấy hàng trả.
+                            </div>
+                        </div>
+
+                        <div class="modal-footer order-return-modal-footer">
+                            <button type="button" class="optical-btn optical-btn--light" data-dismiss="modal">
+                                Hủy
+                            </button>
+
+                            <button type="submit" class="optical-btn optical-btn--dark">
+                                Gửi yêu cầu
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 </section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var checkboxes = document.querySelectorAll('.return-product-checkbox');
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    var item = this.closest('.order-return-product-item');
+                    if (!item) return;
+
+                    var qtyInput = item.querySelector('.order-return-qty-input');
+                    if (!qtyInput) return;
+
+                    qtyInput.disabled = !this.checked;
+
+                    if (this.checked) {
+                        var currentValue = parseInt(qtyInput.value, 10);
+                        qtyInput.value = currentValue > 0 ? currentValue : 1;
+                    }
+                });
+            });
+        });
+    </script>
+}

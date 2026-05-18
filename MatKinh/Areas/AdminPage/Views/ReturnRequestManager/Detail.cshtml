@@ -1,0 +1,413 @@
+﻿
+@model MatKinh.Models.YeuCauTraHang
+@using System
+@using System.Collections.Generic
+@using System.Globalization
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Chi tiết yêu cầu trả hàng";
+
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    List<ChiTietTraHang> details = Model.ChiTietTraHangs != null
+        ? Model.ChiTietTraHangs.OrderBy(x => x.ChiTietTraHangId).ToList()
+        : new List<ChiTietTraHang>();
+
+    List<LichSuTrangThaiTraHang> histories = ViewData["returnHistories"] as List<LichSuTrangThaiTraHang>
+        ?? new List<LichSuTrangThaiTraHang>();
+
+    string shipperName = ViewBag.ShipperName as string ?? "";
+    string approverName = ViewBag.ApproverName as string ?? "";
+
+    string keyword = ViewBag.Keyword as string ?? "";
+    int? status = ViewBag.Status as int?;
+    int page = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallbackImg;
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    Func<int, string> returnStatusClass = statusValue =>
+    {
+        switch (statusValue)
+        {
+            case ReturnRequestStatusConstants.PENDING:
+                return "warning";
+
+            case ReturnRequestStatusConstants.APPROVED:
+            case ReturnRequestStatusConstants.ASSIGNED_TO_SHIPPER:
+            case ReturnRequestStatusConstants.PICKING_UP:
+            case ReturnRequestStatusConstants.PICKED_UP:
+            case ReturnRequestStatusConstants.HANDED_OVER:
+                return "processing";
+
+            case ReturnRequestStatusConstants.RECEIVED:
+                return "info";
+
+            case ReturnRequestStatusConstants.REFUNDED:
+                return "success";
+
+            case ReturnRequestStatusConstants.REJECTED:
+            case ReturnRequestStatusConstants.CANCELLED:
+                return "danger";
+
+            default:
+                return "default";
+        }
+    };
+
+    Func<int, string> refundStatusClass = statusValue =>
+    {
+        switch (statusValue)
+        {
+            case RefundStatusConstants.REFUNDED:
+                return "success";
+
+            case RefundStatusConstants.MANUAL_REQUIRED:
+                return "warning";
+
+            case RefundStatusConstants.NO_REFUND:
+                return "danger";
+
+            default:
+                return "muted";
+        }
+    };
+
+    string orderCode = Model.DonHang != null ? Model.DonHang.MaDonHang : "—";
+    string customerName = Model.KhachHang != null ? Model.KhachHang.HoTen : "Khách hàng";
+    string customerPhone = Model.KhachHang != null ? Model.KhachHang.SoDienThoai : "";
+    string customerEmail = Model.KhachHang != null ? Model.KhachHang.Email : "";
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Chi tiết yêu cầu trả hàng</h1>
+        <p class="admin-page-subtitle">
+            Kiểm tra đầy đủ sản phẩm khách yêu cầu trả, tiến trình xử lý, shipper, hoàn kho và hoàn tiền.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "ReturnRequestManager", new { keyword = keyword, status = status, page = page })">Quản lý trả hàng</a>
+        </li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+</div>
+
+<section class="content admin-return-detail-page">
+    <div class="container-fluid p-0">
+
+        <div class="admin-return-detail-hero">
+            <div>
+                <span class="admin-return-detail-eyebrow">Return request</span>
+                <h2>#@Model.MaYeuCau</h2>
+                <p>
+                    Yêu cầu trả hàng từ đơn <strong>#@orderCode</strong>,
+                    tạo lúc <strong>@Model.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")</strong>.
+                </p>
+            </div>
+
+            <div class="admin-return-detail-hero-status">
+                <span class="admin-return-status-badge @returnStatusClass(Model.TrangThai)">
+                    @ReturnRequestStatusConstants.GetName(Model.TrangThai)
+                </span>
+
+                <span class="admin-return-status-badge @refundStatusClass(Model.TrangThaiHoanTien)">
+                    @RefundStatusConstants.GetName(Model.TrangThaiHoanTien)
+                </span>
+            </div>
+        </div>
+
+        <div class="admin-return-detail-grid">
+            <div class="card admin-return-detail-card">
+                <div class="card-header border-0">
+                    <div class="admin-return-card-heading">
+                        <div class="admin-return-heading-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h3 class="admin-return-card-title">Thông tin khách hàng</h3>
+                            <p class="admin-return-card-subtitle">Người gửi yêu cầu trả hàng.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="admin-return-info-list">
+                        <div class="admin-return-info-item">
+                            <span>Khách hàng</span>
+                            <strong>@customerName</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Số điện thoại</span>
+                            <strong>@(string.IsNullOrWhiteSpace(customerPhone) ? "—" : customerPhone)</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Email</span>
+                            <strong>@(string.IsNullOrWhiteSpace(customerEmail) ? "—" : customerEmail)</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Mã đơn hàng</span>
+                            <strong>#@orderCode</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card admin-return-detail-card">
+                <div class="card-header border-0">
+                    <div class="admin-return-card-heading">
+                        <div class="admin-return-heading-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="admin-return-card-title">Thông tin xử lý</h3>
+                            <p class="admin-return-card-subtitle">Trạng thái duyệt, shipper và hoàn tiền.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="admin-return-info-list">
+                        <div class="admin-return-info-item">
+                            <span>Người duyệt</span>
+                            <strong>@(string.IsNullOrWhiteSpace(approverName) ? "—" : approverName)</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Shipper</span>
+                            <strong>@(string.IsNullOrWhiteSpace(shipperName) ? "Chưa gán" : shipperName)</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Tiền hoàn dự kiến</span>
+                            <strong>@Model.TongTienHoanDuKien.ToString("N0", vi) đ</strong>
+                        </div>
+
+                        <div class="admin-return-info-item">
+                            <span>Tiền hoàn thực tế</span>
+                            <strong>
+                                @(Model.TongTienHoanThucTe.HasValue ? Model.TongTienHoanThucTe.Value.ToString("N0", vi) + " đ" : "Chưa cập nhật")
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card admin-return-detail-card">
+            <div class="card-header border-0">
+                <div class="admin-return-card-heading">
+                    <div class="admin-return-heading-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div>
+                        <h3 class="admin-return-card-title">Lý do và ghi chú</h3>
+                        <p class="admin-return-card-subtitle">Thông tin khách cung cấp và ghi chú trong quá trình xử lý.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="admin-return-note-grid">
+                    <div class="admin-return-note-box">
+                        <span>Lý do trả hàng</span>
+                        <p>@Model.LyDo</p>
+                    </div>
+
+                    <div class="admin-return-note-box">
+                        <span>Ghi chú khách hàng</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuKhachHang) ? "Không có ghi chú." : Model.GhiChuKhachHang)</p>
+                    </div>
+
+                    <div class="admin-return-note-box">
+                        <span>Ghi chú admin</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuAdmin) ? "Chưa có ghi chú." : Model.GhiChuAdmin)</p>
+                    </div>
+
+                    <div class="admin-return-note-box">
+                        <span>Ghi chú shipper</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuShipper) ? "Chưa có ghi chú." : Model.GhiChuShipper)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card admin-return-detail-card">
+            <div class="card-header border-0">
+                <div class="admin-return-card-heading">
+                    <div class="admin-return-heading-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="admin-return-card-title">Sản phẩm khách yêu cầu trả</h3>
+                        <p class="admin-return-card-subtitle">
+                            Có <b>@details.Count</b> dòng sản phẩm trong yêu cầu này.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (details.Any())
+                {
+                    <div class="admin-return-detail-table-wrap">
+                        <table class="table admin-return-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng mua</th>
+                                    <th>Số lượng trả</th>
+                                    <th class="text-right">Đơn giá hoàn</th>
+                                    <th class="text-right">Thành tiền hoàn</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in details)
+                                {
+                                    string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                                    string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
+                                    <tr>
+                                        <td data-label="Sản phẩm">
+                                            <div class="admin-return-detail-product">
+                                                <div class="admin-return-detail-product-image">
+                                                    <img src="@imageUrl"
+                                                         alt="@item.TenSanPhamSnapshot"
+                                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                </div>
+
+                                                <div>
+                                                    <div class="admin-return-detail-product-name">@item.TenSanPhamSnapshot</div>
+                                                    <div class="admin-return-subtext">Mã SP: @productCode</div>
+
+                                                    @if (!string.IsNullOrWhiteSpace(item.LyDoChiTiet))
+                                                    {
+                                                        <div class="admin-return-subtext">@item.LyDoChiTiet</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Số lượng mua">x @item.SoLuongMua</td>
+                                        <td data-label="Số lượng trả">x @item.SoLuongTra</td>
+                                        <td data-label="Đơn giá hoàn" class="text-right">@item.DonGiaHoan.ToString("N0", vi) đ</td>
+                                        <td data-label="Thành tiền hoàn" class="text-right">
+                                            <strong>@item.ThanhTienHoan.ToString("N0", vi) đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-right">Tổng tiền hoàn dự kiến</th>
+                                    <th class="text-right">@Model.TongTienHoanDuKien.ToString("N0", vi) đ</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-return-empty">
+                        <h3>Không có sản phẩm trả</h3>
+                        <p>Yêu cầu này hiện chưa có chi tiết sản phẩm.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card admin-return-detail-card">
+            <div class="card-header border-0">
+                <div class="admin-return-card-heading">
+                    <div class="admin-return-heading-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h3 class="admin-return-card-title">Lịch sử trạng thái</h3>
+                        <p class="admin-return-card-subtitle">Các mốc xử lý yêu cầu trả hàng.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (histories.Any())
+                {
+                    <div class="admin-return-detail-timeline">
+                        @foreach (var history in histories)
+                        {
+                            <div class="admin-return-detail-timeline-item">
+                                <div class="admin-return-detail-timeline-dot"></div>
+
+                                <div class="admin-return-detail-timeline-content">
+                                    <div class="admin-return-detail-timeline-top">
+                                        <strong>@ReturnRequestStatusConstants.GetName(history.TrangThaiMoi)</strong>
+                                        <span>@history.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+
+                                    <p>@(string.IsNullOrWhiteSpace(history.GhiChu) ? "Cập nhật trạng thái yêu cầu trả hàng." : history.GhiChu)</p>
+
+                                    @if (history.TaiKhoan != null)
+                                    {
+                                        <small>Cập nhật bởi: @history.TaiKhoan.HoTen</small>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-return-empty">
+                        <h3>Chưa có lịch sử</h3>
+                        <p>Yêu cầu này chưa có lịch sử trạng thái.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="admin-return-detail-actions">
+            <a href="@Url.Action("Index", "ReturnRequestManager", new { keyword = keyword, status = status, page = page })"
+               class="btn admin-return-btn admin-return-btn-light">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</section>

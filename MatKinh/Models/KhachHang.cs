@@ -21,6 +21,7 @@ namespace MatKinh.Models
             this.HanhViNguoiDungs = new HashSet<HanhViNguoiDung>();
             this.GioHangChiTiets = new HashSet<GioHangChiTiet>();
             this.DanhGiaSanPhams = new HashSet<DanhGiaSanPham>();
+            this.YeuCauTraHangs = new HashSet<YeuCauTraHang>();
         }
     
         public int KhachHangId { get; set; }
@@ -44,5 +45,7 @@ namespace MatKinh.Models
         public virtual ICollection<GioHangChiTiet> GioHangChiTiets { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<YeuCauTraHang> YeuCauTraHangs { get; set; }
     }
 }

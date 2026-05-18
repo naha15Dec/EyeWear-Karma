@@ -1,0 +1,449 @@
+﻿@model MatKinh.Models.YeuCauTraHang
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Chi tiết hàng trả cần lấy";
+
+    List<ChiTietTraHang> details = Model.ChiTietTraHangs != null
+        ? Model.ChiTietTraHangs.OrderBy(x => x.ChiTietTraHangId).ToList()
+        : new List<ChiTietTraHang>();
+
+    List<LichSuTrangThaiTraHang> histories = ViewData["returnHistories"] as List<LichSuTrangThaiTraHang>
+        ?? new List<LichSuTrangThaiTraHang>();
+
+    string keyword = ViewBag.Keyword as string ?? "";
+    int? status = ViewBag.Status as int?;
+    int page = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    string orderCode = Model.DonHang != null ? Model.DonHang.MaDonHang : "—";
+
+    string receiverName = Model.DonHang != null && !string.IsNullOrWhiteSpace(Model.DonHang.HoTenNguoiNhan)
+        ? Model.DonHang.HoTenNguoiNhan
+        : (Model.KhachHang != null ? Model.KhachHang.HoTen : "Khách hàng");
+
+    string receiverPhone = Model.DonHang != null && !string.IsNullOrWhiteSpace(Model.DonHang.SoDienThoaiNguoiNhan)
+        ? Model.DonHang.SoDienThoaiNguoiNhan
+        : (Model.KhachHang != null ? Model.KhachHang.SoDienThoai : "");
+
+    string receiverAddress = Model.DonHang != null && !string.IsNullOrWhiteSpace(Model.DonHang.DiaChiNhanHang)
+        ? Model.DonHang.DiaChiNhanHang
+        : "Chưa có địa chỉ lấy hàng.";
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallbackImg;
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    Func<int, string> returnStatusClass = statusValue =>
+    {
+        switch (statusValue)
+        {
+            case ReturnRequestStatusConstants.ASSIGNED_TO_SHIPPER:
+                return "warning";
+
+            case ReturnRequestStatusConstants.PICKING_UP:
+                return "processing";
+
+            case ReturnRequestStatusConstants.PICKED_UP:
+                return "info";
+
+            case ReturnRequestStatusConstants.HANDED_OVER:
+                return "success";
+
+            default:
+                return "default";
+        }
+    };
+
+    bool canStartPickup = ReturnRequestStatusConstants.CanShipperStartPickup(Model.TrangThai);
+    bool canConfirmPickedUp = ReturnRequestStatusConstants.CanShipperConfirmPickedUp(Model.TrangThai);
+    bool canHandOver = ReturnRequestStatusConstants.CanShipperHandOver(Model.TrangThai);
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Chi tiết hàng trả cần lấy</h1>
+        <p class="admin-page-subtitle">
+            Xem thông tin lấy hàng, sản phẩm khách trả và cập nhật tiến trình bàn giao về cửa hàng.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "ShipperReturnRequest", new { keyword = keyword, status = status, page = page })">Hàng trả cần lấy</a>
+        </li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+</div>
+
+<section class="content shipper-return-detail-page">
+    <div class="container-fluid p-0">
+
+        <div class="shipper-return-detail-hero">
+            <div>
+                <span class="shipper-return-detail-eyebrow">Return pickup</span>
+                <h2>#@Model.MaYeuCau</h2>
+                <p>
+                    Yêu cầu trả hàng từ đơn <strong>#@orderCode</strong>,
+                    được tạo lúc <strong>@Model.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")</strong>.
+                </p>
+            </div>
+
+            <div class="shipper-return-detail-hero-status">
+                <span class="shipper-return-status-badge @returnStatusClass(Model.TrangThai)">
+                    @ReturnRequestStatusConstants.GetName(Model.TrangThai)
+                </span>
+            </div>
+        </div>
+
+        <div class="shipper-return-detail-grid">
+            <div class="card shipper-return-detail-card">
+                <div class="card-header border-0">
+                    <div class="shipper-return-card-heading">
+                        <div class="shipper-return-heading-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="shipper-return-card-title">Thông tin lấy hàng</h3>
+                            <p class="shipper-return-card-subtitle">Liên hệ khách và đến đúng địa chỉ để lấy hàng trả.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="shipper-return-info-list">
+                        <div class="shipper-return-info-item">
+                            <span>Người liên hệ</span>
+                            <strong>@receiverName</strong>
+                        </div>
+
+                        <div class="shipper-return-info-item">
+                            <span>Số điện thoại</span>
+                            <strong>@(string.IsNullOrWhiteSpace(receiverPhone) ? "—" : receiverPhone)</strong>
+                        </div>
+
+                        <div class="shipper-return-info-item shipper-return-info-full">
+                            <span>Địa chỉ lấy hàng</span>
+                            <strong>@receiverAddress</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shipper-return-detail-card">
+                <div class="card-header border-0">
+                    <div class="shipper-return-card-heading">
+                        <div class="shipper-return-heading-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="shipper-return-card-title">Thông tin yêu cầu</h3>
+                            <p class="shipper-return-card-subtitle">Mã yêu cầu, trạng thái và các mốc xử lý.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="shipper-return-info-list">
+                        <div class="shipper-return-info-item">
+                            <span>Mã yêu cầu</span>
+                            <strong>#@Model.MaYeuCau</strong>
+                        </div>
+
+                        <div class="shipper-return-info-item">
+                            <span>Mã đơn</span>
+                            <strong>#@orderCode</strong>
+                        </div>
+
+                        <div class="shipper-return-info-item">
+                            <span>Ngày giao shipper</span>
+                            <strong>@(Model.NgayGanShipper.HasValue ? Model.NgayGanShipper.Value.ToString("dd/MM/yyyy HH:mm") : "—")</strong>
+                        </div>
+
+                        <div class="shipper-return-info-item">
+                            <span>Trạng thái</span>
+                            <strong>@ReturnRequestStatusConstants.GetName(Model.TrangThai)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shipper-return-detail-card">
+            <div class="card-header border-0">
+                <div class="shipper-return-card-heading">
+                    <div class="shipper-return-heading-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div>
+                        <h3 class="shipper-return-card-title">Lý do và ghi chú</h3>
+                        <p class="shipper-return-card-subtitle">Thông tin hỗ trợ shipper khi lấy hàng từ khách.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="shipper-return-note-grid">
+                    <div class="shipper-return-note-box">
+                        <span>Lý do trả hàng</span>
+                        <p>@Model.LyDo</p>
+                    </div>
+
+                    <div class="shipper-return-note-box">
+                        <span>Ghi chú khách hàng</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuKhachHang) ? "Không có ghi chú." : Model.GhiChuKhachHang)</p>
+                    </div>
+
+                    <div class="shipper-return-note-box">
+                        <span>Ghi chú admin</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuAdmin) ? "Chưa có ghi chú." : Model.GhiChuAdmin)</p>
+                    </div>
+
+                    <div class="shipper-return-note-box">
+                        <span>Ghi chú shipper</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.GhiChuShipper) ? "Chưa có ghi chú." : Model.GhiChuShipper)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shipper-return-detail-card">
+            <div class="card-header border-0">
+                <div class="shipper-return-card-heading">
+                    <div class="shipper-return-heading-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="shipper-return-card-title">Sản phẩm cần lấy từ khách</h3>
+                        <p class="shipper-return-card-subtitle">
+                            Có <b>@details.Count</b> dòng sản phẩm trong yêu cầu trả hàng.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (details.Any())
+                {
+                    <div class="shipper-return-detail-table-wrap">
+                        <table class="table shipper-return-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng mua</th>
+                                    <th>Số lượng cần lấy</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in details)
+                                {
+                                    string imageUrl = item.SanPham != null ? normalizeImage(item.SanPham.HinhAnhChinh) : fallbackImg;
+                                    string productCode = item.SanPham != null ? item.SanPham.MaSanPham : item.SanPhamId.ToString();
+
+                                    <tr>
+                                        <td data-label="Sản phẩm">
+                                            <div class="shipper-return-detail-product">
+                                                <div class="shipper-return-detail-product-image">
+                                                    <img src="@imageUrl"
+                                                         alt="@item.TenSanPhamSnapshot"
+                                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                </div>
+
+                                                <div>
+                                                    <div class="shipper-return-detail-product-name">@item.TenSanPhamSnapshot</div>
+                                                    <div class="shipper-return-subtext">Mã SP: @productCode</div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Số lượng mua">x @item.SoLuongMua</td>
+                                        <td data-label="Số lượng cần lấy">
+                                            <strong>x @item.SoLuongTra</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="shipper-return-empty">
+                        <h3>Không có sản phẩm cần lấy</h3>
+                        <p>Yêu cầu này hiện chưa có chi tiết sản phẩm.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card shipper-return-detail-card">
+            <div class="card-header border-0">
+                <div class="shipper-return-card-heading">
+                    <div class="shipper-return-heading-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h3 class="shipper-return-card-title">Lịch sử xử lý</h3>
+                        <p class="shipper-return-card-subtitle">Các mốc trạng thái liên quan đến lấy hàng trả.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (histories.Any())
+                {
+                    <div class="shipper-return-detail-timeline">
+                        @foreach (var history in histories)
+                        {
+                            <div class="shipper-return-detail-timeline-item">
+                                <div class="shipper-return-detail-timeline-dot"></div>
+
+                                <div class="shipper-return-detail-timeline-content">
+                                    <div class="shipper-return-detail-timeline-top">
+                                        <strong>@ReturnRequestStatusConstants.GetName(history.TrangThaiMoi)</strong>
+                                        <span>@history.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+
+                                    <p>@(string.IsNullOrWhiteSpace(history.GhiChu) ? "Cập nhật trạng thái yêu cầu trả hàng." : history.GhiChu)</p>
+
+                                    @if (history.TaiKhoan != null)
+                                    {
+                                        <small>Cập nhật bởi: @history.TaiKhoan.HoTen</small>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="shipper-return-empty">
+                        <h3>Chưa có lịch sử</h3>
+                        <p>Yêu cầu này chưa có lịch sử trạng thái.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="shipper-return-detail-action-card">
+            <div>
+                <span class="shipper-return-detail-eyebrow">Next action</span>
+                <h3>Cập nhật tiến trình lấy hàng</h3>
+                <p>Chỉ cập nhật khi bạn đã thực hiện đúng bước tương ứng ngoài thực tế.</p>
+            </div>
+
+            <div class="shipper-return-detail-actions">
+                @if (canStartPickup)
+                {
+                    using (Html.BeginForm("StartPickup", "ShipperReturnRequest", FormMethod.Post, new { @class = "shipper-return-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.YeuCauTraHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-return-action start"
+                                data-confirm-title="Bắt đầu lấy hàng?"
+                                data-confirm="Trạng thái sẽ chuyển sang: Shipper đang lấy hàng."
+                                data-confirm-ok="Bắt đầu">
+                            <i class="fas fa-route"></i>
+                            <span>Bắt đầu lấy hàng</span>
+                        </button>
+                    }
+                }
+
+                @if (canConfirmPickedUp)
+                {
+                    using (Html.BeginForm("ConfirmPickedUp", "ShipperReturnRequest", FormMethod.Post, new { @class = "shipper-return-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.YeuCauTraHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-return-action picked"
+                                data-confirm-title="Xác nhận đã lấy hàng?"
+                                data-confirm="Bạn xác nhận đã lấy hàng trả từ khách."
+                                data-confirm-ok="Đã lấy">
+                            <i class="fas fa-box"></i>
+                            <span>Đã lấy hàng từ khách</span>
+                        </button>
+                    }
+                }
+
+                @if (canHandOver)
+                {
+                    using (Html.BeginForm("HandOverToStore", "ShipperReturnRequest", FormMethod.Post, new { @class = "shipper-return-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.YeuCauTraHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-return-action handover"
+                                data-confirm-title="Bàn giao về cửa hàng?"
+                                data-confirm="Sau bước này admin sẽ kiểm tra và xác nhận nhận hàng trả."
+                                data-confirm-ok="Bàn giao">
+                            <i class="fas fa-store"></i>
+                            <span>Bàn giao shop</span>
+                        </button>
+                    }
+                }
+
+                @if (!canStartPickup && !canConfirmPickedUp && !canHandOver)
+                {
+                    <span class="shipper-return-locked">
+                        <i class="fas fa-lock"></i>
+                        Không còn thao tác cho shipper
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="shipper-return-detail-footer">
+            <a href="@Url.Action("Index", "ShipperReturnRequest", new { keyword = keyword, status = status, page = page })"
+               class="btn shipper-return-btn shipper-return-btn-light">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+
+    </div>
+</section>

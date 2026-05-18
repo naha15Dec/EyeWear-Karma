@@ -42,5 +42,8 @@ namespace MatKinh.Models
         public virtual DbSet<KieuGong> KieuGongs { get; set; }
         public virtual DbSet<RuleGoiYKinhTheoMat> RuleGoiYKinhTheoMats { get; set; }
         public virtual DbSet<DanhGiaSanPham> DanhGiaSanPhams { get; set; }
+        public virtual DbSet<ChiTietTraHang> ChiTietTraHangs { get; set; }
+        public virtual DbSet<LichSuTrangThaiTraHang> LichSuTrangThaiTraHangs { get; set; }
+        public virtual DbSet<YeuCauTraHang> YeuCauTraHangs { get; set; }
     }
 }
