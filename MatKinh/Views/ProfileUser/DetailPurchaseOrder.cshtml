@@ -457,9 +457,9 @@
                 }
             </div>
 
-            @if (returnRequest != null)
+            @if (returnRequest != null || canCreateReturnRequest)
             {
-                <div class="order-return-card">
+                <div class="order-return-card order-return-card--danger">
                     <div class="order-return-card-main">
                         <div class="order-return-card-icon">
                             <i class="fa fa-refresh"></i>
@@ -469,35 +469,57 @@
                             <span class="order-detail-eyebrow">Return request</span>
                             <h3>Yêu cầu trả hàng</h3>
 
-                            <p>
-                                Yêu cầu trả hàng <strong>#@returnRequest.MaYeuCau</strong>
-                                đang ở trạng thái
-                                <strong>@ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)</strong>.
-                            </p>
+                            @if (returnRequest != null)
+                            {
+                                <p>
+                                    Yêu cầu trả hàng <strong>#@returnRequest.MaYeuCau</strong>
+                                    đang ở trạng thái
+                                    <strong>@ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)</strong>.
+                                </p>
 
-                            <div class="order-return-card-meta">
-                                <span>
-                                    <i class="fa fa-calendar"></i>
-                                    Ngày yêu cầu: @returnRequest.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")
-                                </span>
+                                <div class="order-return-card-meta">
+                                    <span>
+                                        <i class="fa fa-calendar"></i>
+                                        Ngày yêu cầu: @returnRequest.NgayYeuCau.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
 
-                                <span>
-                                    <i class="fa fa-money"></i>
-                                    Dự kiến hoàn: @string.Format("{0:N0}", returnRequest.TongTienHoanDuKien) ₫
-                                </span>
-                            </div>
+                                    <span>
+                                        <i class="fa fa-money"></i>
+                                        Dự kiến hoàn: @string.Format("{0:N0}", returnRequest.TongTienHoanDuKien) ₫
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <p>
+                                    Nếu sản phẩm không phù hợp hoặc có vấn đề sau khi nhận hàng,
+                                    bạn có thể gửi yêu cầu trả hàng để cửa hàng kiểm tra và xử lý.
+                                </p>
+                            }
                         </div>
                     </div>
 
                     <div class="order-return-card-side">
-                        <span class="status-badge processing">
-                            @ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)
-                        </span>
+                        @if (returnRequest != null)
+                        {
+                            <span class="status-badge processing">
+                                @ReturnRequestStatusConstants.GetName(returnRequest.TrangThai)
+                            </span>
 
-                        <a href="@Url.Action("DetailReturnRequest", "ProfileUser", new { maYeuCau = returnRequest.MaYeuCau })"
-                           class="optical-btn optical-btn--light order-return-detail-btn">
-                            Xem chi tiết trả hàng
-                        </a>
+                            <a href="@Url.Action("DetailReturnRequest", "ProfileUser", new { maYeuCau = returnRequest.MaYeuCau })"
+                               class="optical-btn optical-btn--return-outline order-return-detail-btn">
+                                Xem chi tiết trả hàng
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="optical-btn optical-btn--return order-return-detail-btn"
+                                    data-toggle="modal"
+                                    data-target="#returnRequestModal">
+                                Yêu cầu trả hàng
+                            </button>
+                        }
                     </div>
                 </div>
             }
@@ -720,16 +742,6 @@
             }
 
             <div class="order-actions">
-                @if (canCreateReturnRequest)
-                {
-                    <button type="button"
-                            class="optical-btn optical-btn--light"
-                            data-toggle="modal"
-                            data-target="#returnRequestModal">
-                        Yêu cầu trả hàng
-                    </button>
-                }
-
                 <a href="@Url.Action("Profile", "ProfileUser")"
                    class="optical-btn optical-btn--light">
                     Quay lại tài khoản

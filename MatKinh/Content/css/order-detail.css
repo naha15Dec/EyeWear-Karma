@@ -1252,3 +1252,50 @@
     padding: 10px 16px;
     font-size: 13px;
 }
+
+.order-return-card--danger {
+    border: 1px solid rgba(185, 74, 59, 0.24);
+    background: linear-gradient(135deg, rgba(185, 74, 59, 0.08), #ffffff);
+    box-shadow: 0 14px 34px rgba(185, 74, 59, 0.08);
+}
+
+    .order-return-card--danger .order-return-card-icon {
+        background: rgba(185, 74, 59, 0.12);
+        color: #b94a3b;
+        border: 1px solid rgba(185, 74, 59, 0.18);
+    }
+
+    .order-return-card--danger h3,
+    .order-return-card--danger p strong {
+        color: #b94a3b;
+    }
+
+    .order-return-card--danger .order-return-card-meta span {
+        background: rgba(185, 74, 59, 0.10);
+        color: #b94a3b;
+        border: 1px solid rgba(185, 74, 59, 0.14);
+    }
+
+.optical-btn--return {
+    background: #b94a3b;
+    border: 1px solid #b94a3b;
+    color: #ffffff;
+}
+
+    .optical-btn--return:hover {
+        background: #9f382d;
+        border-color: #9f382d;
+        color: #ffffff;
+    }
+
+.optical-btn--return-outline {
+    background: #ffffff;
+    border: 1px solid rgba(185, 74, 59, 0.25);
+    color: #b94a3b;
+}
+
+    .optical-btn--return-outline:hover {
+        background: #b94a3b;
+        border-color: #b94a3b;
+        color: #ffffff;
+    }

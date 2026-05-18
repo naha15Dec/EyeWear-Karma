@@ -1,0 +1,464 @@
+﻿@model MatKinh.ViewModel.AdminOrderDetailVm
+@using System
+@using MatKinh.Models
+
+@{
+    ViewBag.Title = "Chi tiết đơn giao hàng";
+
+    string keyword = ViewBag.Keyword as string ?? "";
+    int? status = ViewBag.Status as int?;
+    int page = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+
+    string fallbackImg = Url.Content("~/Asset/img/no-image.png");
+
+    Func<string, string> normalizeImage = path =>
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return fallbackImg;
+        }
+
+        path = path.Trim();
+
+        if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return path;
+        }
+
+        if (path.StartsWith("~/"))
+        {
+            return Url.Content(path);
+        }
+
+        if (path.StartsWith("/"))
+        {
+            return Url.Content("~" + path);
+        }
+
+        return Url.Content("~/" + path);
+    };
+
+    Func<string, string> paymentMethodText = method =>
+    {
+        if (string.Equals(method, PaymentConstants.VNPAY, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán online qua VNPay";
+        }
+
+        return "Thanh toán khi nhận hàng";
+    };
+
+    Func<string, string> paymentStatusText = paymentStatus =>
+    {
+        if (string.Equals(paymentStatus, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(paymentStatus, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Thanh toán thất bại";
+        }
+
+        if (string.Equals(paymentStatus, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Đã hoàn tiền";
+        }
+
+        return "Chờ thanh toán";
+    };
+
+    Func<string, string> paymentStatusClass = paymentStatus =>
+    {
+        if (string.Equals(paymentStatus, PaymentConstants.PAID, StringComparison.OrdinalIgnoreCase))
+        {
+            return "success";
+        }
+
+        if (string.Equals(paymentStatus, PaymentConstants.FAILED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "danger";
+        }
+
+        if (string.Equals(paymentStatus, PaymentConstants.REFUNDED, StringComparison.OrdinalIgnoreCase))
+        {
+            return "warning";
+        }
+
+        return "processing";
+    };
+
+    Func<int, string> orderStatusClass = orderStatus =>
+    {
+        switch (orderStatus)
+        {
+            case OrderStatusConstants.ASSIGNED_TO_SHIPPER:
+                return "warning";
+
+            case OrderStatusConstants.DELIVERING:
+                return "shipping";
+
+            case OrderStatusConstants.DELIVERED:
+                return "success";
+
+            case OrderStatusConstants.DELIVERY_FAILED:
+                return "danger";
+
+            default:
+                return "default";
+        }
+    };
+
+    bool canStartDelivery = Model.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER;
+    bool canConfirmResult = Model.TrangThai == OrderStatusConstants.DELIVERING;
+}
+
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Chi tiết đơn giao hàng</h1>
+        <p class="admin-page-subtitle">
+            Xem thông tin người nhận, địa chỉ giao hàng, sản phẩm trong đơn và cập nhật kết quả giao.
+        </p>
+    </div>
+
+    <ol class="breadcrumb admin-breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "ShipperOrder", new { keyword = keyword, status = status, page = page })">Đơn được giao</a>
+        </li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
+</div>
+
+<section class="content shipper-order-detail-page">
+    <div class="container-fluid p-0">
+
+        <div class="shipper-order-detail-hero">
+            <div>
+                <span class="shipper-order-detail-eyebrow">Delivery order</span>
+                <h2>#@Model.MaDonHang</h2>
+                <p>
+                    Đơn hàng được giao cho <strong>@(string.IsNullOrWhiteSpace(Model.ShipperName) ? "shipper" : Model.ShipperName)</strong>,
+                    đặt lúc <strong>@Model.NgayDat.ToString("dd/MM/yyyy HH:mm")</strong>.
+                </p>
+            </div>
+
+            <div class="shipper-order-detail-hero-status">
+                <span class="shipper-order-status-badge @orderStatusClass(Model.TrangThai)">
+                    @Model.TrangThaiText
+                </span>
+
+                <span class="shipper-order-status-badge @paymentStatusClass(Model.TrangThaiThanhToan)">
+                    @paymentStatusText(Model.TrangThaiThanhToan)
+                </span>
+            </div>
+        </div>
+
+        <div class="shipper-order-detail-grid">
+            <div class="card shipper-order-detail-card">
+                <div class="card-header border-0">
+                    <div class="shipper-order-card-heading">
+                        <div class="shipper-order-heading-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="shipper-order-card-title">Thông tin giao hàng</h3>
+                            <p class="shipper-order-card-subtitle">Liên hệ đúng người nhận và giao đến đúng địa chỉ.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="shipper-order-info-list">
+                        <div class="shipper-order-info-item">
+                            <span>Người nhận</span>
+                            <strong>@Model.HoTenNguoiNhan</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item">
+                            <span>Số điện thoại</span>
+                            <strong>@Model.SoDienThoaiNguoiNhan</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item shipper-order-info-full">
+                            <span>Địa chỉ giao hàng</span>
+                            <strong>@Model.DiaChiNhanHang</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item shipper-order-info-full">
+                            <span>Ghi chú khách hàng</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú." : Model.GhiChu)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shipper-order-detail-card">
+                <div class="card-header border-0">
+                    <div class="shipper-order-card-heading">
+                        <div class="shipper-order-heading-icon">
+                            <i class="fas fa-money-check-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="shipper-order-card-title">Thông tin thanh toán</h3>
+                            <p class="shipper-order-card-subtitle">Shipper chỉ theo dõi, không xử lý hoàn tiền thủ công.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="shipper-order-info-list">
+                        <div class="shipper-order-info-item">
+                            <span>Phương thức</span>
+                            <strong>@paymentMethodText(Model.PhuongThucThanhToan)</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item">
+                            <span>Trạng thái</span>
+                            <strong>@paymentStatusText(Model.TrangThaiThanhToan)</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item">
+                            <span>Tổng thanh toán</span>
+                            <strong>@Model.TongThanhToan.ToString("N0") đ</strong>
+                        </div>
+
+                        <div class="shipper-order-info-item">
+                            <span>Mã giao dịch</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model.MaGiaoDichThanhToan) ? "—" : Model.MaGiaoDichThanhToan)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.CanRequireManualRefund)
+        {
+            <div class="shipper-order-refund-note">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <strong>Đơn VNPay cần shop xử lý hoàn tiền.</strong>
+                    Shipper đã cập nhật giao thất bại. Cửa hàng sẽ kiểm tra giao dịch và hoàn tiền thủ công cho khách.
+                </div>
+            </div>
+        }
+
+        <div class="card shipper-order-detail-card">
+            <div class="card-header border-0">
+                <div class="shipper-order-card-heading">
+                    <div class="shipper-order-heading-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="shipper-order-card-title">Sản phẩm trong đơn</h3>
+                        <p class="shipper-order-card-subtitle">
+                            Kiểm tra số lượng sản phẩm trước khi giao cho khách.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Items != null && Model.Items.Any())
+                {
+                    <div class="shipper-order-detail-table-wrap">
+                        <table class="table shipper-order-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th class="text-right">Đơn giá</th>
+                                    <th class="text-right">Thành tiền</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    string imageUrl = normalizeImage(item.HinhAnhChinh);
+
+                                    <tr>
+                                        <td data-label="Sản phẩm">
+                                            <div class="shipper-order-detail-product">
+                                                <div class="shipper-order-detail-product-image">
+                                                    <img src="@imageUrl"
+                                                         alt="@item.TenSanPhamSnapshot"
+                                                         onerror="this.onerror=null;this.src='@fallbackImg';" />
+                                                </div>
+
+                                                <div>
+                                                    <div class="shipper-order-detail-product-name">@item.TenSanPhamSnapshot</div>
+                                                    <div class="shipper-order-subtext">
+                                                        Mã SP: @(string.IsNullOrWhiteSpace(item.MaSanPham) ? item.SanPhamId.ToString() : item.MaSanPham)
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td data-label="Số lượng">x @item.SoLuong</td>
+                                        <td data-label="Đơn giá" class="text-right">@item.DonGiaSnapshot.ToString("N0") đ</td>
+                                        <td data-label="Thành tiền" class="text-right">
+                                            <strong>@item.ThanhTien.ToString("N0") đ</strong>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-right">Tổng thanh toán</th>
+                                    <th class="text-right">@Model.TongThanhToan.ToString("N0") đ</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="shipper-order-empty">
+                        <h3>Không có sản phẩm</h3>
+                        <p>Đơn hàng này hiện chưa có chi tiết sản phẩm.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card shipper-order-detail-card">
+            <div class="card-header border-0">
+                <div class="shipper-order-card-heading">
+                    <div class="shipper-order-heading-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div>
+                        <h3 class="shipper-order-card-title">Lịch sử trạng thái</h3>
+                        <p class="shipper-order-card-subtitle">Theo dõi các mốc xử lý của đơn hàng.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (Model.Histories != null && Model.Histories.Any())
+                {
+                    <div class="shipper-order-detail-timeline">
+                        @foreach (var history in Model.Histories)
+                        {
+                            <div class="shipper-order-detail-timeline-item">
+                                <div class="shipper-order-detail-timeline-dot"></div>
+
+                                <div class="shipper-order-detail-timeline-content">
+                                    <div class="shipper-order-detail-timeline-top">
+                                        <strong>@history.TrangThaiMoiText</strong>
+                                        <span>@history.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+
+                                    <p>@(string.IsNullOrWhiteSpace(history.GhiChu) ? "Cập nhật trạng thái đơn hàng." : history.GhiChu)</p>
+
+                                    @if (!string.IsNullOrWhiteSpace(history.NguoiCapNhat))
+                                    {
+                                        <small>Cập nhật bởi: @history.NguoiCapNhat</small>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="shipper-order-empty">
+                        <h3>Chưa có lịch sử</h3>
+                        <p>Đơn hàng này chưa có lịch sử trạng thái.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="shipper-order-detail-action-card">
+            <div>
+                <span class="shipper-order-detail-eyebrow">Next action</span>
+                <h3>Cập nhật tiến trình giao hàng</h3>
+                <p>Chỉ cập nhật khi bạn đã thực hiện đúng bước tương ứng ngoài thực tế.</p>
+            </div>
+
+            <div class="shipper-order-detail-actions">
+                @if (canStartDelivery)
+                {
+                    using (Html.BeginForm("StartDelivery", "ShipperOrder", FormMethod.Post, new { @class = "shipper-order-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.DonHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-order-action start"
+                                data-confirm-title="Bắt đầu giao hàng?"
+                                data-confirm="Trạng thái đơn sẽ chuyển sang: Đang giao."
+                                data-confirm-ok="Bắt đầu">
+                            <i class="fas fa-route"></i>
+                            <span>Bắt đầu giao hàng</span>
+                        </button>
+                    }
+                }
+
+                @if (canConfirmResult)
+                {
+                    using (Html.BeginForm("ConfirmDelivered", "ShipperOrder", FormMethod.Post, new { @class = "shipper-order-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.DonHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-order-action delivered"
+                                data-confirm-title="Xác nhận giao thành công?"
+                                data-confirm="Đơn hàng sẽ chuyển sang giao thành công. Nếu là COD, trạng thái thanh toán sẽ được cập nhật đã thanh toán."
+                                data-confirm-ok="Giao thành công">
+                            <i class="fas fa-check"></i>
+                            <span>Giao thành công</span>
+                        </button>
+                    }
+
+                    using (Html.BeginForm("ConfirmDeliveryFailed", "ShipperOrder", FormMethod.Post, new { @class = "shipper-order-inline-form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.DonHangId" />
+                        <input type="hidden" name="keyword" value="@keyword" />
+                        <input type="hidden" name="status" value="@status" />
+                        <input type="hidden" name="page" value="@page" />
+
+                        <button type="submit"
+                                class="btn shipper-order-action failed"
+                                data-confirm-title="Xác nhận giao thất bại?"
+                                data-confirm="Đơn hàng sẽ chuyển sang giao thất bại và hệ thống hoàn lại tồn kho."
+                                data-confirm-ok="Giao thất bại">
+                            <i class="fas fa-times"></i>
+                            <span>Giao thất bại</span>
+                        </button>
+                    }
+                }
+
+                @if (!canStartDelivery && !canConfirmResult)
+                {
+                    <span class="shipper-order-locked">
+                        <i class="fas fa-lock"></i>
+                        Không còn thao tác cho shipper
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="shipper-order-detail-footer">
+            <a href="@Url.Action("Index", "ShipperOrder", new { keyword = keyword, status = status, page = page })"
+               class="btn shipper-order-btn shipper-order-btn-light">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+
+    </div>
+</section>

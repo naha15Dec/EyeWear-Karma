@@ -636,6 +636,7 @@
     <Content Include="Content\css\product.css" />
     <Content Include="Content\css\profile.css" />
     <Content Include="Content\css\return-request-detail.css" />
+    <Content Include="Content\css\shipper-order.css" />
     <Content Include="Content\css\shipper-return-request.css" />
     <Content Include="Content\css\success.css" />
     <Content Include="Content\dataTables.bootstrap4.min.css" />
@@ -763,6 +764,7 @@
     <Compile Include="Areas\AdminPage\Controllers\ReturnRequestManagerController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ReviewManagerController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\SettingInformationWebsiteController.cs" />
+    <Compile Include="Areas\AdminPage\Controllers\ShipperOrderController.cs" />
     <Compile Include="Areas\AdminPage\Controllers\ShipperReturnRequestController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BlogController.cs" />
@@ -975,6 +977,8 @@
     <Content Include="Areas\AdminPage\Views\ReturnRequestManager\Detail.cshtml" />
     <Content Include="Areas\AdminPage\Views\ShipperReturnRequest\Index.cshtml" />
     <Content Include="Areas\AdminPage\Views\ShipperReturnRequest\Detail.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ShipperOrder\Index.cshtml" />
+    <Content Include="Areas\AdminPage\Views\ShipperOrder\Detail.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />

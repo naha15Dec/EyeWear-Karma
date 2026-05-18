@@ -154,8 +154,8 @@ namespace MatKinh.ViewModel
         [Required]
         public int DonHangId { get; set; }
 
-        [Required]
-        public int ShipperId { get; set; }
+        [Required(ErrorMessage = "Vui lòng chọn shipper giao hàng.")]
+        public int? ShipperId { get; set; }
 
         public string GhiChu { get; set; }
     }

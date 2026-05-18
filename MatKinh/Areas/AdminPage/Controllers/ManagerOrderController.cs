@@ -152,7 +152,13 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return Redirect("~/Error/Index");
             }
 
-            if (model.ShipperId <= 0)
+            if (model == null || model.DonHangId <= 0)
+            {
+                TempData["ErrorMessage"] = "Dữ liệu gán shipper không hợp lệ.";
+                return RedirectToAction("Index");
+            }
+
+            if (!model.ShipperId.HasValue || model.ShipperId.Value <= 0)
             {
                 TempData["ErrorMessage"] = "Vui lòng chọn shipper giao hàng.";
                 return RedirectToAction("Detail", new { id = model.DonHangId });
@@ -178,23 +184,23 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return RedirectToAction("Detail", new { id = model.DonHangId });
             }
 
+            if (order.TrangThai != OrderStatusConstants.PREPARING)
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể gán shipper khi đơn hàng đang ở trạng thái đang chuẩn bị.";
+                return RedirectToAction("Detail", new { id = model.DonHangId });
+            }
+
             var shipper = db.TaiKhoans
                 .Include(x => x.VaiTro)
                 .FirstOrDefault(x =>
-                    x.TaiKhoanId == model.ShipperId &&
+                    x.TaiKhoanId == model.ShipperId.Value &&
                     x.IsActive &&
+                    x.VaiTro != null &&
                     x.VaiTro.MaVaiTro == RoleConstants.SHIPPER);
 
             if (shipper == null)
             {
-                TempData["ErrorMessage"] = "Shipper không hợp lệ.";
-                return RedirectToAction("Detail", new { id = model.DonHangId });
-            }
-
-            if (order.TrangThai != OrderStatusConstants.PREPARING &&
-                order.TrangThai != OrderStatusConstants.ASSIGNED_TO_SHIPPER)
-            {
-                TempData["ErrorMessage"] = "Chỉ được gán shipper khi đơn đang chuẩn bị hoặc đã giao shipper.";
+                TempData["ErrorMessage"] = "Shipper không hợp lệ hoặc đã bị khóa.";
                 return RedirectToAction("Detail", new { id = model.DonHangId });
             }
 
@@ -208,13 +214,15 @@ namespace MatKinh.Areas.AdminPage.Controllers
                     order.TrangThai = OrderStatusConstants.ASSIGNED_TO_SHIPPER;
                     order.UpdatedAt = DateTime.Now;
 
+                    string note = string.IsNullOrWhiteSpace(model.GhiChu)
+                        ? "Gán shipper: " + shipper.HoTen + ". Đơn hàng đã được giao cho shipper xử lý giao hàng."
+                        : model.GhiChu.Trim();
+
                     AddOrderHistory(
                         order.DonHangId,
                         oldStatus,
                         OrderStatusConstants.ASSIGNED_TO_SHIPPER,
-                        string.IsNullOrWhiteSpace(model.GhiChu)
-                            ? "Gán shipper: " + shipper.HoTen
-                            : model.GhiChu,
+                        note,
                         currentUser.TaiKhoanId);
 
                     db.SaveChanges();
@@ -323,7 +331,7 @@ namespace MatKinh.Areas.AdminPage.Controllers
             {
                 Keyword = keyword,
                 StatusFilter = status,
-                HeaderTitle = IsShipper(currentUser) ? "Đơn hàng được giao cho tôi" : "Quản lý đơn hàng",
+                HeaderTitle = "Quản lý đơn hàng",
                 StatusOptions = BuildStatusOptions(status),
                 Orders = orders,
 
@@ -661,11 +669,6 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return false;
             }
 
-            if (IsShipper(currentUser))
-            {
-                return CanShipperUpdateStatus(currentUser, order, newStatus, out errorMessage);
-            }
-
             if (IsStaff(currentUser))
             {
                 return CanStaffUpdateStatus(order, newStatus, out errorMessage);
@@ -677,41 +680,6 @@ namespace MatKinh.Areas.AdminPage.Controllers
             }
 
             errorMessage = "Bạn không có quyền cập nhật trạng thái đơn hàng.";
-            return false;
-        }
-
-        private bool CanShipperUpdateStatus(TaiKhoan currentUser, DonHang order, int newStatus, out string errorMessage)
-        {
-            errorMessage = string.Empty;
-
-            if (!order.ShipperId.HasValue || order.ShipperId.Value != currentUser.TaiKhoanId)
-            {
-                errorMessage = "Bạn không có quyền xử lý đơn hàng này.";
-                return false;
-            }
-
-            if (newStatus != OrderStatusConstants.DELIVERING &&
-                newStatus != OrderStatusConstants.DELIVERED &&
-                newStatus != OrderStatusConstants.DELIVERY_FAILED)
-            {
-                errorMessage = "Shipper chỉ được cập nhật trạng thái giao hàng.";
-                return false;
-            }
-
-            if (order.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER &&
-                newStatus == OrderStatusConstants.DELIVERING)
-            {
-                return true;
-            }
-
-            if (order.TrangThai == OrderStatusConstants.DELIVERING &&
-                (newStatus == OrderStatusConstants.DELIVERED ||
-                 newStatus == OrderStatusConstants.DELIVERY_FAILED))
-            {
-                return true;
-            }
-
-            errorMessage = "Không thể chuyển trạng thái theo luồng hiện tại.";
             return false;
         }
 
@@ -741,6 +709,13 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 newStatus == OrderStatusConstants.ASSIGNED_TO_SHIPPER)
             {
                 errorMessage = "Vui lòng chọn shipper giao hàng để chuyển đơn sang trạng thái đã giao shipper.";
+                return false;
+            }
+
+            if (order.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ||
+                order.TrangThai == OrderStatusConstants.DELIVERING)
+            {
+                errorMessage = "Đơn hàng đã giao cho shipper. Nhân viên chỉ theo dõi trạng thái, shipper sẽ cập nhật quá trình giao hàng.";
                 return false;
             }
 
@@ -779,29 +754,10 @@ namespace MatKinh.Areas.AdminPage.Controllers
                 return false;
             }
 
-            if (order.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER &&
-                newStatus == OrderStatusConstants.DELIVERING)
+            if (order.TrangThai == OrderStatusConstants.ASSIGNED_TO_SHIPPER ||
+                order.TrangThai == OrderStatusConstants.DELIVERING)
             {
-                if (!order.ShipperId.HasValue)
-                {
-                    errorMessage = "Đơn hàng chưa được gán shipper.";
-                    return false;
-                }
-
-                return true;
-            }
-
-            if (order.TrangThai == OrderStatusConstants.DELIVERING &&
-                (newStatus == OrderStatusConstants.DELIVERED ||
-                 newStatus == OrderStatusConstants.DELIVERY_FAILED))
-            {
-                return true;
-            }
-
-            if (order.TrangThai == OrderStatusConstants.DELIVERING &&
-                newStatus == OrderStatusConstants.CANCELLED)
-            {
-                errorMessage = "Đơn hàng đang giao không nên hủy trực tiếp. Vui lòng chuyển sang giao thành công hoặc giao thất bại.";
+                errorMessage = "Đơn hàng đã giao cho shipper. Admin chỉ theo dõi trạng thái, shipper sẽ cập nhật quá trình giao hàng.";
                 return false;
             }
 
