@@ -789,3 +789,129 @@
         white-space: nowrap;
     }
 }
+
+/* =========================
+   BLOG HEADING / TITLE
+========================= */
+
+.section-heading {
+    margin-bottom: 30px;
+}
+
+    .section-heading .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #f4efe7;
+        color: #8a6a2f;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.1px;
+        line-height: 1.2;
+        text-transform: uppercase;
+    }
+
+    .section-heading h2 {
+        margin: 0 0 12px;
+        color: #161616;
+        font-size: 38px;
+        line-height: 1.22;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+    }
+
+    .section-heading p {
+        max-width: 640px;
+        margin: 0 auto;
+        color: #777;
+        font-size: 15px;
+        line-height: 1.75;
+    }
+
+.section-heading--left {
+    text-align: left;
+    margin-bottom: 28px;
+}
+
+    .section-heading--left p {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+.blog-list-heading {
+    padding-top: 2px;
+}
+
+    .blog-list-heading h2 {
+        font-size: 38px;
+        line-height: 1.22;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .blog-list-heading p {
+        max-width: 680px;
+    }
+
+        .blog-list-heading p strong {
+            color: #161616;
+            font-weight: 800;
+        }
+
+/* Responsive tiêu đề blog */
+@media (max-width: 991px) {
+    .section-heading h2,
+    .blog-list-heading h2 {
+        font-size: 34px;
+    }
+
+    .section-heading p,
+    .blog-list-heading p {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 767px) {
+    .section-heading {
+        margin-bottom: 24px;
+    }
+
+        .section-heading .eyebrow {
+            margin-bottom: 10px;
+            padding: 7px 13px;
+            font-size: 11px;
+            letter-spacing: 0.9px;
+        }
+
+        .section-heading h2,
+        .blog-list-heading h2 {
+            font-size: 30px;
+            line-height: 1.25;
+        }
+
+        .section-heading p,
+        .blog-list-heading p {
+            font-size: 14px;
+            line-height: 1.7;
+        }
+}
+
+@media (max-width: 575px) {
+    .section-heading {
+        margin-bottom: 22px;
+    }
+
+        .section-heading h2,
+        .blog-list-heading h2 {
+            font-size: 26px;
+        }
+
+        .section-heading .eyebrow {
+            max-width: 100%;
+            white-space: normal;
+            text-align: center;
+        }
+}

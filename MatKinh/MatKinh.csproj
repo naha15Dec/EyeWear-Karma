@@ -639,6 +639,7 @@
     <Content Include="Content\css\shipper-order.css" />
     <Content Include="Content\css\shipper-return-request.css" />
     <Content Include="Content\css\success.css" />
+    <Content Include="Content\css\tryon.css" />
     <Content Include="Content\dataTables.bootstrap4.min.css" />
     <Content Include="Content\daterangepicker.css" />
     <Content Include="Content\ekko-lightbox.css" />
@@ -667,6 +668,7 @@
     <Content Include="Content\jqvmap.min.css" />
     <Content Include="Content\js\premium-confirm.js" />
     <Content Include="Content\js\premium-toast.js" />
+    <Content Include="Content\js\tryon.js" />
     <Content Include="Content\linearicons.css" />
     <Content Include="Content\magnific-popup.css" />
     <Content Include="Content\main.css" />
@@ -776,6 +778,7 @@
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\ProfileUserController.cs" />
     <Compile Include="Controllers\ShoppingCartController.cs" />
+    <Compile Include="Controllers\TryOnController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -1008,6 +1011,7 @@
     <Content Include="Views\ShoppingCart\_CartCount.cshtml" />
     <Content Include="Views\Shared\_PremiumConfirmModal.cshtml" />
     <Content Include="Views\ProfileUser\DetailReturnRequest.cshtml" />
+    <Content Include="Views\TryOn\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -1018,6 +1022,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\AdminPage\Data\" />
+    <Folder Include="Content\tryon\" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />

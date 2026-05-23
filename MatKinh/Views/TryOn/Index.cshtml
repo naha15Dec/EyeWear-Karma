@@ -1,0 +1,137 @@
+﻿@model List<string>
+
+@{
+    ViewBag.Title = "Thử kính online";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="@Url.Content("~/Content/css/tryon.css")" rel="stylesheet" />
+
+<section class="tryon-page">
+    <div class="container">
+
+        <div class="tryon-hero">
+            <span class="tryon-badge">
+                <i class="fa fa-camera"></i>
+                VIRTUAL TRY-ON
+            </span>
+
+            <h1>Thử kính online trực tiếp</h1>
+
+            <p>
+                Bật camera, chọn mẫu kính yêu thích và xem kính hiển thị trực tiếp
+                trên khuôn mặt của bạn theo thời gian thực.
+            </p>
+        </div>
+
+        <div class="tryon-layout">
+            <div class="tryon-left">
+                <div class="tryon-card tryon-camera-card">
+
+                    <div class="tryon-camera-zone">
+                        <div class="tryon-camera-frame">
+                            <video id="tryonVideo" autoplay muted playsinline></video>
+                            <canvas id="tryonCanvas"></canvas>
+
+                            <div id="tryonPlaceholder" class="tryon-placeholder">
+                                <div class="tryon-placeholder-icon">
+                                    <i class="fa fa-camera"></i>
+                                </div>
+                                <h3>Camera thử kính</h3>
+                                <p>Bấm bật camera, nhìn thẳng khuôn mặt và chọn mẫu kính bạn muốn thử.</p>
+                            </div>
+                        </div>
+
+                        <div class="tryon-actions">
+                            <button type="button" id="btnTryonCamera" class="tryon-main-btn">
+                                <i class="fa fa-video-camera"></i>
+                                Bật camera
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tryon-result-box">
+                        <span>Trạng thái thử kính</span>
+                        <h3 id="tryonStatusTitle">Chưa bật camera</h3>
+                        <p id="tryonStatusDesc">Hãy bật camera và chọn một mẫu kính để bắt đầu thử online.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tryon-right">
+                <div class="tryon-card tryon-guide-card">
+                    <span class="tryon-guide-label">Bộ sưu tập thử kính</span>
+                    <h3>Chọn mẫu kính</h3>
+                    <p class="tryon-guide-desc">
+                        Mỗi mẫu kính dưới đây là ảnh mô phỏng chính diện. Bạn có thể đổi mẫu bất cứ lúc nào khi camera đang bật.
+                    </p>
+
+                    <div class="tryon-glasses-list">
+                        @if (Model != null && Model.Any())
+                        {
+                            var index = 1;
+
+                            foreach (var item in Model)
+                            {
+                                string fileName = System.IO.Path.GetFileNameWithoutExtension(item);
+                                string displayName = fileName.Replace("-", " ").Replace("_", " ");
+
+                                <button type="button"
+                                        class="tryon-glass-item"
+                                        data-glass="@Url.Content(item)">
+                                    <div class="tryon-glass-thumb">
+                                        <img src="@Url.Content(item)" alt="@displayName" />
+                                    </div>
+
+                                    <div class="tryon-glass-info">
+                                        <strong>Mẫu @index</strong>
+                                        <span>Chọn để thử kính</span>
+                                    </div>
+                                </button>
+
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <div class="tryon-empty">
+                                <div class="tryon-empty-icon">
+                                    <i class="fa fa-image"></i>
+                                </div>
+                                <h4>Chưa có mẫu kính</h4>
+                                <p>Vui lòng thêm ảnh kính PNG vào hệ thống để sử dụng chức năng thử kính.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="tryon-card tryon-note-card">
+                    <span class="tryon-guide-label">Lưu ý</span>
+
+                    <div class="tryon-note-list">
+                        <div class="tryon-note-item">
+                            <div>1</div>
+                            <p>Giữ khuôn mặt thẳng và đủ sáng để kính bám chính xác hơn.</p>
+                        </div>
+
+                        <div class="tryon-note-item">
+                            <div>2</div>
+                            <p>Ảnh kính cần là PNG nền trong suốt để hiển thị đẹp nhất.</p>
+                        </div>
+
+                        <div class="tryon-note-item">
+                            <div>3</div>
+                            <p>Kết quả là mô phỏng trực quan, giúp bạn tham khảo kiểu dáng gọng kính phù hợp.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://unpkg.com/%40mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="@Url.Content("~/Content/js/tryon.js?v=2001")"></script>
+}
